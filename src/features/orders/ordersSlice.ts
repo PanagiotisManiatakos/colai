@@ -24,7 +24,7 @@ export interface OrdersState {
   orders: Order[];
   discountRequests: DiscountRequest[];
   loadingOrders: boolean;
-  isRefreshing: boolean;
+  refreshingOrders: boolean;
   ordersError: string | null;
   draft: DraftState;
   selected: SelectedOrderState | null;
@@ -57,8 +57,9 @@ export const fetchOrders = createAsyncThunk<
       const q = typeof arg === "object" && arg?.q ? arg.q.trim() : "";
       const force = typeof arg === "object" && arg?.force;
 
-      if (force) return true;                 // later: pull-to-refresh uses this
-      if (state.orders.loadingOrders) return false;
+      if (force) return !(state.orders.refreshingOrders || state.orders.loadingOrders);
+
+      if (state.orders.loadingOrders || state.orders.refreshingOrders) return false;
 
       if (state.orders.orders.length > 0 && state.orders.ordersQuery === q) {
         return false;
@@ -126,7 +127,7 @@ const initialStateBase: OrdersState = {
   orders: [],
   discountRequests: [],
   loadingOrders: false,
-  isRefreshing: false,
+  refreshingOrders: false,
   ordersError: null,
   draft: {
     editState: { loading: false, error: null },
@@ -139,8 +140,6 @@ const initialStateBase: OrdersState = {
   ordersFetchedAt: 0,
 };
 
-const initialState: OrdersState =
-  (typeof window !== "undefined" ? loadStateFromLocalStorage() : null) ?? initialStateBase;
 
 const LS_KEY = "orders";
 
@@ -156,11 +155,11 @@ function loadStateFromLocalStorage(): OrdersState | null {
 
     // Only hydrate what you really want persisted (recommended)
     return {
-      ...initialState,
+      ...initialStateBase,
       draft: {
-        ...initialState.draft,
-        order: (parsed?.order ?? initialState.draft.order) as Order,
-        ylika: (parsed?.ylika ?? initialState.draft.ylika) as OrderYlika[],
+        ...initialStateBase.draft,
+        order: (parsed?.order ?? initialStateBase.draft.order) as Order,
+        ylika: (parsed?.ylika ?? initialStateBase.draft.ylika) as OrderYlika[],
       },
       // optionally persist selected too, but usually not needed:
       // selected: (parsed.selected ?? initialState.selected) as any,
@@ -195,8 +194,8 @@ const ordersSlice = createSlice({
     },
     deletedDraftTemplate(state) {
       state.draft.order = {} as Order;
-      state.draft.ylika = [] as OrderYlika[],
-        persistStateToLocalStorage(state);
+      state.draft.ylika = [] as OrderYlika[];
+      persistStateToLocalStorage(state);
     },
     setDraftProperty(state, action: PayloadAction<{ key: keyof Order; value: any }>) {
       state.draft.order = {
@@ -253,12 +252,17 @@ const ordersSlice = createSlice({
     },
   },
   extraReducers: (b) => {
-    b.addCase(fetchOrders.pending, (state) => {
-      state.loadingOrders = true;
+    b.addCase(fetchOrders.pending, (state, action) => {
+      const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
+      if (force) state.refreshingOrders = true;
+      else state.loadingOrders = true;
       state.ordersError = null;
     });
     b.addCase(fetchOrders.fulfilled, (state, action) => {
-      state.loadingOrders = false;
+      const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
+      if (force) state.refreshingOrders = false;
+      else state.loadingOrders = false;
+
       state.orders = action.payload;
 
       const q =
@@ -269,7 +273,10 @@ const ordersSlice = createSlice({
       state.ordersFetchedAt = Date.now();
     });
     b.addCase(fetchOrders.rejected, (state, action) => {
-      state.loadingOrders = false;
+      const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
+      if (force) state.refreshingOrders = false;
+      else state.loadingOrders = false;
+
       state.ordersError = action.error.message || "Failed to load orders";
     });
     b.addCase(fetchOrderById.pending, (state) => {
