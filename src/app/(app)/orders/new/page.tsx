@@ -11,13 +11,14 @@ import { Alert, FormSelect } from "react-bootstrap";
 export default function NewOrderPage() {
   const router = useRouter();
   const type = useAppSelector((state) => state.orders.draft.order?.type);
+  const groupid = useAppSelector((state) => state.orders.draft.order?.groupid);
   const loading = useAppSelector((state) => state.orders.draft.editState.loading);
   const reduxError = useAppSelector((state) => state.orders.draft.editState.error);
   const [error, setError] = React.useState<string | null>(null);
   const dispatch = useAppDispatch();
 
   React.useEffect(() => {
-    dispatch(setDraftProperty({ key: "groupid", value: 4 }));
+    if (!groupid) dispatch(setDraftProperty({ key: "groupid", value: 4 }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -39,8 +40,6 @@ export default function NewOrderPage() {
     } catch (e: any) {
       setError(e?.message || "Κάτι πήγε στραβά.");
     }
-
-    //router.push(`/orders/new/${encodeURIComponent(type as string)}`);
   }
   return (
     <div>
@@ -57,7 +56,7 @@ export default function NewOrderPage() {
 
       <div className="app-card p-3 mb-3">
         <label className="form-label small text-secondary mb-2">Κατηγορία</label>
-        <FormSelect defaultValue={1} onChange={(e) => dispatch(setDraftProperty({ key: "groupid", value: e.target?.value }))} aria-label="Κατηγορία">
+        <FormSelect value={groupid} onChange={(e) => dispatch(setDraftProperty({ key: "groupid", value: e.target?.value }))} aria-label="Κατηγορία">
           <option value="4">WC</option>
         </FormSelect>
       </div>

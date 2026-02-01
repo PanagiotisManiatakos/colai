@@ -32,11 +32,7 @@ export interface OrdersState {
   ordersFetchedAt: number;
 }
 
-export const fetchOrders = createAsyncThunk<
-  Order[],
-  { q?: string; force?: boolean } | void,
-  { state: RootState }
->(
+export const fetchOrders = createAsyncThunk<Order[], { q?: string; force?: boolean } | void, { state: RootState }>(
   "orders/fetchOrders",
   async (arg) => {
     const q = typeof arg === "object" && arg?.q ? arg.q : "";
@@ -77,6 +73,16 @@ export const fetchOrderById = createAsyncThunk<any, { orderId: number; orderUID:
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data?.ok) throw new Error(data?.message || "Failed to load order");
     return data;
+  }
+);
+
+export const deleteOrderAsync = createAsyncThunk<any, { orderId: number; orderUID: string }>(
+  "orders/deleteOrder",
+  async ({ orderId, orderUID }) => {
+    const res = await fetch(`/api/orders/${orderId}?uid=${orderUID}`, { method: "DELETE", cache: "no-store" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok) throw new Error(data?.message || "Failed to delete order");
+    return { ...data, orderId, orderUID };
   }
 );
 
@@ -323,6 +329,14 @@ const ordersSlice = createSlice({
     b.addCase(submitDraftAsync.rejected, (state, action) => {
       state.draft.submitState.loading = false;
       state.draft.submitState.error = action.error.message || "Failed to submit order";
+    });
+    b.addCase(deleteOrderAsync.pending, (state) => {
+    });
+    b.addCase(deleteOrderAsync.fulfilled, (state, action) => {
+      const idx = state.orders.findIndex((x) => x.id === action.payload.orderId && x.uid === action.payload.orderUID);
+      if (idx !== -1) state.orders.splice(idx, 1);
+    });
+    b.addCase(deleteOrderAsync.rejected, (state, action) => {
     });
 
   },

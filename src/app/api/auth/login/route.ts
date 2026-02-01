@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import axios from "axios";
+import { cookieName } from "@/lib/auth";
 
-const COOKIE_NAME = "amsa_token";
 const USER_COOKIE = "amsa_user";
 
 function base64urlEncode(obj: unknown) {
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
     // Cookie options
     const jar = cookies();
-    (await jar).set(COOKIE_NAME, token, {
+    (await jar).set(cookieName, token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production", // important for local dev
         sameSite: "lax",

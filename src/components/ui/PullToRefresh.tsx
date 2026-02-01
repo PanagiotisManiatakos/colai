@@ -5,8 +5,9 @@ import React from "react";
 type Props = {
     onRefresh: () => Promise<any> | void;
     isRefreshing?: boolean;
-    threshold?: number;       // px
-    maxPull?: number;         // px
+    threshold?: number; // px
+    maxPull?: number; // px
+    scrollSelector?: string; // default ".app-content"
     children: React.ReactNode;
 };
 
@@ -15,16 +16,26 @@ export default function PullToRefresh({
     isRefreshing = false,
     threshold = 72,
     maxPull = 120,
+    scrollSelector = ".app-content",
     children,
 }: Props) {
     const containerRef = React.useRef<HTMLDivElement | null>(null);
+    const scrollElRef = React.useRef<HTMLElement | null>(null);
 
     const startYRef = React.useRef(0);
     const pullingRef = React.useRef(false);
     const canPullRef = React.useRef(false);
 
-    const [pull, setPull] = React.useState(0);     // current pull distance
+    const [pull, setPull] = React.useState(0);
     const [armed, setArmed] = React.useState(false);
+
+    // Find the real scroll container (your <main className="app-content"> usually)
+    React.useEffect(() => {
+        scrollElRef.current =
+            (document.querySelector(scrollSelector) as HTMLElement | null) ??
+            (containerRef.current?.parentElement as HTMLElement | null) ??
+            null;
+    }, [scrollSelector]);
 
     // If parent sets isRefreshing, keep UI pinned a bit while refreshing
     React.useEffect(() => {
@@ -38,52 +49,13 @@ export default function PullToRefresh({
     }, [isRefreshing, threshold]);
 
     function getScrollTop() {
-        // Your list likely lives inside .app-content; this wrapper should be inside that.
-        const el = containerRef.current;
-        return el ? el.scrollTop : 0;
-    }
-
-    function onPointerDown(e: React.PointerEvent) {
-        if (isRefreshing) return;
-        if (e.pointerType === "mouse" && e.button !== 0) return;
-
-        // only allow pull-to-refresh when scrolled to top
-        canPullRef.current = getScrollTop() <= 0;
-
-        // ignore if not at top
-        if (!canPullRef.current) return;
-
-        pullingRef.current = true;
-        startYRef.current = e.clientY;
-    }
-
-    function onPointerMove(e: React.PointerEvent) {
-        if (!pullingRef.current) return;
-        if (!canPullRef.current) return;
-
-        const dy = e.clientY - startYRef.current;
-        if (dy <= 0) {
-            setPull(0);
-            setArmed(false);
-            return;
-        }
-
-        // prevent native overscroll bounce interference
-        e.preventDefault();
-
-        // "rubber band" feel (ease out)
-        const eased = maxPull * (1 - Math.exp(-dy / 85));
-        const next = Math.min(maxPull, Math.max(0, eased));
-
-        setPull(next);
-        setArmed(next >= threshold);
+        return scrollElRef.current?.scrollTop ?? 0;
     }
 
     async function endPull() {
         pullingRef.current = false;
 
         if (armed && !isRefreshing) {
-            // lock indicator at threshold and refresh
             setPull(threshold);
             try {
                 await onRefresh();
@@ -98,29 +70,70 @@ export default function PullToRefresh({
         }
     }
 
-    function onPointerUp() {
-        if (!pullingRef.current) return;
-        void endPull();
-    }
+    // Native touch listeners (passive:false on move) so preventDefault works
+    React.useEffect(() => {
+        const scrollEl = scrollElRef.current;
+        if (!scrollEl) return;
 
-    function onPointerCancel() {
-        if (!pullingRef.current) return;
-        void endPull();
-    }
+        const onTouchStart = (e: TouchEvent) => {
+            if (isRefreshing) return;
+            if (e.touches.length !== 1) return;
+
+            // Only allow pull-to-refresh when scrolled to top
+            canPullRef.current = getScrollTop() <= 0;
+            if (!canPullRef.current) return;
+
+            pullingRef.current = true;
+            startYRef.current = e.touches[0].clientY;
+        };
+
+        const onTouchMove = (e: TouchEvent) => {
+            if (!pullingRef.current) return;
+            if (!canPullRef.current) return;
+
+            const dy = e.touches[0].clientY - startYRef.current;
+
+            // user is scrolling up -> let normal scroll happen
+            if (dy <= 0) {
+                setPull(0);
+                setArmed(false);
+                return;
+            }
+
+            // Critical: stop the scroll only while pulling down at top
+            if (e.cancelable) e.preventDefault();
+
+            // rubber band
+            const eased = maxPull * (1 - Math.exp(-dy / 85));
+            const next = Math.min(maxPull, Math.max(0, eased));
+
+            setPull(next);
+            setArmed(next >= threshold);
+        };
+
+        const onTouchEnd = () => {
+            if (!pullingRef.current) return;
+            void endPull();
+        };
+
+        scrollEl.addEventListener("touchstart", onTouchStart, { passive: true });
+        scrollEl.addEventListener("touchmove", onTouchMove, { passive: false });
+        scrollEl.addEventListener("touchend", onTouchEnd, { passive: true });
+        scrollEl.addEventListener("touchcancel", onTouchEnd, { passive: true });
+
+        return () => {
+            scrollEl.removeEventListener("touchstart", onTouchStart);
+            scrollEl.removeEventListener("touchmove", onTouchMove as any);
+            scrollEl.removeEventListener("touchend", onTouchEnd);
+            scrollEl.removeEventListener("touchcancel", onTouchEnd);
+        };
+    }, [isRefreshing, threshold, maxPull, onRefresh, armed]);
 
     const rotate = Math.min(180, (pull / threshold) * 180);
     const showSpinner = isRefreshing;
 
     return (
-        <div
-            ref={containerRef}
-            className="ptr-container"
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerCancel={onPointerCancel}
-            style={{ touchAction: "pan-x pan-y" }} // allow scroll; we preventDefault only when pulling down at top
-        >
+        <div ref={containerRef} className="ptr-container">
             {/* Indicator */}
             <div
                 className="ptr-indicator"

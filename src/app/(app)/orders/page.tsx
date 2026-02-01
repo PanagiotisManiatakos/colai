@@ -34,10 +34,10 @@ export default function OrdersPage() {
 
   return (
     <>
-      <div className="app-card p-3 mb-3">
-        <SearchBar placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)" />
-      </div>
       <PullToRefresh onRefresh={onRefresh} isRefreshing={refreshing}>
+        <div className="app-card p-3 mb-3">
+          <SearchBar placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)" />
+        </div>
 
         {showInitialLoader ? (
           <AppLoader label="Φόρτωση παραγγελιών…" />
@@ -48,7 +48,7 @@ export default function OrdersPage() {
         )}
       </PullToRefresh>
 
-      <FloatingActionButton href="/orders/new" ariaLabel="Νέα παραγγελία (Επιλογή πλατφόρμας)" />
+      <FloatingActionButton href="/orders/new" ariaLabel="Νέα παραγγελία" />
     </>
   );
 }

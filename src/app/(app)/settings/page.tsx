@@ -29,7 +29,7 @@ export default function SettingsPage() {
       <div className="app-card p-4 mb-3">
         <div className="fw-semibold mb-2">Install</div>
         <div className="text-secondary small">
-          Android/Chrome: menu → <span className="fw-semibold">Install app</span>. 
+          Android/Chrome: menu → <span className="fw-semibold">Install app</span>.
           iPhone/Safari: Share → <span className="fw-semibold">Add to Home Screen</span>.
         </div>
       </div>
@@ -37,7 +37,7 @@ export default function SettingsPage() {
       <div className="app-card p-4">
         <div className="fw-semibold mb-2">About</div>
         <div className="text-secondary small">
-          Premium mobile-first PWA shell with Bootstrap and Redux Toolkit.
+          {process.env.NEXT_PUBLIC_APP_VERSION}
         </div>
       </div>
     </div>

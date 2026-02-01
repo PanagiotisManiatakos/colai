@@ -4,22 +4,13 @@ import React from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import BottomNav from "@/components/shell/BottomNav";
-import ThemeToggleButton from "@/components/shell/ThemeToggleButton";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
-const TITLE_BY_PATH: Array<{ test: (p: string) => boolean; title: string }> = [
-  { test: (p) => p === "/", title: "Αρχική" },
-  { test: (p) => p.startsWith("/orders/new"), title: "Νέα παραγγελία" }, // added
-  { test: (p) => p.startsWith("/platform/eoppy"), title: "ΕΟΠΥΥ" },
-  { test: (p) => p.startsWith("/platform/ektos-eoppy"), title: "Εκτός ΕΟΠΥΥ" },
-  { test: (p) => p.startsWith("/orders"), title: "Παραγγελίες" },
-  { test: (p) => p.startsWith("/discount-requests"), title: "Αιτήματα" },
-  { test: (p) => p.startsWith("/settings"), title: "Ρυθμίσεις" },
-  { test: (p) => p.startsWith("/offline"), title: "Offline" },
-];
+import { logoutAsync } from "@/features/auth/authSlice";
 
-function getTitle(pathname: string): string {
-  return TITLE_BY_PATH.find((x) => x.test(pathname))?.title ?? "Colai";
-}
+import Dropdown from "react-bootstrap/Dropdown";
+
+
 
 function shouldShowBack(pathname: string): boolean {
   return pathname !== "/";
@@ -28,9 +19,27 @@ function shouldShowBack(pathname: string): boolean {
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
-  const title = getTitle(pathname);
   const showBack = shouldShowBack(pathname);
+
+  const userInfos = useAppSelector((s) => s.auth?.userInfos);
+  const fullName = [userInfos?.fname, userInfos?.lname].filter(Boolean).join(" ") || "Λογαριασμός";
+
+  const onProfile = () => {
+    // change to your actual profile route
+    router.push("/settings/profile");
+  };
+
+  const onLogout = async () => {
+    try {
+
+      await dispatch(logoutAsync());
+      router.replace("/login");
+    } catch (e) {
+
+    }
+  };
 
   return (
     <div className="app-viewport">
@@ -49,14 +58,34 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ) : null}
           </div>
 
-          <div className="text-center flex-grow-1">
-            <div className="fw-semibold" style={{ letterSpacing: "-0.01em" }}>
-              {title}
-            </div>
-          </div>
 
           <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 44 }}>
-            <ThemeToggleButton />
+            <Dropdown align="end">
+              <Dropdown.Toggle
+                id="user-menu"
+                size="sm"
+                variant="outline-secondary"
+                className="app-pill d-inline-flex align-items-center gap-2"
+                aria-label="User menu"
+                style={{ maxWidth: 200 }}
+              >
+                <span className="text-truncate" style={{ maxWidth: 170 }}>
+                  {fullName}
+                </span>
+              </Dropdown.Toggle>
+
+              <Dropdown.Menu>
+                <Dropdown.Item onClick={onProfile}>
+                  <i className="bi bi-person me-2" />
+                  Προφίλ
+                </Dropdown.Item>
+                <Dropdown.Divider />
+                <Dropdown.Item onClick={onLogout}>
+                  <i className="bi bi-box-arrow-right me-2" />
+                  Αποσύνδεση
+                </Dropdown.Item>
+              </Dropdown.Menu>
+            </Dropdown>
           </div>
         </div>
       </header>

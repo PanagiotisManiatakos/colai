@@ -33,19 +33,50 @@ export const logoutAsync = createAsyncThunk("auth/logout", async () => {
     return true;
 });
 
+
+const LS_KEY = "auth";
+
+function loadStateFromLocalStorage(): any | null {
+    if (typeof window === "undefined") return null;
+
+    try {
+        const raw = window.localStorage.getItem(LS_KEY);
+        if (!raw) return null;
+
+        const parsed = JSON.parse(raw) as any;
+        if (!parsed || typeof parsed !== "object") return null;
+
+        return parsed;
+    } catch {
+        return null;
+    }
+}
+
+function persistStateToLocalStorage(state: any) {
+    if (typeof window === "undefined") return;
+
+    try {
+        window.localStorage.setItem(LS_KEY, JSON.stringify(state));
+    } catch {
+        // ignore quota / private mode issues
+    }
+}
+
 const authSlice = createSlice({
     name: "auth",
-    initialState,
+    initialState: () => (loadStateFromLocalStorage() ?? initialState),
     reducers: {
         loginOk(state, action: PayloadAction<{ userInfos: AuthUser }>) {
             state.status = "authenticated";
             state.userInfos = action.payload.userInfos;
             state.error = null;
+            persistStateToLocalStorage(state)
         },
         loginFail(state, action: PayloadAction<string>) {
             state.status = "unauthenticated";
             state.userInfos = null;
             state.error = action.payload;
+            persistStateToLocalStorage(state)
         },
     },
     extraReducers: (b) => {
@@ -53,18 +84,22 @@ const authSlice = createSlice({
             if (action.payload.authenticated) {
                 state.status = "authenticated";
                 //state.user = action.payload.user ?? { username: "user" };
+                persistStateToLocalStorage(state)
             } else {
                 state.status = "unauthenticated";
                 state.userInfos = null;
+                persistStateToLocalStorage(state)
             }
         });
         b.addCase(hydrateAuth.rejected, (state) => {
             state.status = "unauthenticated";
             state.userInfos = null;
+            persistStateToLocalStorage(state)
         });
         b.addCase(logoutAsync.fulfilled, (state) => {
             state.status = "unauthenticated";
             state.userInfos = null;
+            persistStateToLocalStorage(state)
         });
     },
 });

@@ -5,7 +5,7 @@
 */
 
 :root {
-  --app-max-width: 480px;
+  --app-max-width: 540px;
   --app-radius: 18px;
   --app-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
   --app-shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.06);
@@ -78,6 +78,7 @@ body {
 
   padding: 14px 14px 92px;               /* keep your bottom-nav safe space */
 }
+
 .app-card {
   border-radius: var(--app-radius);
   border: 1px solid rgba(0, 0, 0, 0.06);
@@ -97,6 +98,7 @@ body {
 .app-card-pressable:active {
   transform: scale(0.99);
 }
+
 
 .app-pill {
   border-radius: 999px;
@@ -174,15 +176,23 @@ body {
   position: relative;
   overflow: hidden;
   border-radius: var(--app-radius);
+  /* fallback background in case any 1px gap appears */
+  background: rgba(255, 255, 255, 1);
+}
+
+[data-bs-theme="dark"] .swipe-row {
+  background: rgba(13, 18, 31, 1);
 }
 
 .swipe-actions {
   position: absolute;
   inset: 0;
+  margin: 1px;
   display: flex;
   justify-content: flex-end;
   align-items: stretch;
-  pointer-events: none; /* enable only the button */
+  pointer-events: none;
+  z-index: 0;
 }
 
 .swipe-actions .swipe-delete {
@@ -196,12 +206,17 @@ body {
 
 
 .swipe-content {
+  position: relative;
+  z-index: 1;
+
+  /* critical: clip with same radius as row */
+  border-radius: var(--app-radius);
+  overflow: hidden;
+
   will-change: transform;
-  transform: translateX(0);
   transition: transform 160ms ease;
   background: rgba(255, 255, 255, 1);
 }
-
 
 [data-bs-theme="dark"] .swipe-content {
   background: rgba(13, 18, 31, 1);

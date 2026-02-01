@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-
-const COOKIE_NAME = "amsa_token";
+import { cookieName } from "@/lib/auth";
 
 
 export async function GET(req: Request) {
     const jar = cookies();
-    const token = (await jar).get(COOKIE_NAME)?.value;
+    const token = (await jar).get(cookieName)?.value;
 
     if (!token) {
         return NextResponse.json({ ok: false, message: "Not authenticated" }, { status: 401 });

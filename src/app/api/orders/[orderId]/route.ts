@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-
-const COOKIE_NAME = "amsa_token";
+import { cookieName } from "@/lib/auth";
 
 const UPDATE_ORDER_PATH = "/api/update-order";
 
@@ -22,7 +21,7 @@ function backendError(payload: any): string {
 
 export async function GET(_req: Request, ctx: { params: Promise<{ orderId: string }> }) {
     const jar = cookies();
-    const token = (await jar).get(COOKIE_NAME)?.value;
+    const token = (await jar).get(cookieName)?.value;
     if (!token) return NextResponse.json({ ok: false, message: "Not authenticated" }, { status: 401 });
 
     const baseUrl = process.env.AMSA_API_BASE_URL;
@@ -56,7 +55,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ orderId: strin
 
 export async function PATCH(req: Request, ctx: { params: { orderId: string } }) {
     const jar = cookies();
-    const token = (await jar).get(COOKIE_NAME)?.value;
+    const token = (await jar).get(cookieName)?.value;
     if (!token) return NextResponse.json({ ok: false, message: "Not authenticated" }, { status: 401 });
 
     const baseUrl = process.env.AMSA_API_BASE_URL;
@@ -103,4 +102,38 @@ export async function PATCH(req: Request, ctx: { params: { orderId: string } }) 
         null;
 
     return NextResponse.json({ ok: true, order: updated });
+}
+
+export async function DELETE(_req: Request, ctx: { params: Promise<{ orderId: string }> }) {
+    const jar = cookies();
+    const token = (await jar).get(cookieName)?.value;
+    if (!token) return NextResponse.json({ ok: false, message: "Not authenticated" }, { status: 401 });
+
+    const baseUrl = process.env.AMSA_API_BASE_URL;
+    if (!baseUrl) return NextResponse.json({ ok: false, message: "Missing AMSA_API_BASE_URL" }, { status: 500 });
+
+    const id = toNum((await ctx.params).orderId);
+    if (!id) return NextResponse.json({ ok: false, message: "Invalid orderId" }, { status: 400 });
+
+    const url = new URL(_req.url);
+    const uid = url.searchParams.get("uid");
+    if (!uid) return NextResponse.json({ ok: false, message: "Missing uid" }, { status: 400 });
+
+    const res = await fetch(`${baseUrl}/api/order-delete?id=${id}&uid=${uid}`, {
+        method: "DELETE",
+        headers: {
+            Accept: "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+        cache: "no-store",
+    });
+
+    if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        return NextResponse.json({ ok: false, message: t || "Backend fetch failed" }, { status: res.status });
+    }
+
+    const payload = await res.json().catch(() => ({}));
+
+    return NextResponse.json({ ok: true, ...payload });
 }

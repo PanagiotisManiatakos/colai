@@ -68,8 +68,6 @@ export default function LoginPage() {
             >
               <i className="bi bi-shield-lock" style={{ fontSize: "1.4rem" }} />
             </div>
-            <h1 className="h5 fw-semibold mt-3 mb-1">Σύνδεση</h1>
-            <div className="text-secondary small">Συνέχισε για να διαχειριστείς παραγγελίες.</div>
           </div>
 
           <div className="app-card p-4">
@@ -106,7 +104,7 @@ export default function LoginPage() {
                 ) : (
                   <span>
                     <i className="bi bi-box-arrow-in-right me-2" />
-                    Login
+                    Σύνδεση
                   </span>
                 )}
               </button>
