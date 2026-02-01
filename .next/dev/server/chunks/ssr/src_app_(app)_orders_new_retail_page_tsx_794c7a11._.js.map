@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/panag/Desktop/colai/src/app/%28app%29/orders/new/retail/page.tsx"],"sourcesContent":["\"use client\";\r\n\r\nimport OrderWizard from \"@/components/orders/new/OrderRetailWizard\";\r\n\r\nexport default function NewNonEoppyOrderPage() {\r\n\r\n  return (\r\n    <div>\r\n      <div className=\"app-card p-4 mb-3\">\r\n        <h1 className=\"h5 fw-semibold mb-1\">Νέα παραγγελία – Λιανικής</h1>\r\n        <p className=\"text-secondary small mb-0\">\r\n          Συμπλήρωσε τα στοιχεία.\r\n        </p>\r\n      </div>\r\n\r\n      <OrderWizard />\r\n    </div>\r\n  );\r\n}\r\n"],"names":[],"mappings":";;;;;;;;;;AAAA;;;AAIe,SAAS;IAEtB,qBACE,8OAAC;;0BACC,8OAAC;gBAAI,WAAU;;kCACb,8OAAC;wBAAG,WAAU;kCAAsB;;;;;;kCACpC,8OAAC;wBAAE,WAAU;kCAA4B;;;;;;;;;;;;0BAK3C,8OAAC;;;;;;;;;;;AAGP"}}]
+}

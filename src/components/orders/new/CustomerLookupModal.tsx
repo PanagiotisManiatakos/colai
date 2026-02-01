@@ -1,0 +1,163 @@
+"use client";
+
+import React from "react";
+import { Modal } from "react-bootstrap";
+import { useAppDispatch } from "@/store/hooks";
+import { setDraftProperty } from "@/features/orders/ordersSlice";
+import AppLoader from "@/components/ui/AppLoader";
+
+export type CustomerSearchResult = {
+    explain?: string;
+    iS_CERTIFIED_PHONE: number;
+    pE_ActivityCode?: string;
+    pE_Code?: string;
+    pE_DEAD_ALIVE?: number;
+    pE_NAME?: string;
+    PE_REMARKS?: string;
+    pE_TaxRegNum?: string;
+    peS_Address1?: string;
+    peS_Area?: string;
+    peS_CityCode?: string;
+    peS_Country?: string;
+    peS_FPOSTALCODE?: string;
+    peS_FSiteGID?: string;
+    peS_KindSite?: number;
+    peS_STATUS?: number;
+    tR_Code?: string;
+    tR_GID?: string;
+    tR_Name?: string;
+    tR_REMARKS?: string;
+    tR_StringField5?: string;
+    tR_fPersonCodeGID?: string;
+};
+
+export default function CustomerLookupModal({
+    show,
+    onClose,
+    initialQuery = "",
+}: {
+    show: boolean;
+    onClose: () => void;
+    initialQuery?: string;
+}) {
+    const dispatch = useAppDispatch();
+    const [q, setQ] = React.useState(initialQuery);
+    const [loading, setLoading] = React.useState(false);
+    const [error, setError] = React.useState<string | null>(null);
+    const [results, setResults] = React.useState<CustomerSearchResult[]>([]);
+
+    React.useEffect(() => {
+        if (show) {
+            setQ(initialQuery);
+            setResults([]);
+            setError(null);
+        }
+    }, [show, initialQuery]);
+
+    async function search() {
+        const query = q.trim();
+        if (query.length < 2) return;
+
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await fetch(`/api/customers?q=${encodeURIComponent(query)}`, {
+                cache: "no-store",
+            });
+            const data = await res.json().catch(() => ({}));
+
+            if (!res.ok || !data?.ok) {
+                throw new Error(data?.message || "Search failed");
+            }
+
+            setResults((data.listCustomers ?? []) as CustomerSearchResult[]);
+        } catch (e: any) {
+            setError(e?.message || "Search failed");
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function applyCustomer(c: CustomerSearchResult) {
+        console.log(c)
+        dispatch(setDraftProperty({ key: "customer_ErpGID", value: c.tR_GID }))
+        dispatch(setDraftProperty({ key: "customer_name", value: c.pE_NAME }));
+        dispatch(setDraftProperty({ key: "customer_amka", value: c.tR_StringField5 }));
+        dispatch(setDraftProperty({ key: "customer_address", value: c.peS_Address1 }));
+        dispatch(setDraftProperty({ key: "customer_city", value: c.peS_CityCode }));
+        dispatch(setDraftProperty({ key: "customer_tk", value: c.peS_FPOSTALCODE }));
+        dispatch(setDraftProperty({ key: "customer_tel", value: "" }));
+        dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
+        dispatch(setDraftProperty({ key: "customer_email", value: "" }));
+
+        onClose();
+    }
+
+    return (
+        <Modal show={show} onHide={onClose} centered contentClassName="premium-modal">
+            <Modal.Header closeButton>
+                <Modal.Title className="h6 mb-0">Αναζήτηση ασθενή</Modal.Title>
+            </Modal.Header>
+
+            <Modal.Body>
+                <div className="app-card p-3">
+                    <label className="form-label small text-secondary mb-2">
+                        Αναζήτησε με ΑΜΚΑ / Όνομα
+                    </label>
+
+                    <div className="d-flex gap-2">
+                        <input
+                            className="form-control"
+                            value={q}
+                            onChange={(e) => setQ(e.target.value)}
+                            placeholder="π.χ. 12345678901 ή Παπαδόπουλος"
+                            inputMode="search"
+                            autoFocus
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") search();
+                            }}
+                        />
+                        <button type="button" className="btn btn-primary" onClick={search} disabled={q.trim().length < 2 || loading}>
+                            <i className="bi bi-search" />
+                        </button>
+                    </div>
+
+                    {error ? <div className="alert alert-danger py-2 small mt-3 mb-0">{error}</div> : null}
+                </div>
+
+                <div className="mt-3">
+                    {loading ? (
+                        <AppLoader label="Αναζήτηση…" card={false} />
+                    ) : results.length ? (
+                        <div className="mt-3 modal-results-scroll">
+                            {loading ? (
+                                <AppLoader label="Αναζήτηση…" card={false} />
+                            ) : results.length ? (
+                                <div className="list-group">
+                                    {results.map((r, idx) => (
+                                        <button
+                                            key={idx}
+                                            type="button"
+                                            className="list-group-item list-group-item-action"
+                                            onClick={() => applyCustomer(r)}
+                                        >
+                                            <div className="fw-semibold">{r.pE_NAME || "—"}</div>
+                                            <div className="small text-secondary">AMKA: {r.tR_StringField5 || "—"}</div>
+                                            <div className="small text-secondary">
+                                                Διέυθυνση: {`${r.peS_CityCode ?? ""} ${r.peS_Address1 ?? ""}`}
+                                            </div>
+                                        </button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-secondary small text-center py-3">Δεν υπάρχουν αποτελέσματα.</div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="text-secondary small text-center py-3">Δεν υπάρχουν αποτελέσματα.</div>
+                    )}
+                </div>
+            </Modal.Body>
+        </Modal>
+    );
+}

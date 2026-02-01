@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/panag/Desktop/colai/src/app/api/auth/me/route.ts"],"sourcesContent":["import { NextResponse } from \"next/server\";\r\nimport { cookies } from \"next/headers\";\r\n\r\nconst COOKIE_NAME = \"amsa_token\";\r\n\r\nexport async function GET() {\r\n    const jar = await cookies();\r\n    const token = jar.get(COOKIE_NAME)?.value;\r\n\r\n    if (!token) {\r\n        return NextResponse.json({ ok: true, authenticated: false });\r\n    }\r\n\r\n    // Minimal: just confirm session exists.\r\n    // Later you can call a backend /me endpoint if Swagger provides one.\r\n    return NextResponse.json({\r\n        ok: true,\r\n        authenticated: true,\r\n        user: { username: \"user\" },\r\n    });\r\n}\r\n"],"names":[],"mappings":";;;;AAAA;AACA;;;AAEA,MAAM,cAAc;AAEb,eAAe;IAClB,MAAM,MAAM,MAAM,IAAA,4IAAO;IACzB,MAAM,QAAQ,IAAI,GAAG,CAAC,cAAc;IAEpC,IAAI,CAAC,OAAO;QACR,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,IAAI;YAAM,eAAe;QAAM;IAC9D;IAEA,wCAAwC;IACxC,qEAAqE;IACrE,OAAO,gJAAY,CAAC,IAAI,CAAC;QACrB,IAAI;QACJ,eAAe;QACf,MAAM;YAAE,UAAU;QAAO;IAC7B;AACJ"}}]
+}

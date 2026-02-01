@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 46, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/panag/Desktop/colai/src/app/api/eoppy/upload/route.ts"],"sourcesContent":["import { NextResponse } from \"next/server\";\n\nexport async function POST(req: Request) {\n  try {\n    const form = await req.formData();\n    const file = form.get(\"file\");\n\n    if (!file || !(file instanceof File)) {\n      return new NextResponse(\"Missing file\", { status: 400 });\n    }\n\n    // Demo endpoint: in a real app you would\n    // - upload to S3 / server storage\n    // - trigger OCR/AI processing\n    // - return parsed fields\n\n    return NextResponse.json({ ok: true, filename: file.name });\n  } catch {\n    return new NextResponse(\"Upload failed\", { status: 500 });\n  }\n}\n"],"names":[],"mappings":";;;;AAAA;;AAEO,eAAe,KAAK,GAAY;IACrC,IAAI;QACF,MAAM,OAAO,MAAM,IAAI,QAAQ;QAC/B,MAAM,OAAO,KAAK,GAAG,CAAC;QAEtB,IAAI,CAAC,QAAQ,CAAC,CAAC,gBAAgB,IAAI,GAAG;YACpC,OAAO,IAAI,gJAAY,CAAC,gBAAgB;gBAAE,QAAQ;YAAI;QACxD;QAEA,yCAAyC;QACzC,kCAAkC;QAClC,8BAA8B;QAC9B,yBAAyB;QAEzB,OAAO,gJAAY,CAAC,IAAI,CAAC;YAAE,IAAI;YAAM,UAAU,KAAK,IAAI;QAAC;IAC3D,EAAE,OAAM;QACN,OAAO,IAAI,gJAAY,CAAC,iBAAiB;YAAE,QAAQ;QAAI;IACzD;AACF"}}]
+}
