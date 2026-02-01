@@ -45,6 +45,7 @@ export default function CustomerLookupModal({
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [results, setResults] = React.useState<CustomerSearchResult[]>([]);
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
 
     React.useEffect(() => {
         if (show) {
@@ -55,8 +56,8 @@ export default function CustomerLookupModal({
     }, [show, initialQuery]);
 
     async function search() {
+        inputRef.current?.blur();
         const query = q.trim();
-        if (query.length < 2) return;
 
         setLoading(true);
         setError(null);
@@ -107,6 +108,7 @@ export default function CustomerLookupModal({
 
                     <div className="d-flex gap-2">
                         <input
+                            ref={inputRef}
                             className="form-control"
                             value={q}
                             onChange={(e) => setQ(e.target.value)}

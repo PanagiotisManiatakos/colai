@@ -11,6 +11,7 @@ export function SearchBar({ placeholder }: { placeholder: string }) {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const [q, setQ] = React.useState("");
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   const qFromUrl = (searchParams.get("search") ?? "").trim();
 
@@ -29,6 +30,8 @@ export function SearchBar({ placeholder }: { placeholder: string }) {
     if (next) params.set("search", next);
     else params.delete("search");
 
+    inputRef.current?.blur();
+
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   }
   return (
@@ -40,10 +43,11 @@ export function SearchBar({ placeholder }: { placeholder: string }) {
     >
 
       <div className="input-group">
-        <span className="input-group-text">
+        {/* <span className="input-group-text">
           <i className="bi bi-search" />
-        </span>
+        </span> */}
         <input
+          ref={inputRef}
           className="form-control"
           type="search"
           inputMode="search"

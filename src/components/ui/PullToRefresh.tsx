@@ -131,20 +131,24 @@ export default function PullToRefresh({
             >
                 <div className="ptr-pill">
                     {showSpinner ? (
-                        <span className="spinner-border spinner-border-sm" aria-hidden />
+                        <div
+                            className="premium-loader ptr-premium-loader"
+                            style={{ width: 22, height: 22 }}
+                            aria-label="Ανανέωση…"
+                            role="status"
+                        />
                     ) : (
                         <i
                             className="bi bi-arrow-down"
-                            style={{ transform: `rotate(${rotate}deg)`, transition: pullingRef.current ? "none" : "transform 160ms ease" }}
+                            style={{
+                                transform: `rotate(${rotate}deg)`,
+                                transition: pullingRef.current ? "none" : "transform 160ms ease",
+                            }}
                         />
                     )}
 
                     <span className="ptr-text">
-                        {showSpinner
-                            ? "Ανανέωση…"
-                            : armed
-                                ? "Άφησε για ανανέωση"
-                                : "Τράβηξε προς τα κάτω"}
+                        {showSpinner ? "Ανανέωση…" : armed ? "Άφησε για ανανέωση" : "Τράβηξε προς τα κάτω"}
                     </span>
                 </div>
             </div>
