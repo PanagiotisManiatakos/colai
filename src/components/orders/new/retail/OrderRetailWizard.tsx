@@ -64,7 +64,7 @@ export default function OrderRetailWizard() {
         {currentLabel === "Checkout" ? <CompletionArea /> : null}
       </div>
 
-      <div className="pt-3" style={{ flex: "0 0 auto" }}>
+      <div className="pb-3 pt-1" style={{ flex: "0 0 auto" }}>
         <div className="d-flex gap-2">
           <button
             type="button"
@@ -73,18 +73,18 @@ export default function OrderRetailWizard() {
             disabled={step === 0}
           >
             <i className="bi bi-chevron-left me-2" />
-            Back
+            Πίσω
           </button>
 
           {step < maxStep ? (
             <button type="button" className="btn btn-primary flex-fill" onClick={goNext}>
-              Next
+              Επόμενο
               <i className="bi bi-chevron-right ms-2" />
             </button>
           ) : (
             <button type="button" className="btn btn-success flex-fill" onClick={onSave}>
               <i className="bi bi-check2-circle me-2" />
-              Save
+              Αποθήκευση
             </button>
           )}
         </div>

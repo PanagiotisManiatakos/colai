@@ -13,6 +13,7 @@ export default function NewOrderPage() {
   const groupid = useAppSelector((state: any) => state.orders.draft.order?.groupid);
   const loading = useAppSelector((state: any) => state.orders.draft.editState.loading);
   const reduxError = useAppSelector((state: any) => state.orders.draft.editState.error);
+  const [bLoading, setLoading] = React.useState(false)
 
   const [error, setError] = React.useState<string | null>(null);
   const dispatch = useAppDispatch();
@@ -42,9 +43,12 @@ export default function NewOrderPage() {
     }
   };
 
+  React.useEffect(() => {
+    if (loading) setLoading(true);
+  }, [loading])
+
   return (
     <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
-      {/* SCROLLABLE CONTENT */}
       <div className="flex-grow-1 overflow-auto" style={{ minHeight: 0 }}>
         <div className="mb-3">
           <div className="d-flex align-items-center justify-content-between">
@@ -78,13 +82,13 @@ export default function NewOrderPage() {
       </div>
 
       {/* FIXED BOTTOM BUTTONS */}
-      <div className="pt-3" style={{ flex: "0 0 auto" }}>
+      <div className="pb-3 pt-1" style={{ flex: "0 0 auto" }}>
         <div className="d-flex gap-2">
           <button
             type="button"
             className="btn btn-outline-secondary flex-fill"
             onClick={() => {
-              router.back();
+              router.replace('/orders');
               dispatch(deletedDraftTemplate());
             }}
             disabled={loading}
@@ -93,7 +97,7 @@ export default function NewOrderPage() {
           </button>
 
           <button type="button" className="btn btn-primary flex-fill" onClick={handleContinue} disabled={loading}>
-            {loading ? "Φόρτωση…" : "Επόμενο"}
+            {bLoading ? "Φόρτωση…" : "Επόμενο"}
           </button>
         </div>
       </div>

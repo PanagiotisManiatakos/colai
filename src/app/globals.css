@@ -1,20 +1,27 @@
-/*
-  Mobile-first (mobile-only) premium UI shell
-  - Bootstrap provides base styles
-  - These styles add a modern, app-like look
-*/
-
 :root {
   --app-max-width: 540px;
   --app-radius: 18px;
   --app-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
   --app-shadow-soft: 0 8px 24px rgba(0, 0, 0, 0.06);
   --app-border: rgba(255, 255, 255, 0.18);
-  --app-bg:
+
+  /* Base page background (used behind the "phone canvas" and for iOS overscroll blending) */
+  --app-bg-color: #ffffff;
+  --app-bg-image:
     radial-gradient(1200px 600px at 50% -10%, rgba(99, 102, 241, 0.30), transparent 60%),
     radial-gradient(1000px 500px at 15% 110%, rgba(16, 185, 129, 0.18), transparent 55%),
     radial-gradient(900px 450px at 85% 120%, rgba(59, 130, 246, 0.16), transparent 55%),
     linear-gradient(180deg, rgba(15, 23, 42, 0.04), rgba(15, 23, 42, 0.02));
+}
+
+/* Dark theme page background */
+[data-bs-theme="dark"] {
+  --app-bg-color: #0b1220;
+  --app-bg-image:
+    radial-gradient(1200px 600px at 50% -10%, rgba(99, 102, 241, 0.28), transparent 60%),
+    radial-gradient(1000px 500px at 15% 110%, rgba(16, 185, 129, 0.16), transparent 55%),
+    radial-gradient(900px 450px at 85% 120%, rgba(59, 130, 246, 0.14), transparent 55%),
+    linear-gradient(180deg, rgba(11, 18, 32, 0.85), rgba(11, 18, 32, 0.85));
 }
 
 html,
@@ -24,14 +31,12 @@ body {
 
 body {
   margin: 0;
-  background: var(--app-bg);
+  background-color: var(--app-bg-color);
+  background-image: var(--app-bg-image);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-  /* critical: stop document scrolling (prevents pull-to-refresh) */
   overflow: hidden;
-
-  /* optional but helps iOS be strict */
   position: fixed;
   width: 100%;
 }
@@ -76,7 +81,7 @@ body {
   overflow-y: auto;                      /* scrolling lives here */
   -webkit-overflow-scrolling: touch;     /* iOS momentum scrolling */
   min-height: 0;
-  padding: 14px 14px 92px;               /* keep your bottom-nav safe space */
+  padding: 14px 14px 57px;               /* keep your bottom-nav safe space */
 }
 
 .app-card {
@@ -111,7 +116,7 @@ body {
   transform: translateX(-50%);
   bottom: 0;
   width: min(100%, var(--app-max-width));
-  padding-bottom: max(10px, env(safe-area-inset-bottom));
+  /* padding-bottom: max(10px, env(safe-area-inset-bottom)); */
   background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);

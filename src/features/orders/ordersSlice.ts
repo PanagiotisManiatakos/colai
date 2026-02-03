@@ -41,8 +41,12 @@ export const fetchOrders = createAsyncThunk<Order[], { q?: string; force?: boole
   "orders/fetchOrders",
   async (arg) => {
     const q = typeof arg === "object" && arg?.q ? arg.q : "";
-    const res = await fetch(`/api/orders${q ? `?search=${encodeURIComponent(q)}` : ""}`, {
+    const res = await fetch(`/api/orders?_ts=${Date.now()}${q ? `&search=${encodeURIComponent(q)}` : ""}`, {
       cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      }
     });
 
     const data = await res.json().catch(() => ({}));
@@ -74,7 +78,7 @@ export const fetchOrders = createAsyncThunk<Order[], { q?: string; force?: boole
 export const fetchOrderById = createAsyncThunk<any, { orderId: number; orderUID: string }>(
   "orders/fetchOrderById",
   async ({ orderId, orderUID }) => {
-    const res = await fetch(`/api/orders/${orderId}?uid=${orderUID}`, { cache: "no-store" });
+    const res = await fetch(`/api/orders/${orderId}?_ts=${Date.now()}&uid=${orderUID}`, { cache: "no-store" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok || !data?.ok) throw new Error(data?.message || "Failed to load order");
     return data;
@@ -120,9 +124,13 @@ export const editDraftAsync = createAsyncThunk<any, void, { state: RootState }>(
   async (_, thunkApi) => {
     const state = thunkApi.getState();
     const { type, groupid } = state.orders.draft.order;
-    const res = await fetch(`/api/orders/edit?typeid=${type}&catid=${groupid}`, {
+    const res = await fetch(`/api/orders/edit?_ts=${Date.now()}&typeid=${type}&catid=${groupid}`, {
       method: "GET",
-      headers: { "Content-Type": "application/json" },
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
+      },
     });
 
     const data = await res.json().catch(() => ({}));

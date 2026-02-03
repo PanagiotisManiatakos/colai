@@ -6,7 +6,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import OrderDetailsViewCustomerInfo from "./view/OrderDetailsViewCustomerInfo";
 import OrderDetailsViewDoctorInfo from "./view/OrderDetailsViewDoctorInfo";
 
-export default function OrderDetailsView({order,mode,value,}: {
+export default function OrderDetailsView({ order, mode, value, }: {
   order: Order;
   mode: "view" | "edit";
   value: Partial<Order>;
@@ -28,7 +28,7 @@ export default function OrderDetailsView({order,mode,value,}: {
         </div>
       </div>
 
-     <OrderDetailsViewCustomerInfo order={order} />
+      <OrderDetailsViewCustomerInfo order={order} />
 
       <OrderDetailsViewDoctorInfo order={order} />
 
@@ -42,7 +42,7 @@ export default function OrderDetailsView({order,mode,value,}: {
         />
       </div>
 
-      <div className="app-card p-3">
+      <div className="app-card p-3" style={{ marginBottom: 14 }}>
         <div className="fw-semibold mb-2">Παράδοση</div>
 
         <div className="form-check form-switch">

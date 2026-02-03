@@ -164,11 +164,6 @@ function MonthlyTargetCard() {
 export default function HomeStats() {
   return (
     <div className="mb-3">
-      <div className="d-flex align-items-center justify-content-between mb-2">
-        <div className="fw-semibold">Στατιστικά</div>
-        <div className="text-secondary small">Σήμερα</div>
-      </div>
-
       <div className="row g-3 mb-3">
         <MetricCard
           title="Παραγγελίες Μήνα"

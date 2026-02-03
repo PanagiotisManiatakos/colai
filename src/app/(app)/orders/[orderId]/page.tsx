@@ -29,20 +29,23 @@ export default function OrderViewPage() {
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
-    <div>
-      {/* <div className="d-flex gap-2 mb-3">
+    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
+      <div className="flex-grow-1 overflow-auto" style={{ minHeight: 0 }}>
+
+        {/* <div className="d-flex gap-2 mb-3">
         <Link href="/orders" className="btn btn-outline-secondary flex-fill">
           <i className="bi bi-chevron-left me-2" />
           Back
-        </Link>
+          </Link>
 
-        <Link href={`/orders/${order.id}/edit`} className="btn btn-primary flex-fill">
+          <Link href={`/orders/${order.id}/edit`} className="btn btn-primary flex-fill">
           <i className="bi bi-pencil-square me-2" />
           Edit
-        </Link>
-      </div> */}
+          </Link>
+          </div> */}
 
-      <OrderDetailsView order={order} mode="view" value={{}} />
+        <OrderDetailsView order={order} mode="view" value={{}} />
+      </div>
     </div>
   );
 }

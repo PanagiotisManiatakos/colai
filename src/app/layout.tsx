@@ -30,17 +30,12 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Colai",
   },
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FFF" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d121fcc" },
-  ],
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b1220",
 };
 
 export default function RootLayout({
@@ -50,6 +45,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={outfit.className} suppressHydrationWarning>
+      <head>
+        {/* This tag is updated at runtime when the user toggles Light/Dark */}
+        <meta name="theme-color" content="#0b1220" />
+      </head>
       <body>
         <StoreProvider>
           <BootstrapThemeSync />

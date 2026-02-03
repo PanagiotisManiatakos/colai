@@ -1,11 +1,31 @@
 "use client";
 
-import { toggleTheme } from "@/features/settings/settingsSlice";
+import { ThemeMode, toggleTheme } from "@/features/settings/settingsSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+
+const THEME_COLOR: Record<ThemeMode, string> = {
+  light: "#ffffff",
+  dark: "#0b1220",
+};
 
 export default function SettingsPage() {
   const dispatch = useAppDispatch();
   const theme = useAppSelector((s) => s.settings.theme);
+
+  const handleTheming = () => {
+    dispatch(toggleTheme())
+    if (typeof document === "undefined") return;
+
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    meta.content = THEME_COLOR[theme];
+
+    document.body.style.backgroundColor = THEME_COLOR[theme];
+  }
 
   return (
     <div>
@@ -18,7 +38,7 @@ export default function SettingsPage() {
           <button
             type="button"
             className="btn btn-outline-primary app-pill"
-            onClick={() => dispatch(toggleTheme())}
+            onClick={handleTheming}
           >
             <i className={`bi ${theme === "dark" ? "bi-sun" : "bi-moon"} me-2`} />
             {theme === "dark" ? "Light" : "Dark"}
