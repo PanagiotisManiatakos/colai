@@ -30,6 +30,10 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Colai",
   },
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0d121fcc" },
+  ],
 };
 
 export const viewport: Viewport = {
