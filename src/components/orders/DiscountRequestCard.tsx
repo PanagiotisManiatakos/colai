@@ -24,13 +24,13 @@ export default function DiscountRequestCard({
         <div className="me-3">
           <div className="d-flex align-items-center gap-2">
             <span className="badge bg-primary-subtle text-primary">#{request.id}</span>
-            <div className="fw-semibold">{request.recipeNo}</div>
+            <div className="fw-semibold">{request.barcode}</div>
           </div>
-          <div className="text-secondary small mt-1">{request.clientName}</div>
+          <div className="text-secondary small mt-1">{request.customer_name}</div>
         </div>
 
         <div className="text-end">
-          <StatusBadge status={request.status} />
+          {/* <StatusBadge status={request.status} /> */}
           <div className="small text-secondary mt-1">
             €{request.requestedPrice.toFixed(2)}
           </div>
@@ -43,20 +43,20 @@ export default function DiscountRequestCard({
         <div className="row g-2">
           <div className="col-12">
             <div className="small text-secondary">Ημερομηνία Συνταγής</div>
-            <div className="fw-medium">{request.dateCreated}</div>
+            <div className="fw-medium">{request.dateOfSyntagi}</div>
           </div>
           <div className="col-12">
             <div className="small text-secondary">Ημερομηνία Υποβολής</div>
-            <div className="fw-medium">{request.dateSubmitted}</div>
+            <div className="fw-medium">{request.dateIn}</div>
           </div>
           <div className="col-12">
             <div className="small text-secondary">ΑΜΚΑ Πελάτη</div>
-            <div className="fw-medium">{request.clientAmka}</div>
+            <div className="fw-medium">{request.customer_amka}</div>
           </div>
           <div className="col-12">
             <div className="small text-secondary">Ιατρός</div>
-            <div className="fw-medium">{request.doctorName}</div>
-            <div className="text-secondary small">AMKA: {request.doctorAmka}</div>
+            <div className="fw-medium">{request.doctor_name}</div>
+            <div className="text-secondary small">AMKA: {request.doctor_amka}</div>
           </div>
         </div>
 
@@ -64,7 +64,7 @@ export default function DiscountRequestCard({
           <button
             type="button"
             className="btn btn-outline-secondary flex-fill"
-            onClick={() => void navigator.clipboard?.writeText(request.recipeNo)}
+            onClick={() => void navigator.clipboard?.writeText(request.barcode)}
           >
             <i className="bi bi-clipboard me-2" />
             Copy

@@ -17,11 +17,11 @@ export default function DiscountRequestsPage() {
     return requests.filter((r) =>
       [
         r.id.toString(),
-        r.recipeNo,
-        r.clientName,
-        r.clientAmka,
-        r.doctorName,
-        r.doctorAmka,
+        r.barcode,
+        r.customer_name,
+        r.customer_amka,
+        r.doctor_name,
+        r.doctor_amka,
         r.status,
         r.requestedPrice.toString(),
       ]
@@ -34,7 +34,7 @@ export default function DiscountRequestsPage() {
   return (
     <div>
       <div className="app-card p-3 mb-3">
-        <SearchBar value={q} onChange={setQ} placeholder="Αναζήτηση αιτήματος…" />
+        <SearchBar placeholder="Αναζήτηση αιτήματος…" />
       </div>
 
       {filtered.length ? (
@@ -42,8 +42,8 @@ export default function DiscountRequestsPage() {
           <DiscountRequestCard
             key={r.id}
             request={r}
-            // onApprove={() => dispatch(approveDiscount(r.id))}
-            // onDeny={() => dispatch(denyDiscount(r.id))}
+          // onApprove={() => dispatch(approveDiscount(r.id))}
+          // onDeny={() => dispatch(denyDiscount(r.id))}
           />
         ))
       ) : (

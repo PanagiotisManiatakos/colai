@@ -53,7 +53,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ orderId: strin
     return NextResponse.json({ ok: true, ...payload.data });
 }
 
-export async function PATCH(req: Request, ctx: { params: { orderId: string } }) {
+export async function PATCH(req: Request, ctx: { params: Promise<{ orderId: string }> }) {
     const jar = cookies();
     const token = (await jar).get(cookieName)?.value;
     if (!token) return NextResponse.json({ ok: false, message: "Not authenticated" }, { status: 401 });
@@ -61,7 +61,7 @@ export async function PATCH(req: Request, ctx: { params: { orderId: string } }) 
     const baseUrl = process.env.AMSA_API_BASE_URL;
     if (!baseUrl) return NextResponse.json({ ok: false, message: "Missing AMSA_API_BASE_URL" }, { status: 500 });
 
-    const id = toNum(ctx.params.orderId);
+    const id = toNum((await ctx.params).orderId);
     if (!id) return NextResponse.json({ ok: false, message: "Invalid orderId" }, { status: 400 });
 
     const patch = await req.json().catch(() => null);

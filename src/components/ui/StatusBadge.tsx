@@ -1,13 +1,14 @@
 
-const statusB = {
+const statusB: Record<"0" | "1" | "200" | "500", { name: string; variant: string }> = {
   "0": {name: "Σε Αναμονή", variant: "warning"},
   "1": {name: "Καταχωρήθηκε", variant: "success"},
   "200": {name: "Συγχ. με ERP", variant: "success"},
   "500": {name: "Ακυρώθηκε", variant: "danger"},
-}
+};
 export function StatusBadge({status}: {status: number;}) {
-  const variant = statusB[status]?.variant || "secondary";  
-  const name = statusB[status]?.name || status;
+  const key = String(status) as keyof typeof statusB;
+  const variant = statusB[key]?.variant || "secondary";  
+  const name = statusB[key]?.name || status;
 
   return (
     <span

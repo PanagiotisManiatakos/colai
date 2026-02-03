@@ -3,7 +3,7 @@
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchOrderById,  } from "@/features/orders/ordersSlice";
+import { fetchOrderById, } from "@/features/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
 import OrderDetailsForm from "@/components/orders/OrderDetailsForm";
 
@@ -18,13 +18,16 @@ export default function OrderEditPage() {
   const loading = useAppSelector((s) => s.orders.selected?.loading);
   const error = useAppSelector((s) => s.orders.selected?.loadingError);
 
-//   const saving = useAppSelector((s) => s.orders.savingSelected);
-//   const saveError = useAppSelector((s) => s.orders.saveError);
+  //   const saving = useAppSelector((s) => s.orders.savingSelected);
+  //   const saveError = useAppSelector((s) => s.orders.saveError);
 
   //const [patch, setPatch] = React.useState<OrderEditPatch>({});
 
   React.useEffect(() => {
-    if (orderId) dispatch(fetchOrderById(orderId));
+    if (orderId) dispatch(fetchOrderById({
+      orderId,
+      orderUID: ""
+    }));
   }, [dispatch, orderId]);
 
   async function onSave() {
