@@ -9,6 +9,9 @@ type Props = {
     maxPull?: number; // px
     scrollSelector?: string; // default ".app-content"
     children: React.ReactNode;
+    useSelfScroll?: boolean;
+    style?: React.CSSProperties;
+    className?: string;
 };
 
 export default function PullToRefresh({
@@ -16,8 +19,11 @@ export default function PullToRefresh({
     isRefreshing = false,
     threshold = 72,
     maxPull = 120,
+    useSelfScroll = false,
     scrollSelector = ".app-content",
     children,
+    style,
+    className
 }: Props) {
     const containerRef = React.useRef<HTMLDivElement | null>(null);
     const scrollElRef = React.useRef<HTMLElement | null>(null);
@@ -133,7 +139,25 @@ export default function PullToRefresh({
     const showSpinner = isRefreshing;
 
     return (
-        <div ref={containerRef} className="ptr-container">
+        <div
+            ref={containerRef}
+            className={`ptr-container ${className ?? ""}`}
+            style={{
+                // When using self scroll, this element is the scroll container
+                ...(useSelfScroll
+                    ? {
+                        height: "100%",
+                        minHeight: 0,
+                        overflowY: "auto",
+                        overflowX: "hidden",
+                        WebkitOverflowScrolling: "touch",
+                        overscrollBehavior: "contain",
+                        touchAction: "pan-y",
+                    }
+                    : {}),
+                ...style,
+            }}
+        >
             {/* Indicator */}
             <div
                 className="ptr-indicator"

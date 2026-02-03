@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { DiscountRequest, Order, OrderYlika } from "@/types/orders";
+import type { DiscountRequest, OrdeListOfSelections, Order, OrderFile, OrderYlika } from "@/types/orders";
 import type { IDoctorFormData, IPatientFormData, IRecipientFormData } from "@/lib/interface";
 import { RootState } from "@/store/store";
 
@@ -10,6 +10,11 @@ export interface DraftState {
   submitState: { loading: boolean; error: string | null };
   order: Order;
   ylika: OrderYlika[]
+  files: OrderFile[]
+  list_LogosParalipti: OrdeListOfSelections[]
+  list_SygeniaParalipti: OrdeListOfSelections[]
+  list_DiscountReasons: OrdeListOfSelections[]
+  list_TroposApostolis: OrdeListOfSelections[]
 }
 
 export interface SelectedOrderState {
@@ -139,7 +144,12 @@ const initialStateBase: OrdersState = {
     editState: { loading: false, error: null },
     submitState: { loading: false, error: null },
     order: {} as Order,
-    ylika: [] as OrderYlika[]
+    ylika: [] as OrderYlika[],
+    files: [] as OrderFile[],
+    list_DiscountReasons: [] as OrdeListOfSelections[],
+    list_LogosParalipti: [] as OrdeListOfSelections[],
+    list_SygeniaParalipti: [] as OrdeListOfSelections[],
+    list_TroposApostolis: [] as OrdeListOfSelections[],
   },
   selected: null,
   ordersQuery: "",
@@ -166,6 +176,11 @@ function loadStateFromLocalStorage(): OrdersState | null {
         ...initialStateBase.draft,
         order: (parsed?.order ?? initialStateBase.draft.order) as Order,
         ylika: (parsed?.ylika ?? initialStateBase.draft.ylika) as OrderYlika[],
+        files: (parsed?.files ?? initialStateBase.draft.files) as OrderFile[],
+        list_DiscountReasons: (parsed?.list_DiscountReasons ?? initialStateBase.draft.list_DiscountReasons) as OrdeListOfSelections[],
+        list_LogosParalipti: (parsed?.list_LogosParalipti ?? initialStateBase.draft.list_LogosParalipti) as OrdeListOfSelections[],
+        list_SygeniaParalipti: (parsed?.list_SygeniaParalipti ?? initialStateBase.draft.list_SygeniaParalipti) as OrdeListOfSelections[],
+        list_TroposApostolis: (parsed?.list_TroposApostolis ?? initialStateBase.draft.list_TroposApostolis) as OrdeListOfSelections[],
       },
       // optionally persist selected too, but usually not needed:
       // selected: (parsed.selected ?? initialState.selected) as any,
@@ -181,6 +196,11 @@ function persistStateToLocalStorage(state: OrdersState) {
   const toSave = {
     order: state.draft.order,
     ylika: state.draft.ylika,
+    files: state.draft.files,
+    list_DiscountReasons: state.draft.list_DiscountReasons,
+    list_LogosParalipti: state.draft.list_LogosParalipti,
+    list_SygeniaParalipti: state.draft.list_SygeniaParalipti,
+    list_TroposApostolis: state.draft.list_TroposApostolis,
   };
 
   try {
@@ -236,9 +256,9 @@ const ordersSlice = createSlice({
 
       persistStateToLocalStorage(state);
     },
-    setDraftSyntagiUploaded(state, action: PayloadAction<{ filename: string }>) {
-      // state.draft.syntagiUploaded = { filename: action.payload.filename };
-      return state
+    setDraftSyntagiUploaded(state, action: PayloadAction<OrderFile>) {
+      state.draft.files.push(action.payload);
+      persistStateToLocalStorage(state);
     },
     patchDraftPatient(state, action: PayloadAction<Partial<IPatientFormData>>) {
       // state.draft.patient = { ...state.draft.patient, ...action.payload };
@@ -310,7 +330,13 @@ const ordersSlice = createSlice({
       state.draft.editState.loading = false;
       if (action.payload.ok) {
         state.draft.order = action.payload.data.order
-        state.draft.ylika = []
+        state.draft.ylika = [];
+        state.draft.files = [];
+        state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons
+        state.draft.list_LogosParalipti = action.payload.data.list_LogosParalipti
+        state.draft.list_SygeniaParalipti = action.payload.data.list_SygeniaParalipti
+        state.draft.list_TroposApostolis = action.payload.data.list_TroposApostolis
+        persistStateToLocalStorage(state);
       } else {
         state.draft.editState.error = action.payload.message || "Failed to submit order";
       }

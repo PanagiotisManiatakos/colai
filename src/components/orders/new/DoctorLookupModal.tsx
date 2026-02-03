@@ -24,9 +24,11 @@ export type DoctorLookupModal = {
 export default function DoctorLookupModal({
     show,
     onClose,
+    isSuggested,
     initialQuery = "",
 }: {
     show: boolean;
+    isSuggested?: boolean;
     onClose: () => void;
     initialQuery?: string;
 }) {
@@ -69,11 +71,18 @@ export default function DoctorLookupModal({
         }
     }
 
-    function applyCustomer(c: DoctorLookupModal) {
-        dispatch(setDraftProperty({ key: "doctorSuggested_name", value: c.doctoR_NAME }));
-        dispatch(setDraftProperty({ key: "doctorSuggested_amka", value: c.doctoR_AMKA }));
-        dispatch(setDraftProperty({ key: "doctorSuggested_afm", value: c.doctoR_AFM }));
-        dispatch(setDraftProperty({ key: "doctorSuggested_ErpGID", value: c.gid }));
+    function applyDoctor(c: DoctorLookupModal) {
+        if (isSuggested) {
+            dispatch(setDraftProperty({ key: "doctorSuggested_name", value: c.doctoR_NAME }));
+            dispatch(setDraftProperty({ key: "doctorSuggested_amka", value: c.doctoR_AMKA }));
+            dispatch(setDraftProperty({ key: "doctorSuggested_afm", value: c.doctoR_AFM }));
+            dispatch(setDraftProperty({ key: "doctorSuggested_ErpGID", value: c.gid }));
+        } else {
+            dispatch(setDraftProperty({ key: "doctor_name", value: c.doctoR_NAME }));
+            dispatch(setDraftProperty({ key: "doctor_amka", value: c.doctoR_AMKA }));
+            dispatch(setDraftProperty({ key: "doctor_afm", value: c.doctoR_AFM }));
+            dispatch(setDraftProperty({ key: "doctor_ErpGID", value: c.gid }));
+        }
 
         onClose();
     }
@@ -125,7 +134,7 @@ export default function DoctorLookupModal({
                                             key={idx}
                                             type="button"
                                             className="list-group-item list-group-item-action"
-                                            onClick={() => applyCustomer(r)}
+                                            onClick={() => applyDoctor(r)}
                                         >
                                             <div className="fw-semibold">{r.doctoR_NAME || "—"}</div>
                                             <div className="small text-secondary">AMKA: {r.doctoR_AMKA || "—"}</div>

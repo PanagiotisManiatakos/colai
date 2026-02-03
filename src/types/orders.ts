@@ -131,6 +131,34 @@ export type OrderYlika = {
   kostos_EOPPY?: number
 };
 
+export type OrderFile = {
+  id?: number;
+  uid?: string;
+  orderId?: number;
+  orderUID?: string;
+  originalFileName?: string;
+  name?: string;
+  fileType?: string;
+  fileSize?: string;
+  documentCategory?: string;
+  extractedText?: string;
+  dateIn?: any;
+  sellerComments?: string;
+  adminComments?: string;
+  useInAI?: number;
+  position?: number;
+  hasValidData?: number;
+  document_category?: string;
+  base64filename?: string
+};
+
+export type OrdeListOfSelections = {
+  disabled: boolean;
+  selected: boolean;
+  text: string;
+  value: string
+}
+
 
 export interface DiscountRequest extends Order {
   kind: "discountRequest";

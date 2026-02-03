@@ -15,15 +15,6 @@ export default function NewNonEoppyOrderPage() {
   }, []);
 
   return (
-    <div>
-      {/* <div className="app-card p-4 mb-3">
-        <h1 className="h5 fw-semibold mb-1">Νέα παραγγελία – Λιανικής</h1>
-        <p className="text-secondary small mb-0">
-          Συμπλήρωσε τα στοιχεία.
-        </p>
-      </div> */}
-
-      <OrderWizard />
-    </div>
+    <OrderWizard />
   );
 }

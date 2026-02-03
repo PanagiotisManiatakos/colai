@@ -53,39 +53,41 @@ export default function OrderRetailWizard() {
   const currentLabel = effectiveSteps[step];
 
   return (
-    <div>
-      <StepIndicator steps={effectiveSteps as unknown as string[]} current={step} setStep={setStep} />
+    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
+      <div style={{ flex: "0 0 auto" }}>
+        <StepIndicator steps={effectiveSteps as unknown as string[]} current={step} setStep={setStep} />
+      </div>
+      <div className="flex-grow-1 overflow-auto" style={{ minHeight: 0 }}>
+        {currentLabel === "Ασθενής" ? <OrderRetailCustomerArea /> : null}
+        {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}
+        {currentLabel === "Υλικά" ? <MaterialsArea /> : null}
+        {currentLabel === "Checkout" ? <CompletionArea /> : null}
+      </div>
 
-      {currentLabel === "Ασθενής" ? <OrderRetailCustomerArea /> : null}
-
-      {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}
-
-      {currentLabel === "Υλικά" ? <MaterialsArea /> : null}
-
-      {currentLabel === "Checkout" ? <CompletionArea /> : null}
-
-      <div className="d-flex gap-2 mt-3">
-        <button
-          type="button"
-          className="btn btn-outline-secondary flex-fill"
-          onClick={goPrev}
-          disabled={step === 0 || loading}
-        >
-          <i className="bi bi-chevron-left me-2" />
-          Πίσω
-        </button>
-
-        {step < maxStep ? (
-          <button type="button" className="btn btn-primary flex-fill" onClick={goNext}>
-            Επόμενο
-            <i className="bi bi-chevron-right ms-2" />
+      <div className="pt-3" style={{ flex: "0 0 auto" }}>
+        <div className="d-flex gap-2">
+          <button
+            type="button"
+            className="btn btn-outline-secondary flex-fill"
+            onClick={goPrev}
+            disabled={step === 0}
+          >
+            <i className="bi bi-chevron-left me-2" />
+            Back
           </button>
-        ) : (
-          <button type="button" className="btn btn-success flex-fill" disabled={loading} onClick={onSave}>
-            <i className="bi bi-check2-circle me-2" />
-            {loading ? "Αποθηκέυεται..." : "Αποθήκευση"}
-          </button>
-        )}
+
+          {step < maxStep ? (
+            <button type="button" className="btn btn-primary flex-fill" onClick={goNext}>
+              Next
+              <i className="bi bi-chevron-right ms-2" />
+            </button>
+          ) : (
+            <button type="button" className="btn btn-success flex-fill" onClick={onSave}>
+              <i className="bi bi-check2-circle me-2" />
+              Save
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

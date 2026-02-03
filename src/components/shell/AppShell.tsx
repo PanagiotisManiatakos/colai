@@ -42,7 +42,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="app-viewport">
+    <div className="app-viewport d-flex flex-column">
       <header className="app-header">
         <div className="px-3 d-flex align-items-center justify-content-between">
           <div className="d-flex align-items-center gap-2" style={{ minWidth: 44 }}>
@@ -90,7 +90,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="app-content">{children}</main>
+      <main className="app-content flex-grow-1 overflow-hidden">{children}</main>
       <BottomNav />
     </div>
   );

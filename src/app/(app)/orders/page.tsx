@@ -33,8 +33,11 @@ export default function OrdersPage() {
   const showInitialLoader = listLoading && orders.length === 0;
 
   return (
-    <>
-      <PullToRefresh onRefresh={onRefresh} isRefreshing={refreshing}>
+    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
+      <PullToRefresh useSelfScroll
+        className="flex-grow-1"
+        onRefresh={onRefresh}
+        isRefreshing={refreshing}>
         <div className="app-card p-3 mb-3">
           <SearchBar placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)" />
         </div>
@@ -49,6 +52,6 @@ export default function OrdersPage() {
       </PullToRefresh>
 
       <FloatingActionButton href="/orders/new" ariaLabel="Νέα παραγγελία" />
-    </>
+    </div>
   );
 }
