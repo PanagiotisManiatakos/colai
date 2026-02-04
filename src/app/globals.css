@@ -33,7 +33,7 @@ html[data-bs-theme="dark"] {
 
 html[data-pwa="true"]:root{
   --app-nav-height:100px;
-    --safe-bottom:0px
+  --safe-bottom:0px
 }
 
 html[data-pwa="true"] {
@@ -48,7 +48,7 @@ html[data-pwa="true"] .app-header {
 }
 
 html[data-pwa="true"] .app-content {
-  padding-bottom: max(18px, calc(18px + var(--app-nav-height) - env(safe-area-inset-bottom)));
+  padding-bottom: max(18px, calc(18px + var(--app-nav-height) - var(--safe-bottom)));
 }
 
 html[data-pwa="true"] .app-bottom-nav {
