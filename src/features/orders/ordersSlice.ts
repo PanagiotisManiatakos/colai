@@ -132,8 +132,8 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
 
 export const editDraftAsync = createAsyncThunk<any, { typeid: string; catid: number, uid?: string }, { state: RootState }>(
   "orders/editDraftAsync",
-  async ({ typeid, catid, uid = null }) => {
-    const res = await fetch(`/api/orders/edit?_ts=${Date.now()}&uid=${uid}&typeid=${typeid}&catid=${catid}`, {
+  async ({ typeid, catid, uid }) => {
+    const res = await fetch(`/api/orders/edit?_ts=${Date.now()}&typeid=${typeid}&catid=${catid}${uid ? `&uid=${uid}` : ""}`, {
       method: "GET",
       cache: "no-store",
       headers: {
