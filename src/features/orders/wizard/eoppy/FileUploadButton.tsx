@@ -130,6 +130,7 @@ export default function FileUploadButton({
                 className={className}
                 aria-label={ariaLabel}
                 disabled={disabled}
+                style={{ borderRadius: 50 }}
                 onClick={() => inputRef.current?.click()}
             >
                 {children ?? <i className="bi bi-plus-lg" />}

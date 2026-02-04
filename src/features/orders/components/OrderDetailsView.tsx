@@ -3,8 +3,8 @@
 import type { Order } from "@/types/orders";
 import { formatUIDate } from "@/lib/utils/date";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import OrderDetailsViewCustomerInfo from "./view/OrderDetailsViewCustomerInfo";
-import OrderDetailsViewDoctorInfo from "./view/OrderDetailsViewDoctorInfo";
+import OrderDetailsViewCustomerInfo from "../view/OrderDetailsViewCustomerInfo";
+import OrderDetailsViewDoctorInfo from "../view/OrderDetailsViewDoctorInfo";
 
 export default function OrderDetailsView({ order, mode, value, }: {
   order: Order;

@@ -8,12 +8,10 @@ const STORAGE_KEY = "colai_theme";
 
 const THEME_COLOR: Record<ThemeMode, string> = {
   light: "#ffffff",
-  dark: "#272729",
+  dark: "#0b1220",
 };
 
 function setThemeColor(color: string) {
-  if (typeof document === "undefined") return;
-
   let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
   if (!meta) {
     meta = document.createElement("meta");
@@ -21,9 +19,7 @@ function setThemeColor(color: string) {
     document.head.appendChild(meta);
   }
   meta.content = color;
-
   document.documentElement.style.backgroundColor = color;
-  document.body.style.backgroundColor = color;
 }
 
 export function BootstrapThemeSync() {
@@ -31,9 +27,7 @@ export function BootstrapThemeSync() {
   const theme = useAppSelector((s) => s.settings.theme);
 
   useEffect(() => {
-    const stored = (typeof window !== "undefined" &&
-      localStorage.getItem(STORAGE_KEY)) as ThemeMode | null;
-
+    const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null;
     if (stored === "light" || stored === "dark") {
       dispatch(setTheme(stored));
       return;
@@ -44,11 +38,8 @@ export function BootstrapThemeSync() {
   }, [dispatch]);
 
   useEffect(() => {
-    if (typeof document === "undefined") return;
-
     document.documentElement.setAttribute("data-bs-theme", theme);
     localStorage.setItem(STORAGE_KEY, theme);
-
     setThemeColor(THEME_COLOR[theme] ?? "#0b1220");
   }, [theme]);
 

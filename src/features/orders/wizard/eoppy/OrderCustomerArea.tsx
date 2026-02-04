@@ -1,6 +1,6 @@
 import { setDraftProperty } from "@/features/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import CustomerLookupModal from "../CustomerLookupModal";
+import CustomerLookupModal from "../modals/CustomerLookupModal";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
 
@@ -18,7 +18,7 @@ function Field({ label, children, hint }: {
     );
 }
 
-export default function OrderRetailCustomerArea() {
+export default function OrderCustomerArea() {
     const data = useAppSelector((s) => s.orders.draft.order);
     const dispatch = useAppDispatch()
     const [showLookup, setShowLookup] = React.useState(false);
@@ -238,6 +238,134 @@ export default function OrderRetailCustomerArea() {
                         </FormSelect>
                     </Field>
                 )}
+
+
+            <div className="form-check form-switch mb-2">
+                <input
+                    className="form-check-input"
+                    name="hasOtherRecipientBool"
+                    type="checkbox"
+                    checked={data.hasOtherRecipientBool}
+                    onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "hasOtherRecipientBool", value: e.target.checked }))
+                        dispatch(setDraftProperty({ key: "person_ErpGID", value: e.target.checked ? null : preselected_person_GID }))
+                        dispatch(setDraftProperty({ key: "address_ErpGID", value: e.target.checked ? null : preselected_address_GID }))
+                    }
+                    }
+                    id="hasOtherRecipientBool"
+                />
+                <label className="form-check-label" htmlFor="hasOtherRecipientBool">
+                    Θα παραλάβει άλλος
+                </label>
+            </div>
+
+            {data.hasOtherRecipientBool &&
+                <>
+                    <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                        <div className="fw-semibold">Στοιχεία Παραλήπτη</div>
+                    </div>
+
+                    <Field label="Αιτία παραλαβής">
+                        <FormSelect name="recipient_reason_id" value={data.recipient_reason_id ?? ""} onChange={e => dispatch(setDraftProperty({ key: "recipient_reason_id", value: e.target.value }))}>
+                            <option value=""></option>
+                            {listReceiptientReasons.map((x) => <option key={x.value} value={x.value}>{x.text}</option>)}
+                        </FormSelect>
+                    </Field>
+                    <Field label="Σχέση">
+                        <FormSelect name="recipient_relation_id" value={data.recipient_relation_id ?? ""} onChange={e => dispatch(setDraftProperty({ key: "recipient_relation_id", value: e.target.value }))}>
+                            <option value=""></option>
+                            {listRelationIDs.map((x) => <option key={x.value} value={x.value}>{x.text}</option>)}
+                        </FormSelect>
+                    </Field>
+                    <Field label="Ονοματεπώνυμο ">
+                        <input
+                            className="form-control"
+                            name="recipient_name"
+                            value={data.recipient_name ?? ""}
+                            onChange={(e) => dispatch(setDraftProperty({ key: "recipient_name", value: e.target.value }))}
+                        />
+                    </Field>
+                    <div className="row g-2">
+                        <div className="col-7">
+                            <Field label="ΑΜΚΑ ">
+                                <input
+                                    className="form-control"
+                                    name="recipient_amka"
+                                    type="numeric"
+                                    value={data.recipient_amka ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_amka", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                        <div className="col-5">
+                            <Field label="ΑΦΜ ">
+                                <input
+                                    className="form-control"
+                                    name="recipient_afm"
+                                    type="numeric"
+                                    value={data.recipient_afm ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_afm", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                    </div>
+                    <div className="row g-2">
+                        <div className="col-7">
+                            <Field label="Τηλέφωνο">
+                                <input
+                                    className="form-control"
+                                    inputMode="tel"
+                                    name="recipient_tel"
+                                    value={data.recipient_tel ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_tel", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                        <div className="col-5">
+                            <Field label="ΑΤ/Διαβατήριο">
+                                <input
+                                    className="form-control"
+                                    type="numeric"
+                                    name="recipient_passport"
+                                    value={data.recipient_passport ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_passport", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                    </div>
+                    <Field label="Διεύθυνση">
+                        <input
+                            className="form-control"
+                            name="recipient_address"
+                            value={data.recipient_address ?? ""}
+                            onChange={(e) => dispatch(setDraftProperty({ key: "recipient_address", value: e.target.value }))}
+                        />
+                    </Field>
+                    <div className="row g-2">
+                        <div className="col-8">
+                            <Field label="Πόλη ">
+                                <input
+                                    className="form-control"
+                                    name="recipient_city"
+                                    value={data.recipient_city ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_city", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                        <div className="col-4">
+                            <Field label="ΤΚ">
+                                <input
+                                    className="form-control"
+                                    name="recipient_tk"
+                                    inputMode="numeric"
+                                    value={data.recipient_tk ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_tk", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                    </div>
+                </>
+            }
 
             <div className="form-check form-switch mb-2">
                 <input

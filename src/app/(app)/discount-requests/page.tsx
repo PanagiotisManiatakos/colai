@@ -1,30 +1,31 @@
 "use client";
 
 import React from "react";
-import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import DiscountRequestCard from "@/components/orders/DiscountRequestCard";
+
+import DiscountRequestCard from "@/features/orders/components/DiscountRequestCard";
+import { useAppSelector } from "@/store/hooks";
 import { SearchBar } from "@/components/ui/SearchBar";
-//import { approveDiscount, denyDiscount } from "@/features/orders/ordersSlice";
 
 export default function DiscountRequestsPage() {
-  const dispatch = useAppDispatch();
   const requests = useAppSelector((s) => s.orders.discountRequests);
   const [q, setQ] = React.useState("");
 
   const filtered = React.useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return requests;
+
     return requests.filter((r) =>
       [
-        r.id.toString(),
+        String(r.id),
         r.barcode,
         r.customer_name,
         r.customer_amka,
         r.doctor_name,
         r.doctor_amka,
         r.status,
-        r.requestedPrice.toString(),
+        String(r.requestedPrice),
       ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase()
         .includes(term)
@@ -32,24 +33,19 @@ export default function DiscountRequestsPage() {
   }, [requests, q]);
 
   return (
-    <div>
-      <div className="app-card p-3 mb-3">
-        <SearchBar placeholder="Αναζήτηση αιτήματος…" />
+    <div className="d-flex flex-column gap-2">
+      <div className="app-card p-2 mb-3">
+        <SearchBar placeholder="Αναζήτηση αιτήματος…" value={q} onChange={setQ} />
       </div>
 
       {filtered.length ? (
-        filtered.map((r) => (
-          <DiscountRequestCard
-            key={r.id}
-            request={r}
-          // onApprove={() => dispatch(approveDiscount(r.id))}
-          // onDeny={() => dispatch(denyDiscount(r.id))}
-          />
-        ))
-      ) : (
-        <div className="app-card p-4 text-center text-secondary">
-          Δεν υπάρχουν αιτήματα.
+        <div className="d-flex flex-column gap-2">
+          {filtered.map((r) => (
+            <DiscountRequestCard key={r.id} request={r} />
+          ))}
         </div>
+      ) : (
+        <div className="app-card p-4 text-center text-secondary">Δεν υπάρχουν αιτήματα.</div>
       )}
     </div>
   );

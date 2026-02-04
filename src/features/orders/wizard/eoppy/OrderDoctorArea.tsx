@@ -1,7 +1,7 @@
 import { setDraftProperty } from "@/features/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
-import DoctorLookupModal from "../DoctorLookupModal";
+import DoctorLookupModal from "../modals/DoctorLookupModal";
 
 function Field({ label, children, hint }: {
     label: string;

@@ -112,7 +112,7 @@ function RadialProgress({ value }: { value: number }) {
         strokeDasharray={`${dash} ${c - dash}`}
         transform={`rotate(-90 ${size / 2} ${size / 2})`}
       />
-      <text color="rgba(var(--bs-secondary-rgb), var(--bs-text-opacity)) !important;" x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fw-bold" style={{ fontSize: 20 }}>
+      <text className="text-body-tertiary fw-bold" x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: 20 }}>
         {pct.toFixed(2)}%
       </text>
     </svg>
@@ -163,7 +163,7 @@ function MonthlyTargetCard() {
 
 export default function HomeStats() {
   return (
-    <div className="mb-3">
+    <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
       <div className="row g-3 mb-3">
         <MetricCard
           title="Παραγγελίες Μήνα"

@@ -1,30 +1,31 @@
 "use client";
-import NotFound from "@/app/not-found";
-import OrderEoppyWizard from "@/components/orders/new/eoppy/OrderEoppyWizard";
-import OrderRetailWizard from "@/components/orders/new/retail/OrderRetailWizard";
-import { setDraftProperty } from "@/features/orders/ordersSlice";
-import { useAppDispatch } from "@/store/hooks";
-import { useParams } from "next/navigation";
+
 import React from "react";
+import { useParams } from "next/navigation";
+
+import NotFoundView from "@/components/system/NotFoundView";
+import { useAppDispatch } from "@/store/hooks";
+import { setDraftProperty } from "@/features/orders/ordersSlice";
+
+import OrderEoppyWizard from "@/features/orders/wizard/eoppy/OrderEoppyWizard";
+import OrderRetailWizard from "@/features/orders/wizard/retail/OrderRetailWizard";
 
 const WIZARDS: Record<string, React.ComponentType> = {
-    eoppy: OrderEoppyWizard,
-    retail: OrderRetailWizard,
+  eoppy: OrderEoppyWizard,
+  retail: OrderRetailWizard,
 };
 
-export default function NewNonEoppyOrderPage() {
-    const dispatch = useAppDispatch()
-    const params = useParams<{ orderId: string, orderType: string }>();
-    const orderType = params.orderType;
+export default function OrderWizardNewPage() {
+  const dispatch = useAppDispatch();
+  const params = useParams<{ orderType: string }>();
+  const orderType = params.orderType;
 
-    React.useEffect(() => {
-        dispatch(setDraftProperty({ key: "type", value: orderType }));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+  React.useEffect(() => {
+    dispatch(setDraftProperty({ key: "type", value: orderType }));
+  }, [dispatch, orderType]);
 
-    const Wizard = orderType ? WIZARDS[orderType] : undefined;
-    if (!Wizard) return <NotFound />;
+  const Wizard = WIZARDS[orderType];
+  if (!Wizard) return <NotFoundView />;
 
-    return <Wizard />;
+  return <Wizard />;
 }
-

@@ -1,74 +1,69 @@
 "use client";
 
-import { fetchOrders } from "@/features/orders/ordersSlice";
-import { useAppDispatch } from "@/store/hooks";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 
-export function SearchBar({ placeholder }: { placeholder: string }) {
-  const dispatch = useAppDispatch()
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-  const [q, setQ] = React.useState("");
+type Props = {
+  placeholder?: string;
+  value: string;
+  onChange: (next: string) => void;
+  onSubmit?: () => void;
+  onClear?: () => void;
+  autoFocus?: boolean;
+  className?: string;
+};
+
+export function SearchBar({
+  placeholder = "Αναζήτηση…",
+  value,
+  onChange,
+  onSubmit,
+  onClear,
+  autoFocus = false,
+  className,
+}: Props) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
-  const qFromUrl = (searchParams.get("search") ?? "").trim();
+  const submit = React.useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault();
+      inputRef.current?.blur();
+      onSubmit?.();
+    },
+    [onSubmit]
+  );
 
-  React.useEffect(() => {
-    setQ(qFromUrl);
-  }, [qFromUrl]);
+  const clear = React.useCallback(() => {
+    onChange("");
+    inputRef.current?.focus();
+    onClear?.();
+  }, [onChange, onClear]);
 
-  React.useEffect(() => {
-    dispatch(fetchOrders(qFromUrl ? { q: qFromUrl } : undefined));
-  }, [dispatch, qFromUrl]);
-
-  function submitSearch(f?: number) {
-    const next = f == -1 ? "" : q.trim();
-    const params = new URLSearchParams(searchParams.toString());
-
-    if (next) params.set("search", next);
-    else params.delete("search");
-
-    inputRef.current?.blur();
-
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  }
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        submitSearch();
-      }}
-    >
-
+    <form onSubmit={submit} className={className}>
       <div className="input-group">
-        {/* <span className="input-group-text">
+        <span className="input-group-text bg-transparent border-0 pe-0" aria-hidden>
           <i className="bi bi-search" />
-        </span> */}
+        </span>
         <input
           ref={inputRef}
-          className="form-control"
+          className="form-control border-0 ps-2 search-bar"
           type="search"
           inputMode="search"
           enterKeyHint="search"
           autoCorrect="off"
           autoCapitalize="none"
           spellCheck={false}
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          autoFocus={autoFocus}
+          style={{ background: "none" }}
         />
-        {q ? (
-          <button
-            type="button"
-            className="btn btn-outline-secondary"
-            onClick={() => {
-              setQ("");
-              submitSearch(-1);
-            }}
-            aria-label="Clear"
-          >
+        {value ? (
+          <button style={{
+            maxHeight: 36
+
+          }} type="button" className="btn border-none" onClick={clear} aria-label="Clear">
             <i className="bi bi-x-lg" />
           </button>
         ) : null}

@@ -1,7 +1,7 @@
 import { removeDraftYliko, setDraftProperty, updateDraftYlikoQuantity } from "@/features/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
-import MaterialsLookupModal from "../MaterialsLookupModals";
+import MaterialsLookupModal from "../modals/MaterialsLookupModals";
 import SwipeToDeleteYliko from "@/components/ui/SwipeToDeleteYliko";
 
 export default function MaterialsArea() {
