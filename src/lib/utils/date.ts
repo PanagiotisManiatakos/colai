@@ -27,3 +27,28 @@ export function formatUIDate(
     const min = pad2(d.getMinutes());
     return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
+
+export function formatStringToISODDateTime(
+    value: string,
+): string | null {
+    if (value == null || value === "") return null;
+
+    const [dd, mm, yyyy] = value.split("/").map(Number);
+
+    const now = new Date();
+    const dt = new Date(
+        yyyy,
+        mm - 1,
+        dd,
+        now.getHours(),
+        now.getMinutes(),
+        now.getSeconds(),
+        now.getMilliseconds()
+    );
+
+    const iso = dt.toISOString();
+
+    return iso;
+}
+
+

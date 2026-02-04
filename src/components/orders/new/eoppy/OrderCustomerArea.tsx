@@ -25,6 +25,9 @@ export default function OrderCustomerArea() {
     const listTropoiApostolis = useAppSelector(s => s.orders.draft.list_TroposApostolis)
     const listReceiptientReasons = useAppSelector(s => s.orders.draft.list_LogosParalipti)
     const listRelationIDs = useAppSelector(s => s.orders.draft.list_SygeniaParalipti)
+    const listAddressesPersons = useAppSelector(s => s.orders.draft.list_AddressesPersons)
+    const preselected_person_GID = useAppSelector(s => s.orders.draft.preselected_person_GID)
+    const preselected_address_GID = useAppSelector(s => s.orders.draft.preselected_address_GID)
 
     const handleDateInput = (value: string) => {
         if (value.length == 1 && parseInt(value) > 3) return;
@@ -205,57 +208,35 @@ export default function OrderCustomerArea() {
                 </label>
             </div>
 
-            <div className="form-check form-switch mb-2">
-                <input
-                    className="form-check-input"
-                    name="shipTo_other_address"
-                    type="checkbox"
-                    checked={data.shipTo_other_address == 1}
-                    onChange={(e) => dispatch(setDraftProperty({ key: "shipTo_other_address", value: e.target.checked ? 1 : 0 }))}
-                    id="shipTo_other_address"
-                />
-                <label className="form-check-label" htmlFor="shipTo_other_address">
-                    Θα παραδοθεί σε άλλη διέυθυνση
-                </label>
-            </div>
+            {!data.hasOtherRecipientBool && listAddressesPersons.length > 0 && (
+                <Field label="Θα παραδοθεί σε">
+                    <FormSelect name="person_ErpGID" value={data.person_ErpGID ?? ""} onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "person_ErpGID", value: e.target.value }))
+                        data.shipTo_other_address != 1 && dispatch(setDraftProperty({ key: "address_ErpGID", value: listAddressesPersons.find(p => p.person_ErpGID == e.target.value)?.addresses?.[0]?.address_ErpGID ?? null }))
+                    }
+                    }>
+                        {listAddressesPersons.map((x) => <option key={x.person_ErpGID} value={x.person_ErpGID}>{x.personName}</option>)}
+                    </FormSelect>
+                </Field>)}
 
-            {data.shipTo_other_address == 1 &&
-                <>
-                    <div className="mt-3">
-                        <Field label="Διεύθυνση παράδοσης">
-                            <input
-                                className="form-control"
-                                name="customer_other_address"
-                                value={data.customer_other_address ?? ""}
-                                onChange={(e) => dispatch(setDraftProperty({ key: "customer_other_address", value: e.target.value }))}
-                            />
-                        </Field>
-                    </div>
-                    <div className="row g-2">
-                        <div className="col-8">
-                            <Field label="Πόλη ">
-                                <input
-                                    className="form-control"
-                                    name="customer_other_city"
-                                    value={data.customer_other_city ?? ""}
-                                    onChange={(e) => dispatch(setDraftProperty({ key: "customer_other_city", value: e.target.value }))}
-                                />
-                            </Field>
-                        </div>
-                        <div className="col-4">
-                            <Field label="ΤΚ">
-                                <input
-                                    className="form-control"
-                                    name="customer_other_tk"
-                                    inputMode="numeric"
-                                    value={data.customer_other_tk ?? ""}
-                                    onChange={(e) => dispatch(setDraftProperty({ key: "customer_other_tk", value: e.target.value }))}
-                                />
-                            </Field>
-                        </div>
-                    </div>
-                </>
-            }
+            {!data.hasOtherRecipientBool &&
+                data.shipTo_other_address != 1 &&
+                listAddressesPersons.length > 0 &&
+                data.person_ErpGID &&
+                data.person_ErpGID != "" &&
+                listAddressesPersons.some((x) => x.person_ErpGID == data.person_ErpGID && (x.addresses.length > 0)) &&
+                (
+                    <Field label="Αποθηκευμένη διέυθυνση">
+                        <FormSelect name="address_ErpGID" value={data.address_ErpGID ?? ""} onChange={(e) => dispatch(setDraftProperty({ key: "address_ErpGID", value: e.target.value }))}>
+                            {listAddressesPersons.map((x) => {
+                                if (x.person_ErpGID == data.person_ErpGID) {
+                                    return x.addresses.map((a) => <option key={a.address_ErpGID} value={a.address_ErpGID}>{`${a.address}, ${a.city}, ${a.tk}`}</option>)
+                                }
+                            })}
+                        </FormSelect>
+                    </Field>
+                )}
+
 
             <div className="form-check form-switch mb-2">
                 <input
@@ -263,7 +244,12 @@ export default function OrderCustomerArea() {
                     name="hasOtherRecipientBool"
                     type="checkbox"
                     checked={data.hasOtherRecipientBool}
-                    onChange={(e) => dispatch(setDraftProperty({ key: "hasOtherRecipientBool", value: e.target.checked }))}
+                    onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "hasOtherRecipientBool", value: e.target.checked }))
+                        dispatch(setDraftProperty({ key: "person_ErpGID", value: e.target.checked ? null : preselected_person_GID }))
+                        dispatch(setDraftProperty({ key: "address_ErpGID", value: e.target.checked ? null : preselected_address_GID }))
+                    }
+                    }
                     id="hasOtherRecipientBool"
                 />
                 <label className="form-check-label" htmlFor="hasOtherRecipientBool">
@@ -372,6 +358,66 @@ export default function OrderCustomerArea() {
                                     inputMode="numeric"
                                     value={data.recipient_tk ?? ""}
                                     onChange={(e) => dispatch(setDraftProperty({ key: "recipient_tk", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                    </div>
+                </>
+            }
+
+            <div className="form-check form-switch mb-2">
+                <input
+                    className="form-check-input"
+                    name="shipTo_other_address"
+                    type="checkbox"
+                    checked={data.shipTo_other_address == 1}
+                    onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "shipTo_other_address", value: e.target.checked ? 1 : 0 }))
+                        if (e.target.checked) {
+                            dispatch(setDraftProperty({ key: "address_ErpGID", value: null }))
+                        } else if (data.person_ErpGID && data.person_ErpGID != "") {
+                            dispatch(setDraftProperty({ key: "address_ErpGID", value: listAddressesPersons.find(x => x.person_ErpGID == data.person_ErpGID)?.addresses?.[0]?.address_ErpGID }))
+                        }
+                    }
+                    }
+                    id="shipTo_other_address"
+                />
+                <label className="form-check-label" htmlFor="shipTo_other_address">
+                    Θα παραδοθεί σε άλλη διέυθυνση
+                </label>
+            </div>
+
+            {data.shipTo_other_address == 1 &&
+                <>
+                    <div className="mt-3">
+                        <Field label="Διεύθυνση παράδοσης">
+                            <input
+                                className="form-control"
+                                name="customer_other_address"
+                                value={data.customer_other_address ?? ""}
+                                onChange={(e) => dispatch(setDraftProperty({ key: "customer_other_address", value: e.target.value }))}
+                            />
+                        </Field>
+                    </div>
+                    <div className="row g-2">
+                        <div className="col-8">
+                            <Field label="Πόλη ">
+                                <input
+                                    className="form-control"
+                                    name="customer_other_city"
+                                    value={data.customer_other_city ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "customer_other_city", value: e.target.value }))}
+                                />
+                            </Field>
+                        </div>
+                        <div className="col-4">
+                            <Field label="ΤΚ">
+                                <input
+                                    className="form-control"
+                                    name="customer_other_tk"
+                                    inputMode="numeric"
+                                    value={data.customer_other_tk ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "customer_other_tk", value: e.target.value }))}
                                 />
                             </Field>
                         </div>

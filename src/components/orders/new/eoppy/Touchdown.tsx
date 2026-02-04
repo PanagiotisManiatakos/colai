@@ -12,14 +12,18 @@ function Field({ label, children, hint }: { label: string; children: React.React
     );
 }
 
-export default function CompletionArea() {
+export default function Touchdown() {
     const data = useAppSelector((s) => s.orders.draft.order);
     const dispatch = useAppDispatch()
+
+    React.useEffect(() => {
+        if (!data.isTempSave) dispatch(setDraftProperty({ key: "isTempSave", value: 1 }))
+    }, [])
 
     return (
         <div className="app-card p-4">
             <div style={{ height: 51 }} className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
-                <div className="fw-semibold">Checkout</div>
+                <div className="fw-semibold">Touchdown</div>
             </div>
 
             <div className="row g-2">
@@ -55,6 +59,18 @@ export default function CompletionArea() {
                 />
                 <label className="form-check-label" htmlFor="payFullOrDiscount">
                     Εφαρμογή έκπτωσης
+                </label>
+            </div>
+            <div className="form-check form-switch mb-2">
+                <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={data.isTempSave == 1}
+                    onChange={(e) => dispatch(setDraftProperty({ key: "isTempSave", value: e.target.checked ? 1 : 0 }))}
+                    name="payFullOrDiscount"
+                />
+                <label className="form-check-label" htmlFor="payFullOrDiscount">
+                    Προσωρινή αποθήκευση
                 </label>
             </div>
 

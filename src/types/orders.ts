@@ -111,6 +111,7 @@ export type Order = {
   hasOtherRecipientBool: boolean;
   hasOtherSystinonIatroBool: boolean;
   isTempSave: number;
+  aiCalculated: boolean;
 };
 
 export type OrderYlika = {
@@ -156,9 +157,23 @@ export type OrdeListOfSelections = {
   disabled: boolean;
   selected: boolean;
   text: string;
-  value: string
+  value: string;
 }
 
+
+export type OrderListOfAddressPersons = {
+  person_ErpGID: string;
+  personName: string;
+  addresses: OrderAddress[];
+  isCustomer: boolean;
+}
+
+export type OrderAddress = {
+  address_ErpGID: string;
+  address: string;
+  city: string;
+  tk: string;
+}
 
 export interface DiscountRequest extends Order {
   kind: "discountRequest";

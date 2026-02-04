@@ -3,21 +3,23 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch } from "@/store/hooks";
-import { submitDraft } from "@/features/orders/ordersSlice";
+import { fetchOrders, submitDraft, submitDraftAsync } from "@/features/orders/ordersSlice";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
-import CompletionArea from "./CompletionArea";
+import Touchdown from "./Touchdown";
 import GnomateuseisArea from "./GnomateuseisArea";
 import SyntagiArea from "./SyntagiArea";
 import SymmetoxiArea from "./SymmetoxiArea";
 import SynenaiseisArea from "./SynenaiseisArea";
+import { useRouter } from "next/navigation";
 
-const steps = ["Γνωματεύσεις", "Ασθενής", "Ιατρός", "Υλικά", "Συνταγη", "Συμμετοχή", "Συνέναιση", "Checkout"] as const;
+const steps = ["Γνωματεύσεις", "Ασθενής", "Ιατρός", "Υλικά", "Συνταγη", "Συμμετοχή", "Συνάινεση", "Touchdown"] as const;
 
 export default function OrderEoppyWizard() {
   const dispatch = useAppDispatch();
   const [step, setStep] = React.useState(0);
+  const router = useRouter()
 
   const effectiveSteps = React.useMemo(() => [...steps], []);
   const maxStep = effectiveSteps.length - 1; // FIX: last valid index
@@ -29,9 +31,19 @@ export default function OrderEoppyWizard() {
     setStep((s) => Math.max(s - 1, 0));
   }
 
-  function onSave() {
-    dispatch(submitDraft());
-    alert("Saved (demo). Draft submitted.");
+
+  async function onSave() {
+    try {
+      const result = await dispatch(submitDraftAsync()).unwrap();
+      if (result.result) {
+        await dispatch(fetchOrders({ force: true }));
+        router.replace("/orders");
+      } else {
+        console.log(result)
+      }
+    } catch (e: any) {
+      console.error(e);
+    }
   }
 
   const currentLabel = effectiveSteps[step];
@@ -45,14 +57,14 @@ export default function OrderEoppyWizard() {
 
       {/* scrollable middle */}
       <div className="flex-grow-1 overflow-auto" style={{ minHeight: 0 }}>
-        {currentLabel === "Γνωματεύσεις" ? <GnomateuseisArea /> : null}
+        {currentLabel === "Γνωματεύσεις" ? <GnomateuseisArea goTo={(x: number) => setStep(x)} /> : null}
         {currentLabel === "Ασθενής" ? <OrderCustomerArea /> : null}
         {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}
         {currentLabel === "Υλικά" ? <MaterialsArea /> : null}
         {currentLabel === "Συνταγη" ? <SyntagiArea /> : null}
         {currentLabel === "Συμμετοχή" ? <SymmetoxiArea /> : null}
-        {currentLabel === "Συνέναιση" ? <SynenaiseisArea /> : null}
-        {currentLabel === "Checkout" ? <CompletionArea /> : null}
+        {currentLabel === "Συνάινεση" ? <SynenaiseisArea /> : null}
+        {currentLabel === "Touchdown" ? <Touchdown /> : null}
       </div>
 
       {/* fixed bottom */}

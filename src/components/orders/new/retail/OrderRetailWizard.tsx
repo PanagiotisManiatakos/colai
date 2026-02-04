@@ -10,7 +10,7 @@ import MaterialsArea from "./MaterialsArea";
 import CompletionArea from "./CompletionArea";
 import { useRouter } from "next/navigation";
 
-const steps = ["Ασθενής", "Ιατρός", "Υλικά", "Checkout"] as const;
+const steps = ["Ασθενής", "Ιατρός", "Υλικά", "Touchdown"] as const;
 
 export default function OrderRetailWizard() {
   const dispatch = useAppDispatch();
@@ -61,7 +61,7 @@ export default function OrderRetailWizard() {
         {currentLabel === "Ασθενής" ? <OrderRetailCustomerArea /> : null}
         {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}
         {currentLabel === "Υλικά" ? <MaterialsArea /> : null}
-        {currentLabel === "Checkout" ? <CompletionArea /> : null}
+        {currentLabel === "Touchdown" ? <CompletionArea /> : null}
       </div>
 
       <div className="pb-3 pt-1" style={{ flex: "0 0 auto" }}>

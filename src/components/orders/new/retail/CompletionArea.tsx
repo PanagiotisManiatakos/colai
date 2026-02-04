@@ -28,7 +28,7 @@ export default function CompletionArea() {
     return (
         <div className="app-card p-4">
             <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
-                <div className="fw-semibold">Checkout</div>
+                <div className="fw-semibold">Touchdown</div>
             </div>
 
             <Field label="Τρόπος αποστολής">

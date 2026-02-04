@@ -1,7 +1,8 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { DiscountRequest, OrdeListOfSelections, Order, OrderFile, OrderYlika } from "@/types/orders";
+import type { DiscountRequest, OrdeListOfSelections, Order, OrderFile, OrderListOfAddressPersons, OrderYlika } from "@/types/orders";
 import type { IDoctorFormData, IPatientFormData, IRecipientFormData } from "@/lib/interface";
 import { RootState } from "@/store/store";
+import { formatStringToISODDateTime } from "@/lib/utils/date";
 
 type OrderDraftType = "eoppy" | "non_eoppy";
 
@@ -15,6 +16,9 @@ export interface DraftState {
   list_SygeniaParalipti: OrdeListOfSelections[]
   list_DiscountReasons: OrdeListOfSelections[]
   list_TroposApostolis: OrdeListOfSelections[]
+  list_AddressesPersons: OrderListOfAddressPersons[]
+  preselected_address_GID?: string;
+  preselected_person_GID?: string;
 }
 
 export interface SelectedOrderState {
@@ -100,7 +104,12 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
   const { draft } = state.orders;
 
   const payload = {
-    order: draft.order,
+    order: {
+      ...draft.order,
+      dateOfSyntagi: formatStringToISODDateTime(draft.order.dateOfSyntagi),
+      dateIsxyeiApo: formatStringToISODDateTime(draft.order.dateIsxyeiApo),
+      dateIsxyeiEos: formatStringToISODDateTime(draft.order.dateIsxyeiEos),
+    },
     ylika: draft.ylika,
     isTempSave: draft.order.isTempSave
   };
@@ -141,6 +150,22 @@ export const editDraftAsync = createAsyncThunk<any, void, { state: RootState }>(
     return data;
   });
 
+export const loadCustomerAddressesAsync = createAsyncThunk<any, { customer_ErpGID: string | undefined; customer_name: string | undefined; customer_address: string | undefined; customer_amka: string | undefined; }>(
+  "orders/loadCustomerAddressesAsync",
+  async ({ customer_ErpGID, customer_name, customer_address, customer_amka }) => {
+    const res = await fetch(`/api/customers/${customer_ErpGID}/addresses?customerAMKA=${customer_amka ?? ""}&customerName=${customer_name ?? ""}&customerAddress=${customer_address ?? ""}`, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.message || "Failed to submit order");
+    }
+
+    return data;
+  });
+
 
 const initialStateBase: OrdersState = {
   orders: [],
@@ -158,6 +183,7 @@ const initialStateBase: OrdersState = {
     list_LogosParalipti: [] as OrdeListOfSelections[],
     list_SygeniaParalipti: [] as OrdeListOfSelections[],
     list_TroposApostolis: [] as OrdeListOfSelections[],
+    list_AddressesPersons: [] as OrderListOfAddressPersons[]
   },
   selected: null,
   ordersQuery: "",
@@ -177,7 +203,6 @@ function loadStateFromLocalStorage(): OrdersState | null {
     const parsed = JSON.parse(raw) as any;
     if (!parsed || typeof parsed !== "object") return null;
 
-    // Only hydrate what you really want persisted (recommended)
     return {
       ...initialStateBase,
       draft: {
@@ -364,13 +389,18 @@ const ordersSlice = createSlice({
       state.draft.submitState.loading = false;
       state.draft.submitState.error = action.error.message || "Failed to submit order";
     });
-    b.addCase(deleteOrderAsync.pending, (state) => {
-    });
     b.addCase(deleteOrderAsync.fulfilled, (state, action) => {
       const idx = state.orders.findIndex((x) => x.id === action.payload.orderId && x.uid === action.payload.orderUID);
       if (idx !== -1) state.orders.splice(idx, 1);
     });
-    b.addCase(deleteOrderAsync.rejected, (state, action) => {
+    b.addCase(loadCustomerAddressesAsync.fulfilled, (state, action) => {
+      if (action.payload.ok) {
+        state.draft.list_AddressesPersons = action.payload.addresses;
+        state.draft.order.person_ErpGID = action.payload.preselected_person_GID
+        state.draft.order.address_ErpGID = action.payload.preselected_address_GID
+        state.draft.preselected_person_GID = action.payload.preselected_person_GID;
+        state.draft.preselected_address_GID = action.payload.preselected_address_GID;
+      }
     });
 
   },

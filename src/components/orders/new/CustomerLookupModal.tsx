@@ -3,7 +3,7 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
-import { setDraftProperty } from "@/features/orders/ordersSlice";
+import { loadCustomerAddressesAsync, setDraftProperty } from "@/features/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
 
 export type CustomerSearchResult = {
@@ -80,7 +80,6 @@ export default function CustomerLookupModal({
     }
 
     function applyCustomer(c: CustomerSearchResult) {
-        console.log(c)
         dispatch(setDraftProperty({ key: "customer_ErpGID", value: c.tR_GID }))
         dispatch(setDraftProperty({ key: "customer_name", value: c.pE_NAME }));
         dispatch(setDraftProperty({ key: "customer_amka", value: c.tR_StringField5 }));
@@ -90,7 +89,7 @@ export default function CustomerLookupModal({
         dispatch(setDraftProperty({ key: "customer_tel", value: "" }));
         dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
         dispatch(setDraftProperty({ key: "customer_email", value: "" }));
-
+        dispatch(loadCustomerAddressesAsync({ customer_ErpGID: c.tR_GID, customer_name: c.pE_NAME, customer_amka: c.tR_StringField5, customer_address: c.peS_Address1 }));
         onClose();
     }
 
