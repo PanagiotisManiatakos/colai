@@ -2,8 +2,12 @@
 
 import { useEffect } from "react";
 
+function getViewportHeight() {
+  return window.visualViewport?.height ?? window.innerHeight;
+}
+
 function setViewportHeightVar() {
-  const vh = window.innerHeight * 0.01;
+  const vh = getViewportHeight() * 0.01;
   document.documentElement.style.setProperty("--vh", `${vh}px`);
 }
 
@@ -18,20 +22,25 @@ function setPwaAttr() {
 
 export function ViewportRuntime() {
   useEffect(() => {
-    setViewportHeightVar();
-    setPwaAttr();
-
-    const onResize = () => {
+    const update = () => {
       setViewportHeightVar();
       setPwaAttr();
     };
 
-    window.addEventListener("resize", onResize, { passive: true });
-    window.addEventListener("orientationchange", onResize, { passive: true });
+    update();
+
+    window.addEventListener("resize", update, { passive: true });
+    window.addEventListener("orientationchange", update, { passive: true });
+
+    const vv = window.visualViewport;
+    vv?.addEventListener("resize", update, { passive: true } as any);
+    vv?.addEventListener("scroll", update, { passive: true } as any);
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      window.removeEventListener("orientationchange", onResize);
+      window.removeEventListener("resize", update);
+      window.removeEventListener("orientationchange", update);
+      vv?.removeEventListener("resize", update as any);
+      vv?.removeEventListener("scroll", update as any);
     };
   }, []);
 

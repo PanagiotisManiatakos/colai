@@ -42,22 +42,32 @@ html[data-pwa="true"] .app-header {
   padding-top: calc(12px + env(safe-area-inset-top));
 }
 
-html[data-pwa="true"] .app-bottom-nav {
-  bottom: calc(-1 * env(safe-area-inset-bottom));
-}
-
-/* Keep content/FAB aligned with the nav shift */
-html[data-pwa="true"] .app-content {
-  padding-bottom: max(18px, calc(18px + var(--app-nav-height) - env(safe-area-inset-bottom)));
-}
-
-html[data-pwa="true"] .app-fab {
-  bottom: calc(var(--app-nav-height) + 16px - env(safe-area-inset-bottom));
-}
-
 @media (min-width: 992px) {
   :root {
     --app-max-width: 920px;
+  }
+}
+
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  html,
+  body {
+    height: 100dvh;
+  }
+
+  .app-viewport {
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+}
+
+/* iOS fallback */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone), (display-mode: fullscreen) {
+    html,
+    body,
+    .app-viewport {
+      height: -webkit-fill-available !important;
+    }
   }
 }
 
