@@ -51,12 +51,12 @@ html[data-pwa="true"] .app-header {
 @media (display-mode: standalone), (display-mode: fullscreen) {
   html,
   body {
-    height: 100dvh;
+    height: 100vh;
   }
 
   .app-viewport {
-    height: 100dvh !important;
-    max-height: 100dvh !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
   }
 }
 
