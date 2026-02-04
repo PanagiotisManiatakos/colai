@@ -23,25 +23,16 @@ export default function PullToRefresh({
     scrollSelector = ".app-content",
     children,
     style,
-    className
+    className,
 }: Props) {
     const containerRef = React.useRef<HTMLDivElement | null>(null);
     const scrollElRef = React.useRef<HTMLElement | null>(null);
-
+    const topReadyRef = React.useRef(false);
     const startYRef = React.useRef(0);
     const pullingRef = React.useRef(false);
-    const canPullRef = React.useRef(false);
 
     const [pull, setPull] = React.useState(0);
     const [armed, setArmed] = React.useState(false);
-
-    // Find the real scroll container (your <main className="app-content"> usually)
-    React.useEffect(() => {
-        scrollElRef.current =
-            (document.querySelector(scrollSelector) as HTMLElement | null) ??
-            (containerRef.current?.parentElement as HTMLElement | null) ??
-            null;
-    }, [scrollSelector]);
 
     // If parent sets isRefreshing, keep UI pinned a bit while refreshing
     React.useEffect(() => {
@@ -61,12 +52,12 @@ export default function PullToRefresh({
     async function endPull() {
         pullingRef.current = false;
 
-        if (armed && !isRefreshing) {
+        // Use pull/threshold (not `armed`) to avoid stale closure issues
+        if (pull >= threshold && !isRefreshing) {
             setPull(threshold);
             try {
                 await onRefresh();
             } finally {
-                // If parent doesn't control isRefreshing, close here
                 setPull(0);
                 setArmed(false);
             }
@@ -78,36 +69,67 @@ export default function PullToRefresh({
 
     // Native touch listeners (passive:false on move) so preventDefault works
     React.useEffect(() => {
-        const scrollEl = scrollElRef.current;
+        const scrollEl =
+            (useSelfScroll ? (containerRef.current as unknown as HTMLElement | null) : null) ??
+            (document.querySelector(scrollSelector) as HTMLElement | null) ??
+            (containerRef.current?.parentElement as HTMLElement | null) ??
+            null;
+
+        scrollElRef.current = scrollEl;
         if (!scrollEl) return;
 
         const onTouchStart = (e: TouchEvent) => {
             if (isRefreshing) return;
             if (e.touches.length !== 1) return;
 
-            // Only allow pull-to-refresh when scrolled to top
-            canPullRef.current = getScrollTop() <= 0;
-            if (!canPullRef.current) return;
-
-            pullingRef.current = true;
             startYRef.current = e.touches[0].clientY;
+
+            pullingRef.current = false;
+
+            // If we start already at top -> allow immediate pull
+            const atTop = getScrollTop() <= 0;
+            topReadyRef.current = atTop;
         };
 
         const onTouchMove = (e: TouchEvent) => {
-            if (!pullingRef.current) return;
-            if (!canPullRef.current) return;
+            if (isRefreshing) return;
+            if (e.touches.length !== 1) return;
 
-            const dy = e.touches[0].clientY - startYRef.current;
+            const y = e.touches[0].clientY;
+            const atTop = getScrollTop() <= 0;
 
-            // user is scrolling up -> let normal scroll happen
+            // Not at top => never pull, always allow normal scroll
+            if (!atTop) {
+                pullingRef.current = false;
+                topReadyRef.current = false;
+                setPull(0);
+                setArmed(false);
+                return;
+            }
+
+            // We just reached the top during an upward scroll:
+            // reset baseline here so it doesn't start pulling immediately.
+            if (!topReadyRef.current) {
+                topReadyRef.current = true;
+                startYRef.current = y;
+                setPull(0);
+                setArmed(false);
+                return;
+            }
+
+            const dy = y - startYRef.current;
+
+            // finger moving up or not pulling down => do nothing
             if (dy <= 0) {
                 setPull(0);
                 setArmed(false);
                 return;
             }
 
-            // Critical: stop the scroll only while pulling down at top
+            // Now we are at top and pulling down: prevent scroll and start pull-to-refresh
             if (e.cancelable) e.preventDefault();
+
+            pullingRef.current = true;
 
             // rubber band
             const eased = maxPull * (1 - Math.exp(-dy / 85));
@@ -133,7 +155,7 @@ export default function PullToRefresh({
             scrollEl.removeEventListener("touchend", onTouchEnd);
             scrollEl.removeEventListener("touchcancel", onTouchEnd);
         };
-    }, [isRefreshing, threshold, maxPull, onRefresh, armed]);
+    }, [isRefreshing, threshold, maxPull, onRefresh, scrollSelector, useSelfScroll, pull]);
 
     const rotate = Math.min(180, (pull / threshold) * 180);
     const showSpinner = isRefreshing;
@@ -143,7 +165,6 @@ export default function PullToRefresh({
             ref={containerRef}
             className={`ptr-container ${className ?? ""}`}
             style={{
-                // When using self scroll, this element is the scroll container
                 ...(useSelfScroll
                     ? {
                         height: "100%",
