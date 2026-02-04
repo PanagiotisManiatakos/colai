@@ -38,6 +38,10 @@ html[data-pwa="true"] {
   --safe-right: 0px;
 }
 
+html[data-pwa="true"] .app-header {
+  padding-top: calc(12px + env(safe-area-inset-top));
+}
+
 @media (min-width: 992px) {
   :root {
     --app-max-width: 920px;
