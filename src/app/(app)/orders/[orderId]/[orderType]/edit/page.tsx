@@ -15,6 +15,7 @@ export default function NewOrderPage() {
     const searchParams = useSearchParams();
     const orderType = params.orderType;
     const uid = searchParams.get("uid");
+    const [fetchLoading, setFetchLoading] = React.useState(true)
 
     React.useEffect(() => {
         const handleFetch = async () => {
@@ -22,12 +23,14 @@ export default function NewOrderPage() {
                 await dispatch(editDraftAsync({ catid: 4, typeid: orderType, uid: uid ?? "" })).unwrap();
             } catch (e: any) {
             }
+
+            setFetchLoading(false)
         };
         handleFetch()
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    if (editState.loading) return <AppLoader label="Φόρτωση παραγγελίας…" />;
+    if (editState.loading || fetchLoading) return <AppLoader label="Φόρτωση παραγγελίας…" />;
     if (editState.error) return <div className="alert alert-danger">{editState.error}</div>;
 
 
