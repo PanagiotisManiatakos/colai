@@ -208,18 +208,20 @@ export default function OrderCustomerArea() {
                 </label>
             </div>
 
-            {!data.hasOtherRecipientBool && listAddressesPersons.length > 0 && (
+            {!data.shipToOtherAddressBool && listAddressesPersons.length > 0 && (
                 <Field label="Θα παραδοθεί σε">
                     <FormSelect name="person_ErpGID" value={data.person_ErpGID ?? ""} onChange={(e) => {
                         dispatch(setDraftProperty({ key: "person_ErpGID", value: e.target.value }))
-                        data.shipTo_other_address != 1 && dispatch(setDraftProperty({ key: "address_ErpGID", value: listAddressesPersons.find(p => p.person_ErpGID == e.target.value)?.addresses?.[0]?.address_ErpGID ?? null }))
+                        if (data.shipTo_other_address != 1) {
+                            dispatch(setDraftProperty({ key: "address_ErpGID", value: listAddressesPersons.find(p => p.person_ErpGID == e.target.value)?.addresses?.[0]?.address_ErpGID ?? null }))
+                        }
                     }
                     }>
                         {listAddressesPersons.map((x) => <option key={x.person_ErpGID} value={x.person_ErpGID}>{x.personName}</option>)}
                     </FormSelect>
                 </Field>)}
 
-            {!data.hasOtherRecipientBool &&
+            {!data.shipToOtherAddressBool &&
                 data.shipTo_other_address != 1 &&
                 listAddressesPersons.length > 0 &&
                 data.person_ErpGID &&
@@ -376,7 +378,7 @@ export default function OrderCustomerArea() {
                         if (e.target.checked) {
                             dispatch(setDraftProperty({ key: "address_ErpGID", value: null }))
                         } else if (data.person_ErpGID && data.person_ErpGID != "") {
-                            dispatch(setDraftProperty({ key: "address_ErpGID", value: listAddressesPersons.find(x => x.person_ErpGID == data.person_ErpGID)?.addresses?.[0]?.address_ErpGID }))
+                            dispatch(setDraftProperty({ key: "address_ErpGID", value: listAddressesPersons.find(x => x.person_ErpGID == data.person_ErpGID)?.addresses?.[0]?.address_ErpGID ?? null }))
                         }
                     }
                     }

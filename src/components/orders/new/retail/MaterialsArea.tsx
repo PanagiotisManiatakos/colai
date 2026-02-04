@@ -48,11 +48,11 @@ export default function MaterialsArea() {
                                         <div className="d-flex align-items-start justify-content-between gap-3">
                                             <div className="flex-grow-1">
                                                 <span className="badge bg-secondary-subtle text-secondary ms-0">
-                                                    {y.erp_code}
+                                                    {y.erpCode}
                                                 </span>
                                                 <div className="d-flex align-items-center">
                                                     <div className="fw-semibold" style={{ lineHeight: 1.2 }}>
-                                                        {y.erp_name}
+                                                        {y.erpName}
                                                     </div>
                                                 </div>
                                             </div>

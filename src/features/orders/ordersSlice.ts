@@ -109,6 +109,8 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
       dateOfSyntagi: formatStringToISODDateTime(draft.order.dateOfSyntagi),
       dateIsxyeiApo: formatStringToISODDateTime(draft.order.dateIsxyeiApo),
       dateIsxyeiEos: formatStringToISODDateTime(draft.order.dateIsxyeiEos),
+      posoDiscounted: parseFloat(String(draft.order.posoDiscounted)),
+      posoSymmetoxis: parseFloat(String(draft.order.posoSymmetoxis))
     },
     ylika: draft.ylika,
     isTempSave: draft.order.isTempSave
@@ -128,12 +130,10 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
   return data;
 });
 
-export const editDraftAsync = createAsyncThunk<any, void, { state: RootState }>(
+export const editDraftAsync = createAsyncThunk<any, { typeid: string; catid: number, uid?: string }, { state: RootState }>(
   "orders/editDraftAsync",
-  async (_, thunkApi) => {
-    const state = thunkApi.getState();
-    const { type, groupid } = state.orders.draft.order;
-    const res = await fetch(`/api/orders/edit?_ts=${Date.now()}&typeid=${type}&catid=${groupid}`, {
+  async ({ typeid, catid, uid }) => {
+    const res = await fetch(`/api/orders/edit?_ts=${Date.now()}&uid=${uid}&typeid=${typeid}&catid=${catid}`, {
       method: "GET",
       cache: "no-store",
       headers: {
@@ -363,8 +363,8 @@ const ordersSlice = createSlice({
       state.draft.editState.loading = false;
       if (action.payload.ok) {
         state.draft.order = action.payload.data.order
-        state.draft.ylika = [];
-        state.draft.files = [];
+        state.draft.ylika = action.payload.data.items;
+        state.draft.files = action.payload.files;
         state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons
         state.draft.list_LogosParalipti = action.payload.data.list_LogosParalipti
         state.draft.list_SygeniaParalipti = action.payload.data.list_SygeniaParalipti

@@ -22,10 +22,6 @@ export default function OrderDoctorArea() {
     const dispatch = useAppDispatch()
     const [showLookup, setShowLookup] = React.useState(false);
 
-    const handleSearchClick = () => {
-        // open search modal / navigate to search page
-        setShowLookup(true);
-    }
 
     return (
         <div className="app-card p-4">
@@ -37,7 +33,7 @@ export default function OrderDoctorArea() {
                         type="button"
                         className="btn-icon-pill"
                         aria-label="Αναζήτηση"
-                        onClick={handleSearchClick}
+                        onClick={() => setShowLookup(true)}
                     >
                         <i className="bi bi-search" />
                     </button>}

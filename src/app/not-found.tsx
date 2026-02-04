@@ -7,7 +7,7 @@ export default function NotFound() {
         <div className="app-card p-4">
           <h1 className="h5 mb-2">Page not found</h1>
           <p className="text-secondary mb-3">
-            The page you are looking for doesn't exist.
+            The page you are looking for doesn&apos;t exist.
           </p>
           <Link href="/" className="btn btn-primary w-100">
             Go to Home

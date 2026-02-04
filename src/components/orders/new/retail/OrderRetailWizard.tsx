@@ -64,7 +64,7 @@ export default function OrderRetailWizard() {
         {currentLabel === "Touchdown" ? <CompletionArea /> : null}
       </div>
 
-      <div className="pb-3 pt-1" style={{ flex: "0 0 auto" }}>
+      <div className="pb-0 pt-1" style={{ flex: "0 0 auto" }}>
         <div className="d-flex gap-2">
           <button
             type="button"

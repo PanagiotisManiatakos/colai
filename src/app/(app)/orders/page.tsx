@@ -51,7 +51,7 @@ export default function OrdersPage() {
         )}
       </PullToRefresh>
 
-      <FloatingActionButton href="/orders/new" ariaLabel="Νέα παραγγελία" />
+      <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
     </div>
   );
 }

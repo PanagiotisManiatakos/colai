@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Modal, Button } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
 import { deleteOrderAsync } from "@/features/orders/ordersSlice";
+import { useRouter } from "next/navigation";
 
 const ACTION_WIDTH = 88;
 
@@ -19,6 +20,7 @@ export default function OrderCard({
   onDelete?: (id: number) => void;
 }) {
   const canSwipeDelete = order.statusId === 0;
+  const router = useRouter()
 
   const dispatch = useAppDispatch()
 
@@ -213,14 +215,16 @@ export default function OrderCard({
                   <button
                     type="button"
                     className="btn btn-outline-secondary flex-fill"
-                    onClick={() => void navigator.clipboard?.writeText(order.barcode)}
+                    onClick={() =>
+                      router.push(`/orders/${order.id}/${order.type}/edit?uid=${order.uid}`)
+                    }
                   >
                     <i className="bi bi-pencil-fill me-2" />
                     Επεξεργασία
                   </button>
                 ) : null}
 
-                <Link href={`/orders/${order.id}?uid=${order.uid}`} className="btn btn-primary flex-fill">
+                <Link href={`/orders/${order.id}/${order.type}/view?uid=${order.uid}`} className="btn btn-primary flex-fill">
                   <i className="bi bi-eye me-2" />
                   Προβολή
                 </Link>

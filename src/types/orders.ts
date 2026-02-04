@@ -65,7 +65,7 @@ export type Order = {
   kostos_EOPPY: number;
   kostos_RETAIL: number;
   posoSymmetoxis: number;
-  posoDiscounted: number;
+  posoDiscounted: number | string;
   calculatedDiscPercent: number;
   dateDiscountReviewed: string; // ISO datetime
   discountReviewedByUID: string;

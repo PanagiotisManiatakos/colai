@@ -3,7 +3,7 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch } from "@/store/hooks";
-import { fetchOrders, submitDraft, submitDraftAsync } from "@/features/orders/ordersSlice";
+import { fetchOrders, submitDraftAsync } from "@/features/orders/ordersSlice";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
@@ -68,7 +68,7 @@ export default function OrderEoppyWizard() {
       </div>
 
       {/* fixed bottom */}
-      <div className="pb-3 pt-1" style={{ flex: "0 0 auto" }}>
+      <div className="pb-0 pt-1" style={{ flex: "0 0 auto" }}>
         <div className="d-flex gap-2">
           <button
             type="button"
