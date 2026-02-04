@@ -28,7 +28,7 @@ export default function NewOrderPage() {
     }, [])
 
     if (editState.loading) return <AppLoader label="Φόρτωση παραγγελίας…" />;
-    if (editState.error) return <div className="alert alert-danger">{error}</div>;
+    if (editState.error) return <div className="alert alert-danger">{editState.error}</div>;
 
 
     return (
