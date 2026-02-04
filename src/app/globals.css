@@ -50,6 +50,10 @@ html[data-pwa="true"] .app-content {
   padding-bottom: max(18px, calc(18px + var(--app-nav-height) - env(safe-area-inset-bottom)));
 }
 
+html[data-pwa="true"] .app-bottom-nav {
+  height: --app-nav-height;
+}
+
 @media (min-width: 992px) {
   :root {
     --app-max-width: 920px;
