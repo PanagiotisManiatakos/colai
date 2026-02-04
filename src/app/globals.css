@@ -19,6 +19,10 @@
   --app-muted: rgba(16, 24, 40, 0.62);
 }
 
+html[data-bs-theme="dark"]:root{
+  --app-nav-height:100px;
+}
+
 html[data-bs-theme="dark"] {
   --app-surface: rgba(18, 24, 38, 0.78);
   --app-surface-border: rgba(255, 255, 255, 0.10);
@@ -40,6 +44,10 @@ html[data-pwa="true"] {
 
 html[data-pwa="true"] .app-header {
   padding-top: calc(12px + env(safe-area-inset-top));
+}
+
+html[data-pwa="true"] .app-content {
+  padding-bottom: max(18px, calc(18px + var(--app-nav-height) - env(safe-area-inset-bottom)));
 }
 
 @media (min-width: 992px) {
