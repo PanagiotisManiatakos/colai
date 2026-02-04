@@ -81,7 +81,7 @@ body {
   overflow-y: auto;                      /* scrolling lives here */
   -webkit-overflow-scrolling: touch;     /* iOS momentum scrolling */
   min-height: 0;
-  padding: 14px 14px 57px;               /* keep your bottom-nav safe space */
+  padding: 10px 10px 85px;               /* keep bottom-nav safe space */
 }
 
 .app-card {
@@ -122,6 +122,7 @@ body {
   -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid rgba(0, 0, 0, 0.06);
   z-index: 1030;
+  height: 75px;
 }
 
 [data-bs-theme="dark"] .app-bottom-nav {
@@ -134,7 +135,7 @@ body {
   position: fixed;
   z-index: 1040;
   right: max(16px, calc((100vw - var(--app-max-width)) / 2 + 16px));
-  bottom: calc(78px + env(safe-area-inset-bottom));
+  bottom: 90;
 }
 
 .nav-icon {

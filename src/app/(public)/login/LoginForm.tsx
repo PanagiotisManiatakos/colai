@@ -58,7 +58,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="app-viewport" style={{ minHeight: "100dvh" }}>
+    <div className="app-viewport" style={{ minHeight: "100vh" }}>
       <div className="app-content d-flex align-items-center" style={{ paddingBottom: 24 }}>
         <div className="w-100">
           <div className="text-center mb-3">
