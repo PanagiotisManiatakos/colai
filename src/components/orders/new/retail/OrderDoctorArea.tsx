@@ -29,7 +29,7 @@ export default function OrderDoctorArea() {
 
     return (
         <div className="app-card p-4">
-            <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+            <div style={{ height: 51 }} className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
                 <div className="fw-semibold">Ιατρός</div>
 
                 {data.has_suggested_doctor == 1 &&
