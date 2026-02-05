@@ -53,7 +53,7 @@ export default function OrderEoppyWizard() {
   const hasFiles = files.some((o: any) => o?.document_category === "recipe");
   const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
-
+  const submitState = useAppSelector((s) => s.orders.draft.submitState)
   const shouldShowAiMaterials = useAppSelector(s => s.orders.draft.ai_ylika);
 
   const stepDefs: StepDef[] = [
@@ -91,8 +91,8 @@ export default function OrderEoppyWizard() {
     try {
       const result = await dispatch(submitDraftAsync()).unwrap();
       if (result.result) {
-        await dispatch(fetchOrders({ force: true }));
         router.replace("/orders");
+        await dispatch(fetchOrders({ force: true }));
       } else {
         console.log(result)
       }
@@ -250,9 +250,9 @@ export default function OrderEoppyWizard() {
             </button>}
 
           {step == maxStep &&
-            <button type="button" className="btn btn-success flex-fill" onClick={onSave}>
+            <button type="button" disabled={submitState.loading} className="btn btn-success flex-fill" onClick={onSave}>
               <i className="bi bi-check2-circle me-2" />
-              Αποθήκευση
+              {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
             </button>}
         </div>
       </div>

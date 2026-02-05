@@ -2,7 +2,7 @@ import { setDraftProperty } from "@/features/orders/ordersSlice";
 import { formatCurrencyGR } from "@/lib/utils/number";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
-import { FormSelect } from "react-bootstrap";
+import { Alert, FormSelect } from "react-bootstrap";
 
 function Field({ label, children, hint }: { label: string; children: React.ReactNode; hint?: string; }) {
     return (
@@ -19,6 +19,8 @@ export default function CompletionArea() {
     const data = useAppSelector((s) => s.orders.draft.order);
     const ylika = useAppSelector((s) => s.orders.draft.ylika);
     const dispatch = useAppDispatch()
+    const submitState = useAppSelector((s) => s.orders.draft.submitState)
+
 
     React.useEffect(() => {
         if (!data.shipMethodId) dispatch(setDraftProperty({ key: "shipMethodId", value: 5 }))
@@ -27,100 +29,104 @@ export default function CompletionArea() {
     }, [])
 
     return (
-        <div className="app-card p-4">
-            <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
-                <div className="fw-semibold">Touchdown</div>
-            </div>
-
-            <div className="row g-2">
-                <div className="col-6">
-                    <Field label="Αξία Υλικών">
-                        <input
-                            className="form-control"
-                            value={formatCurrencyGR(data.kostos)}
-                            disabled
-                        />
-                    </Field>
+        <>
+            <div className="app-card p-4">
+                <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                    <div className="fw-semibold">Touchdown</div>
                 </div>
-            </div>
 
-            <div className="app-divider my-2" />
-
-            <div className="form-check form-switch mb-2 switch-lg">
-                <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={data.payFullOrDiscount == 2}
-                    onChange={(e) => {
-                        dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 2 : 1 }))
-                        if (e.target.checked) {
-                            dispatch(setDraftProperty({ key: "appliedPriceList", value: "eoppy" }));
-                            const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
-                            dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
-                        } else {
-                            dispatch(setDraftProperty({ key: "appliedPriceList", value: null }))
-                            dispatch(setDraftProperty({ key: "posoDiscounted", value: 0 }));
-
-                        }
-                    }
-                    }
-                    id="payFullOrDiscount"
-                />
-                <label className="form-check-label" htmlFor="payFullOrDiscount">
-                    Εφαρμογή έκπτωσης
-                </label>
-            </div>
-
-            {data.payFullOrDiscount == 2 &&
                 <div className="row g-2">
                     <div className="col-6">
-                        <Field label="Εφαρμογή">
-                            <FormSelect name="appliedPriceList" value={data.appliedPriceList} onChange={(e) => {
-                                dispatch(setDraftProperty({ key: "appliedPriceList", value: e.target.value }))
-                                if (e.target.value == "eoppy") {
-                                    const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
-                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
-                                } else {
-                                    const pricesRETAIL = ylika.reduce((acc, x) => acc + (Number(x.kostos_RETAIL) || 0), 0);
-                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesRETAIL) }));
-                                }
-                            }}>
-                                <option value="retail">Λιανική</option>
-                                <option value="eoppy">ΕΟΠΠΥ</option>
-                            </FormSelect>
-                        </Field>
-                    </div>
-                    <div className="col-6">
-                        <Field label="Τελικό ποσό">
+                        <Field label="Αξία Υλικών">
                             <input
                                 className="form-control"
-                                name="posoDiscounted"
-                                value={data.posoDiscounted}
-                                onChange={(e) => {
-                                    const raw = e.target.value.replaceAll(".", "").replaceAll(",", ".");
-                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: raw.replace(".", ",") }));
-                                }}
-                                onBlur={(e) => {
-                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(e.target.value.replaceAll(".", "").replaceAll(",", ".")) }))
-                                }}
+                                value={formatCurrencyGR(data.kostos)}
+                                disabled
                             />
                         </Field>
                     </div>
-                </div>}
+                </div>
 
-            <div className="form-check form-switch mb-2 switch-lg">
-                <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={data.isTempSave == 1}
-                    onChange={(e) => dispatch(setDraftProperty({ key: "isTempSave", value: e.target.checked ? 1 : 0 }))}
-                    id="isTempSave"
-                />
-                <label className="form-check-label" htmlFor="isTempSave">
-                    Προσωρινή αποθήκευση
-                </label>
+                <div className="app-divider my-2" />
+
+                <div className="form-check form-switch mb-2 switch-lg">
+                    <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={data.payFullOrDiscount == 2}
+                        onChange={(e) => {
+                            dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 2 : 1 }))
+                            if (e.target.checked) {
+                                dispatch(setDraftProperty({ key: "appliedPriceList", value: "eoppy" }));
+                                const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
+                                dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
+                            } else {
+                                dispatch(setDraftProperty({ key: "appliedPriceList", value: null }))
+                                dispatch(setDraftProperty({ key: "posoDiscounted", value: 0 }));
+
+                            }
+                        }
+                        }
+                        id="payFullOrDiscount"
+                    />
+                    <label className="form-check-label" htmlFor="payFullOrDiscount">
+                        Εφαρμογή έκπτωσης
+                    </label>
+                </div>
+
+                {data.payFullOrDiscount == 2 &&
+                    <div className="row g-2">
+                        <div className="col-6">
+                            <Field label="Εφαρμογή">
+                                <FormSelect name="appliedPriceList" value={data.appliedPriceList} onChange={(e) => {
+                                    dispatch(setDraftProperty({ key: "appliedPriceList", value: e.target.value }))
+                                    if (e.target.value == "eoppy") {
+                                        const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
+                                        dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
+                                    } else {
+                                        const pricesRETAIL = ylika.reduce((acc, x) => acc + (Number(x.kostos_RETAIL) || 0), 0);
+                                        dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesRETAIL) }));
+                                    }
+                                }}>
+                                    <option value="retail">Λιανική</option>
+                                    <option value="eoppy">ΕΟΠΠΥ</option>
+                                </FormSelect>
+                            </Field>
+                        </div>
+                        <div className="col-6">
+                            <Field label="Τελικό ποσό">
+                                <input
+                                    className="form-control"
+                                    name="posoDiscounted"
+                                    value={data.posoDiscounted}
+                                    onChange={(e) => {
+                                        const raw = e.target.value.replaceAll(".", "").replaceAll(",", ".");
+                                        dispatch(setDraftProperty({ key: "posoDiscounted", value: raw.replace(".", ",") }));
+                                    }}
+                                    onBlur={(e) => {
+                                        dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(e.target.value.replaceAll(".", "").replaceAll(",", ".")) }))
+                                    }}
+                                />
+                            </Field>
+                        </div>
+                    </div>}
+
+                <div className="form-check form-switch mb-2 switch-lg">
+                    <input
+                        className="form-check-input"
+                        type="checkbox"
+                        checked={data.isTempSave == 1}
+                        onChange={(e) => dispatch(setDraftProperty({ key: "isTempSave", value: e.target.checked ? 1 : 0 }))}
+                        id="isTempSave"
+                    />
+                    <label className="form-check-label" htmlFor="isTempSave">
+                        Προσωρινή αποθήκευση
+                    </label>
+                </div>
+
             </div>
+            {submitState.error && <Alert className="mt-3" variant="danger">{submitState.error}</Alert>}
 
-        </div>
+        </>
     );
 }

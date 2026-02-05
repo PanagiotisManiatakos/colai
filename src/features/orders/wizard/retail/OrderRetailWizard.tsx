@@ -17,7 +17,7 @@ export default function OrderRetailWizard() {
   const router = useRouter()
 
   const [step, setStep] = React.useState(0);
-  const loading = useAppSelector(state => state.orders.draft.submitState.loading)
+  const submitState = useAppSelector((s) => s.orders.draft.submitState)
 
   const effectiveSteps = React.useMemo(() => {
     return [...steps];
@@ -37,8 +37,8 @@ export default function OrderRetailWizard() {
     try {
       const result = await dispatch(submitDraftAsync()).unwrap();
       if (result.result) {
-        await dispatch(fetchOrders({ force: true }));
         router.replace("/orders");
+        await dispatch(fetchOrders({ force: true }));
       } else {
         console.log(result)
       }
@@ -82,9 +82,9 @@ export default function OrderRetailWizard() {
               <i className="bi bi-chevron-right ms-2" />
             </button>
           ) : (
-            <button type="button" className="btn btn-success flex-fill" onClick={onSave}>
+            <button type="button" disabled={submitState.loading} className="btn btn-success flex-fill" onClick={onSave}>
               <i className="bi bi-check2-circle me-2" />
-              Αποθήκευση
+              {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
             </button>
           )}
         </div>
