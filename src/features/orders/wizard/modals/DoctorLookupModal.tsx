@@ -88,65 +88,51 @@ export default function DoctorLookupModal({
     }
 
     return (
-        <Modal show={show} onHide={onClose} centered contentClassName="premium-modal">
+        <Modal dialogClassName="modal-grow-scroll" show={show} onHide={onClose} centered contentClassName="premium-modal">
             <Modal.Header closeButton>
                 <Modal.Title className="h6 mb-0">Αναζήτηση Ιατρού</Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
-                <div className="app-card p-3">
-                    <label className="form-label small text-secondary mb-2">
-                        Αναζήτησε με ΑΜΚΑ / Όνομα
-                    </label>
-
-                    <div className="d-flex gap-2">
-                        <input
-                            ref={inputRef}
-                            className="form-control"
-                            value={q}
-                            onChange={(e) => setQ(e.target.value)}
-                            placeholder="π.χ. 12345678901 ή Παπαδόπουλος"
-                            inputMode="search"
-                            autoFocus
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") search();
-                            }}
-                        />
-                        <button type="button" className="btn btn-primary" onClick={search} disabled={q.trim().length < 2 || loading}>
-                            <i className="bi bi-search" />
-                        </button>
-                    </div>
-
-                    {error ? <div className="alert alert-danger py-2 small mt-3 mb-0">{error}</div> : null}
+                <div className="d-flex gap-2">
+                    <input
+                        ref={inputRef}
+                        className="form-control"
+                        value={q}
+                        onChange={(e) => setQ(e.target.value)}
+                        placeholder="π.χ. 12345678901 ή Παπαδόπουλος"
+                        inputMode="search"
+                        autoFocus
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") search();
+                        }}
+                    />
+                    <button type="button" className="btn btn-primary" onClick={search} disabled={q.trim().length < 2 || loading}>
+                        <i className="bi bi-search" />
+                    </button>
                 </div>
 
-                <div className="mt-3">
+                {error ? <div className="alert alert-danger py-2 small mt-3 mb-0">{error}</div> : null}
+
+                <div className="mt-3 modal-results">
                     {loading ? (
                         <AppLoader label="Αναζήτηση…" card={false} />
                     ) : results.length ? (
-                        <div className="mt-3 modal-results-scroll">
-                            {loading ? (
-                                <AppLoader label="Αναζήτηση…" card={false} />
-                            ) : results.length ? (
-                                <div className="list-group">
-                                    {results.map((r, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            className="list-group-item list-group-item-action"
-                                            onClick={() => applyDoctor(r)}
-                                        >
-                                            <div className="fw-semibold">{r.doctoR_NAME || "—"}</div>
-                                            <div className="small text-secondary">AMKA: {r.doctoR_AMKA || "—"}</div>
-                                            <div className="small text-secondary">
-                                                Ειδικότητα: {`${r.eidikotita ?? ""}`}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-secondary small text-center py-3">Δεν υπάρχουν αποτελέσματα.</div>
-                            )}
+                        <div className="list-group">
+                            {results.map((r, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    className="list-group-item list-group-item-action"
+                                    onClick={() => applyDoctor(r)}
+                                >
+                                    <div className="fw-semibold">{r.doctoR_NAME || "—"}</div>
+                                    <div className="small text-secondary">AMKA: {r.doctoR_AMKA || "—"}</div>
+                                    <div className="small text-secondary">
+                                        Ειδικότητα: {`${r.eidikotita ?? ""}`}
+                                    </div>
+                                </button>
+                            ))}
                         </div>
                     ) : (
                         <div className="text-secondary small text-center py-3">Δεν υπάρχουν αποτελέσματα.</div>

@@ -86,7 +86,7 @@ export default function FileUploadButton({
 
             const data = await uploadWithProgress(fd, endpoint, setProgress);
 
-            if (!data || data?.result === false || data?.ok === false) {
+            if (!data || !data?.result || !data?.ok) {
                 setStatus("error");
                 setMessage(data?.message || "Upload failed");
                 return;
@@ -107,6 +107,7 @@ export default function FileUploadButton({
             setProgress(0);
             setUploading(null);
         } catch (e: any) {
+            console.log(e)
             setStatus("error");
             setProgress(0);
             setMessage(e?.data?.message || e?.text || "Upload failed");

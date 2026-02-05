@@ -112,6 +112,7 @@ export type Order = {
   hasOtherSystinonIatroBool: boolean;
   isTempSave: number;
   aiCalculated: boolean;
+  hasAnoia: boolean;
 };
 
 export type OrderYlika = {
@@ -152,6 +153,34 @@ export type OrderFile = {
   document_category?: string;
   base64filename?: string
 };
+
+export type AIMaterials = {
+  anatomiki_perioxi: string;
+  clean_name: string;
+  diagnosi_pos_ayds: string;
+  diarkeia_therapeias_se_mines: number;
+  erp_products: AIMaterialsErpProducts[];
+  kodikos_diagnosis: string;
+  kodikos_diagnosis2: string;
+  kodikos_ylikou: string;
+  mhniaia_posotita_tmx: string;
+  perigrafi_diagnosis: string;
+  perigrafi_diagnosis2: string;
+  perigrafi_ylikou: string;
+  slug_name: string;
+  sxolia: string;
+  symmetoxi: string;
+  synoliki_posotita_eidous: number;
+  xronia_pathisi: string;
+}
+
+export type AIMaterialsErpProducts = {
+  erp_code: string;
+  erp_eoppyprice: number;
+  erp_gid: string;
+  erp_name: string;
+  erp_price: number;
+}
 
 export type OrdeListOfSelections = {
   disabled: boolean;

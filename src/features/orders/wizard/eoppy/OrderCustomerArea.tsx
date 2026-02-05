@@ -180,7 +180,7 @@ export default function OrderCustomerArea() {
                 </FormSelect>
             </Field>
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     name="deliverySunday"
@@ -194,7 +194,7 @@ export default function OrderCustomerArea() {
                 </label>
             </div>
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     name="deliveryMorning"
@@ -240,7 +240,7 @@ export default function OrderCustomerArea() {
                 )}
 
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     name="hasOtherRecipientBool"
@@ -367,7 +367,7 @@ export default function OrderCustomerArea() {
                 </>
             }
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     name="shipTo_other_address"
@@ -385,7 +385,7 @@ export default function OrderCustomerArea() {
                     id="shipTo_other_address"
                 />
                 <label className="form-check-label" htmlFor="shipTo_other_address">
-                    Θα παραδοθεί σε άλλη διέυθυνση
+                    Παράδοση σε άλλη διεύθυνση
                 </label>
             </div>
 

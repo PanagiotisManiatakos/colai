@@ -92,25 +92,45 @@ export default function SwipeToDeleteYliko({
             onPointerCancel={onPointerCancel}
             style={{ touchAction: "pan-y" }}
         >
-            {/* behind */}
-            <div className="swipe-actions">
-                <button
-                    type="button"
-                    className="btn btn-danger swipe-delete"
-                    onClick={onDelete}
-                    aria-label={deleteAriaLabel}
-                >
-                    <i className="bi bi-trash3" />
-                </button>
-            </div>
+            {(() => {
+                const reveal = Math.min(1, Math.max(0, -x / ACTION_WIDTH)); // 0..1
 
-            {/* front */}
-            <div
-                className={`swipe-content ${dragging ? "dragging" : ""}`}
-                style={{ transform: `translateX(${x}px)` }}
-            >
-                {children}
-            </div>
+                return (
+                    <>
+                        {/* behind */}
+                        <div
+                            className="swipe-actions"
+                            style={{
+                                opacity: reveal,
+                                transform: `translateX(${(1 - reveal) * 12}px)`,
+                                pointerEvents: reveal > 0.02 ? "auto" : "none",
+                                transition: dragging ? "none" : "opacity 140ms ease, transform 140ms ease",
+                            }}
+                        >
+                            <button
+                                type="button"
+                                className="btn btn-danger swipe-delete"
+                                onClick={onDelete}
+                                aria-label={deleteAriaLabel}
+                            >
+                                <i className="bi bi-trash3" />
+                            </button>
+                        </div>
+
+                        {/* front */}
+                        <div
+                            className={`swipe-content ${dragging ? "dragging" : ""}`}
+                            style={{
+                                transform: `translateX(${x}px)`,
+                                position: "relative",
+                                zIndex: 1,
+                            }}
+                        >
+                            {children}
+                        </div>
+                    </>
+                );
+            })()}
         </div>
     );
 }

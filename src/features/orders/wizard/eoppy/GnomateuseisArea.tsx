@@ -2,9 +2,8 @@
 
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { loadCustomerAddressesAsync, setDraftProperty, setDraftSyntagiUploaded } from "@/features/orders/ordersSlice";
+import { setDraftProperty, setDraftSyntagiUploaded } from "@/features/orders/ordersSlice";
 import FileUploadButton from "./FileUploadButton";
-import RunAiButton from "./RunAIButton";
 import { Order, OrderFile } from "@/types/orders";
 
 type UploadStatus = "idle" | "uploading" | "error";
@@ -21,17 +20,11 @@ function isPdf(name: string, mimeType?: string) {
     return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
-function hasAnyValue(obj: Record<string, any>): boolean {
-    return Object.values(obj).some((v) => v !== null && v !== "");
-}
-
-export default function GnomateuseisArea({ goTo }: { goTo: (x: number) => void }) {
+export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: string | null; aiStatus: AiStatus }) {
     const dispatch = useAppDispatch();
 
     const files = useAppSelector((s: any) => s.orders?.draft?.files ?? []);
     const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
-    const order = useAppSelector<Order>((s: any) => s.orders.draft.order);
-    const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
 
     const [status, setStatus] = React.useState<UploadStatus>("idle");
     const [statusExtra, setStatusExtra] = React.useState<UploadStatus>("idle");
@@ -40,8 +33,6 @@ export default function GnomateuseisArea({ goTo }: { goTo: (x: number) => void }
 
     const [message, setMessage] = React.useState<string | null>(null);
     const [messageExtra, setMessageExtra] = React.useState<string | null>(null);
-    const [aiStatus, setAiStatus] = React.useState<AiStatus>("idle");
-    const [aiMessage, setAiMessage] = React.useState<string | null>(null);
 
     const [uploading, setUploading] = React.useState<UploadingInfo | null>(null);
     const [uploadingExtra, setUploadingExtra] = React.useState<UploadingInfo | null>(null);
@@ -50,95 +41,12 @@ export default function GnomateuseisArea({ goTo }: { goTo: (x: number) => void }
         dispatch(setDraftProperty({ key: "type", value: "eoppy" }));
     }, [dispatch]);
 
-    async function runAi() {
-        setAiStatus("running");
-        setAiMessage(null);
-
-        const controller = new AbortController();
-        const t = window.setTimeout(() => controller.abort(), 240000); // 4 min
-
-        try {
-            const res = await fetch("/api/orders/runai", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    order_uid: orderUid,
-                    catid: group_EOPPY_id,
-                    aiclient: "auto"
-                }),
-                signal: controller.signal,
-            });
-
-            const response = await res.json().catch(() => ({}));
-            if (!res.ok || response?.ok === false || response?.result === false) {
-                throw new Error(response?.message || "AI request failed");
-            }
-            const data = response.data
-            if (data.isSuccess) {
-                dispatch(setDraftProperty({ key: "aiCalculated", value: true }))
-                data.jsonDoc.customer_erpid && dispatch(loadCustomerAddressesAsync({ customer_ErpGID: data.jsonDoc.customer_erpid, customer_name: data.jsonDoc.onomateponymo_eksetazomenou, customer_amka: data.jsonDoc.amka_eksetazomenou, customer_address: data.jsonDoc.diefthinsi_eksetazomenou }));
-
-                // CUSTOMER
-                data.jsonDoc.amka_eksetazomenou && dispatch(setDraftProperty({ key: "customer_amka", value: data.jsonDoc.amka_eksetazomenou }))
-                data.jsonDoc.onomateponymo_eksetazomenou && dispatch(setDraftProperty({ key: "customer_name", value: data.jsonDoc.onomateponymo_eksetazomenou }))
-                data.jsonDoc.diefthinsi_eksetazomenou && dispatch(setDraftProperty({ key: "customer_address", value: data.jsonDoc.diefthinsi_eksetazomenou }))
-                data.jsonDoc.poli_eksetazomenou && dispatch(setDraftProperty({ key: "customer_city", value: data.jsonDoc.poli_eksetazomenou }))
-                data.jsonDoc.tk_eksetazomenou && dispatch(setDraftProperty({ key: "customer_tk", value: data.jsonDoc.tk_eksetazomenou }))
-                data.jsonDoc.tilefono_eksetazomenou && dispatch(setDraftProperty({ key: "customer_tel", value: data.jsonDoc.tilefono_eksetazomenou }))
-                data.jsonDoc.email_eksetazomenou && dispatch(setDraftProperty({ key: "customer_email", value: data.jsonDoc.email_eksetazomenou }))
-                data.jsonDoc.imerominia_gennisis && dispatch(setDraftProperty({ key: "customer_dob", value: data.jsonDoc.imerominia_gennisis }))
-                data.jsonDoc.otp && dispatch(setDraftProperty({ key: "customer_tel_otp", value: data.jsonDoc.otp }))
-                data.jsonDoc.customer_erpid && dispatch(setDraftProperty({ key: "customer_ErpGID", value: data.jsonDoc.customer_erpid }))
-                //DOCTOR
-                const doctor = data.jsonDoc.iatros
-                doctor.amka_iatrou && dispatch(setDraftProperty({ key: "doctor_amka", value: doctor.amka_iatrou }))
-                doctor.onomateponymo_iatrou && dispatch(setDraftProperty({ key: "doctor_name", value: doctor.onomateponymo_iatrou }))
-                doctor.afm_iatrou && dispatch(setDraftProperty({ key: "doctor_afm", value: doctor.afm_iatrou }))
-                doctor.doctor_erpid && dispatch(setDraftProperty({ key: "doctor_ErpGID", value: doctor.doctor_erpid }))
-                doctor.typos_domis && dispatch(setDraftProperty({ key: "doctor_DomiTypos", value: doctor.typos_domis }))
-                doctor.ygeionomiki_domi && dispatch(setDraftProperty({ key: "doctor_Domi", value: doctor.ygeionomiki_domi }))
-                //SUGGESTED DOCTOR
-                const suggestedDoctor = data.jsonDoc.systinon_iatros
-                const hasSuggestedDoctor = hasAnyValue(suggestedDoctor);
-                hasSuggestedDoctor && dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: hasSuggestedDoctor }))
-                hasSuggestedDoctor && dispatch(setDraftProperty({ key: "has_suggested_doctor", value: hasSuggestedDoctor ? 1 : 0 }))
-                if (hasSuggestedDoctor) {
-                    suggestedDoctor.amka_iatrou && dispatch(setDraftProperty({ key: "doctorSuggested_amka", value: suggestedDoctor.amka_iatrou }))
-                    suggestedDoctor.onomateponymo_iatrou && dispatch(setDraftProperty({ key: "doctorSuggested_name", value: suggestedDoctor.onomateponymo_iatrou }))
-                    suggestedDoctor.afm_iatrou && dispatch(setDraftProperty({ key: "doctorSuggested_afm", value: suggestedDoctor.afm_iatrou }))
-                    suggestedDoctor.doctor_erpid && dispatch(setDraftProperty({ key: "doctorSuggested_ErpGID", value: suggestedDoctor.doctor_erpid }))
-                }
-                //GNOMATEVSI
-                const gnomatevsi = data.jsonDoc.gnomateusi
-                data.jsonDoc.barcode && dispatch(setDraftProperty({ key: "barcode", value: data.jsonDoc.barcode }))
-                gnomatevsi.imerominia_gnomateusis && dispatch(setDraftProperty({ key: "dateOfSyntagi", value: gnomatevsi.imerominia_gnomateusis }))
-                gnomatevsi.diarkeia_isxyos_apo && dispatch(setDraftProperty({ key: "dateIsxyeiApo", value: gnomatevsi.diarkeia_isxyos_apo }))
-                gnomatevsi.diarkeia_isxyos_eos && dispatch(setDraftProperty({ key: "dateIsxyeiEos", value: gnomatevsi.diarkeia_isxyos_eos }))
-                gnomatevsi.katigoria_paroxis && dispatch(setDraftProperty({ key: "katigoriaParoxis", value: gnomatevsi.katigoria_paroxis }))
-                gnomatevsi.eidos_egkrisis && dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: gnomatevsi.eidos_egkrisis }))
-                dispatch(setDraftProperty({ key: "symmPercentage", value: gnomatevsi.symmetoxi_percentage }))
-                gnomatevsi.diagnosi1_gid && dispatch(setDraftProperty({ key: "diagnosi1_GID", value: gnomatevsi.diagnosi1_gid }))
-                gnomatevsi.kodikos_diagnosis && dispatch(setDraftProperty({ key: "eoppy_Diagnosi_Code", value: gnomatevsi.kodikos_diagnosis }))
-                gnomatevsi.perigrafi_diagnosis && dispatch(setDraftProperty({ key: "eoppy_Diagnosi_Name", value: gnomatevsi.perigrafi_diagnosis }))
-                gnomatevsi.diagnosi2_gid && dispatch(setDraftProperty({ key: "diagnosi2_GID", value: gnomatevsi.diagnosi2_gid }))
-                gnomatevsi.kodikos_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Code", value: gnomatevsi.kodikos_diagnosis2 }))
-                gnomatevsi.perigrafi_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Name", value: gnomatevsi.perigrafi_diagnosis2 }))
-            }
-
-            setAiStatus("done");
-            goTo(1)
-        } catch (e: any) {
-            setAiStatus("error");
-            setAiMessage(e?.name === "AbortError" ? "AI request timed out." : (e?.message || "AI request failed"));
-        } finally {
-            window.clearTimeout(t);
-        }
-    }
 
     const isUploadingNow = status === "uploading";
     const isUploadingNowExtra = statusExtra === "uploading";
     const hasFiles = files.some((o: any) => o?.document_category === "recipe");
     const hasAuxFiles = files.some((o: any) => o?.document_category === "recipe_aux");
+    console.log(aiStatus)
 
     return (
         <>
@@ -147,15 +55,6 @@ export default function GnomateuseisArea({ goTo }: { goTo: (x: number) => void }
                     <div className="fw-semibold">Αρχεία</div>
 
                     <div className="d-flex align-items-center gap-2">
-                        {hasFiles ? (
-                            <RunAiButton
-                                running={aiStatus === "running"}
-                                disabled={isUploadingNow}
-                                onClick={runAi}
-                                label="Run AI"
-                            />
-                        ) : null}
-
                         <FileUploadButton
                             ariaLabel="Προσθήκη"
                             disabled={isUploadingNow || aiStatus === "running"}

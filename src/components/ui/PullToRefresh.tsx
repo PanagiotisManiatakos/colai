@@ -155,6 +155,7 @@ export default function PullToRefresh({
             scrollEl.removeEventListener("touchend", onTouchEnd);
             scrollEl.removeEventListener("touchcancel", onTouchEnd);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isRefreshing, threshold, maxPull, onRefresh, scrollSelector, useSelfScroll, pull]);
 
     const rotate = Math.min(180, (pull / threshold) * 180);

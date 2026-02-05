@@ -488,3 +488,52 @@ html[data-bs-theme="dark"] .btn-ai {
 .ptr-content {
   will-change: transform;
 }
+
+.switch-lg{
+    display:flex;
+    align-items: center;
+    gap: .5rem;;
+}
+
+.switch-lg .form-check-input {
+  width: 60px;   /* overall switch width */
+  height: 30px;  /* overall switch height */
+  cursor: pointer;
+}
+
+.switch-lg .form-check-input:checked {
+  background-position: right center; /* keep knob aligned */
+}
+
+/* Full-height modal with scrollable results area */
+.modal-grow-scroll .modal-content {
+  max-height: calc(100dvh - 1.5rem); /* keeps top/bottom breathing space */
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-grow-scroll .modal-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* critical for inner scrolling */
+}
+
+.modal-grow-scroll .modal-results {
+  flex: 1 1 auto;     /* takes remaining space only when needed */
+  min-height: 0;      /* allow it to shrink */
+  overflow-y: auto;   /* scroll only this area when list is long */
+  -webkit-overflow-scrolling: touch;
+}
+
+html[data-bs-theme="dark"], .modal-content {
+  background-color: var(--app-bg);
+}
+
+.ai-mat-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 10; /* show up to 2 lines */
+  line-clamp: 10;
+  overflow: hidden;
+  line-height: 1.2;
+}

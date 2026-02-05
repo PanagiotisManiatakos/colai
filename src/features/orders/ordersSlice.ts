@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { DiscountRequest, OrdeListOfSelections, Order, OrderFile, OrderListOfAddressPersons, OrderYlika } from "@/types/orders";
+import type { AIMaterials, DiscountRequest, OrdeListOfSelections, Order, OrderFile, OrderListOfAddressPersons, OrderYlika } from "@/types/orders";
 import type { IDoctorFormData, IPatientFormData, IRecipientFormData } from "@/lib/interface";
 import { RootState } from "@/store/store";
 import { formatStringToISODDateTime } from "@/lib/utils/date";
@@ -19,6 +19,7 @@ export interface DraftState {
   list_AddressesPersons: OrderListOfAddressPersons[]
   preselected_address_GID?: string;
   preselected_person_GID?: string;
+  ai_ylika: AIMaterials[];
 }
 
 export interface SelectedOrderState {
@@ -183,7 +184,8 @@ const initialStateBase: OrdersState = {
     list_LogosParalipti: [] as OrdeListOfSelections[],
     list_SygeniaParalipti: [] as OrdeListOfSelections[],
     list_TroposApostolis: [] as OrdeListOfSelections[],
-    list_AddressesPersons: [] as OrderListOfAddressPersons[]
+    list_AddressesPersons: [] as OrderListOfAddressPersons[],
+    ai_ylika: [] as AIMaterials[],
   },
   selected: null,
   ordersQuery: "",
@@ -214,6 +216,7 @@ function loadStateFromLocalStorage(): OrdersState | null {
         list_LogosParalipti: (parsed?.list_LogosParalipti ?? initialStateBase.draft.list_LogosParalipti) as OrdeListOfSelections[],
         list_SygeniaParalipti: (parsed?.list_SygeniaParalipti ?? initialStateBase.draft.list_SygeniaParalipti) as OrdeListOfSelections[],
         list_TroposApostolis: (parsed?.list_TroposApostolis ?? initialStateBase.draft.list_TroposApostolis) as OrdeListOfSelections[],
+        ai_ylika: (parsed?.ai_ylika ?? initialStateBase.draft.ai_ylika) as AIMaterials[],
       },
       // optionally persist selected too, but usually not needed:
       // selected: (parsed.selected ?? initialState.selected) as any,
@@ -234,6 +237,7 @@ function persistStateToLocalStorage(state: OrdersState) {
     list_LogosParalipti: state.draft.list_LogosParalipti,
     list_SygeniaParalipti: state.draft.list_SygeniaParalipti,
     list_TroposApostolis: state.draft.list_TroposApostolis,
+    ai_ylika: state.draft.ai_ylika
   };
 
   try {
@@ -263,8 +267,12 @@ const ordersSlice = createSlice({
       };
       persistStateToLocalStorage(state);
     },
+    setAIMaterials(state, action: PayloadAction<AIMaterials[]>) {
+      state.draft.ai_ylika = action.payload;
+      persistStateToLocalStorage(state);
+    },
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
-      state.draft.ylika.push({ ...action.payload, qty: 1, kostos_RETAIL: action.payload.erp_price, kostos_EOPPY: action.payload.erp_eoppyprice });
+      state.draft.ylika.push({ ...action.payload, kostos_RETAIL: action.payload.erp_price, kostos_EOPPY: action.payload.erp_eoppyprice });
       state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_RETAIL) || 0), 0);
       state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
       persistStateToLocalStorage(state);
@@ -289,7 +297,12 @@ const ordersSlice = createSlice({
 
       persistStateToLocalStorage(state);
     },
+    removeAIMaterial: (state, action: PayloadAction<number>) => {
+      state.draft.ai_ylika.splice(action.payload, 1);
+      persistStateToLocalStorage(state);
+    },
     setDraftSyntagiUploaded(state, action: PayloadAction<OrderFile>) {
+      if (!state.draft.files) state.draft.files = []
       state.draft.files.push(action.payload);
       persistStateToLocalStorage(state);
     },
@@ -418,6 +431,8 @@ export const {
   addDraftYliko,
   updateDraftYlikoQuantity,
   removeDraftYliko,
+  removeAIMaterial,
+  setAIMaterials
 } = ordersSlice.actions;
 
 export default ordersSlice.reducer;

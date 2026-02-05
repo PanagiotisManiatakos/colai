@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 
 import { PlatformCard } from "@/components/ui/PlatformCard";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { deletedDraftTemplate, editDraftAsync, setDraftProperty } from "@/features/orders/ordersSlice";
+import { editDraftAsync, setDraftProperty } from "@/features/orders/ordersSlice";
+import AppLoader from "@/components/ui/AppLoader";
 
 export default function OrderStartPage() {
   const router = useRouter();
@@ -19,8 +20,8 @@ export default function OrderStartPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (!groupid) dispatch(setDraftProperty({ key: "groupid", value: 4 }));
-  }, [dispatch, groupid]);
+    dispatch(setDraftProperty({ key: "groupid", value: null }));
+  }, []);
 
   React.useEffect(() => {
     if (type) setError(null);
@@ -30,17 +31,12 @@ export default function OrderStartPage() {
     if (editState.error) setError(editState.error);
   }, [editState.error]);
 
-  const handleContinue = async () => {
-    if (!type) {
-      setError("Παρακαλώ επίλεξε πλατφόρμα για να συνεχίσεις.");
-      return;
-    }
-
+  const handleContinue = async (ty: string) => {
     setError(null);
 
     try {
-      const response = await dispatch(editDraftAsync({ catid: 4, typeid: type })).unwrap();
-      router.push(`/orders/0/${encodeURIComponent(type)}/new?uid=${response.data.order.uid}`);
+      const response = await dispatch(editDraftAsync({ catid: 4, typeid: ty })).unwrap();
+      router.push(`/orders/0/${encodeURIComponent(ty)}/new?uid=${response.data.order.uid}`);
     } catch (e: any) {
       setError(e?.message || "Κάτι πήγε στραβά.");
     }
@@ -61,8 +57,8 @@ export default function OrderStartPage() {
       </div>
 
       <div className="d-flex flex-column gap-2">
-        <PlatformCard title="ΕΟΠΥΥ" type="eoppy" description="Ανέβασε παραπεμπτικό/γνωμάτευση" icon="bi-cloud-upload" />
-        <PlatformCard title="Λιανικής" type="retail" description="Συμπλήρωσε στοιχεία" icon="bi-ui-checks" />
+        <PlatformCard title="ΕΟΠΥΥ" type="eoppy" description="Ανέβασε παραπεμπτικό/γνωμάτευση" icon="bi-cloud-upload" onClick={(x) => handleContinue(x)} />
+        <PlatformCard title="Λιανικής" type="retail" description="Συμπλήρωσε στοιχεία" icon="bi-ui-checks" onClick={(x) => handleContinue(x)} />
       </div>
 
       {error ? (
@@ -70,8 +66,9 @@ export default function OrderStartPage() {
           {error}
         </Alert>
       ) : null}
+      {editState.loading && <AppLoader />}
 
-      <div className="d-flex gap-2 pt-1">
+      {/* <div className="d-flex gap-2 pt-1">
         <button
           type="button"
           className="btn btn-outline-secondary flex-fill"
@@ -87,7 +84,7 @@ export default function OrderStartPage() {
         <button type="button" className="btn btn-primary flex-fill" onClick={handleContinue} disabled={editState.loading}>
           {editState.loading ? "Φόρτωση…" : "Επόμενο"}
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }

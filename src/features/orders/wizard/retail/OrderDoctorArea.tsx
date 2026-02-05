@@ -47,7 +47,7 @@ export default function OrderDoctorArea() {
             />
 
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     type="checkbox"

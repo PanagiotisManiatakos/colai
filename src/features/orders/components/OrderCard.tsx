@@ -20,9 +20,8 @@ export default function OrderCard({
   onDelete?: (id: number) => void;
 }) {
   const canSwipeDelete = order.statusId === 0;
-  const router = useRouter()
-
-  const dispatch = useAppDispatch()
+  const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const [x, setX] = React.useState(0);
   const [dragging, setDragging] = React.useState(false);
@@ -37,7 +36,6 @@ export default function OrderCard({
     active: false,
     swiping: false,
   });
-
 
   React.useEffect(() => {
     if (!canSwipeDelete) {
@@ -119,16 +117,15 @@ export default function OrderCard({
     setShowConfirm(true);
   }
 
-
   async function confirmDelete() {
     try {
       setDeleting(true);
-      await dispatch(deleteOrderAsync({ orderId: order.id, orderUID: order.uid }))
+      await dispatch(deleteOrderAsync({ orderId: order.id, orderUID: order.uid }));
 
       setShowConfirm(false);
       setX(0);
       setDeleting(false);
-
+      onDelete?.(order.id);
     } finally {
     }
   }
@@ -138,12 +135,14 @@ export default function OrderCard({
 
     setShowConfirm(false);
 
-    // close swipe back to normal
     setX(0);
     setDragging(false);
     startRef.current.active = false;
     startRef.current.swiping = false;
   }
+
+  const reveal = canSwipeDelete ? Math.min(1, Math.max(0, -x / ACTION_WIDTH)) : 0;
+
   return (
     <>
       <div
@@ -155,7 +154,15 @@ export default function OrderCard({
         style={{ touchAction: canSwipeDelete ? "pan-y" : "auto" }}
       >
         {canSwipeDelete ? (
-          <div className="swipe-actions">
+          <div
+            className="swipe-actions"
+            style={{
+              opacity: reveal,
+              transform: `translateX(${(1 - reveal) * 12}px)`,
+              pointerEvents: reveal > 0.02 ? "auto" : "none",
+              transition: dragging ? "none" : "opacity 140ms ease, transform 140ms ease",
+            }}
+          >
             <button
               type="button"
               className="btn btn-danger swipe-delete"
@@ -169,7 +176,11 @@ export default function OrderCard({
 
         <div
           className={`swipe-content ${dragging ? "dragging" : ""}`}
-          style={{ transform: `translate3d(${canSwipeDelete ? x : 0}px, 0, 0)` }}
+          style={{
+            transform: `translate3d(${canSwipeDelete ? x : 0}px, 0, 0)`,
+            position: "relative",
+            zIndex: 1,
+          }}
         >
           <details className="app-card p-3">
             <summary
@@ -215,16 +226,17 @@ export default function OrderCard({
                   <button
                     type="button"
                     className="btn btn-outline-secondary flex-fill"
-                    onClick={() =>
-                      router.push(`/orders/${order.id}/${order.type}/edit?uid=${order.uid}`)
-                    }
+                    onClick={() => router.push(`/orders/${order.id}/${order.type}/edit?uid=${order.uid}`)}
                   >
                     <i className="bi bi-pencil-fill me-2" />
                     Επεξεργασία
                   </button>
                 ) : null}
 
-                <Link href={`/orders/${order.id}/${order.type}/view?uid=${order.uid}`} className="btn btn-primary flex-fill">
+                <Link
+                  href={`/orders/${order.id}/${order.type}/view?uid=${order.uid}`}
+                  className="btn btn-primary flex-fill"
+                >
                   <i className="bi bi-eye me-2" />
                   Προβολή
                 </Link>
@@ -255,12 +267,8 @@ export default function OrderCard({
             </div>
 
             <div>
-              <div className="fw-semibold mb-1">
-                Είστε σίγουροι πως θέλετε να διαγράψετε την παραγγελία;
-              </div>
-              <div className="text-secondary small">
-                Η ενέργεια αυτή δεν μπορεί να αναιρεθεί.
-              </div>
+              <div className="fw-semibold mb-1">Είστε σίγουροι πως θέλετε να διαγράψετε την παραγγελία;</div>
+              <div className="text-secondary small">Η ενέργεια αυτή δεν μπορεί να αναιρεθεί.</div>
             </div>
           </div>
         </Modal.Body>

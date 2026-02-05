@@ -98,7 +98,7 @@ export default function OrderDoctorArea() {
             </Field>
 
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     name="has_suggested_doctor"

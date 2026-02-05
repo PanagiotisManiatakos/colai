@@ -42,10 +42,10 @@ export async function POST(req: NextRequest) {
         cache: "no-store",
     });
 
-    const text = await r.text();
+    const parsed = await r.json().catch((e: any) => ({ ok: false, message: e.message }));
     try {
-        return NextResponse.json(JSON.parse(text), { status: r.status });
+        return NextResponse.json({ ok: true, ...parsed }, { status: r.status });
     } catch {
-        return new NextResponse(text, { status: r.status });
+        return new NextResponse(parsed, { status: r.status });
     }
 }

@@ -46,7 +46,7 @@ export default function CompletionArea() {
 
             <div className="app-divider my-2" />
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     type="checkbox"
@@ -108,7 +108,7 @@ export default function CompletionArea() {
                     </div>
                 </div>}
 
-            <div className="form-check form-switch mb-2">
+            <div className="form-check form-switch mb-2 switch-lg">
                 <input
                     className="form-check-input"
                     type="checkbox"
