@@ -53,11 +53,9 @@ const SyntagiArea = () => {
 
             <BarcodeField
                 label="Barcode"
-                name="barcode"
                 value={data.barcode ?? ""}
                 onChange={(v) => dispatch(setDraftProperty({ key: "barcode", value: v }))}
-                hint="Πάτησε το εικονίδιο για σάρωση."
-            // formats={["ean_13","ean_8","code_128","qr_code","upc_a","upc_e"]} // optional
+                name="barcode"
             />
             <div className="row g-2">
                 <div className="col-6">

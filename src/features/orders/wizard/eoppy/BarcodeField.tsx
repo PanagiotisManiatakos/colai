@@ -5,222 +5,183 @@ import { Modal } from "react-bootstrap";
 
 type Props = {
     label: string;
-    name?: string;
     value: string;
     onChange: (next: string) => void;
+
+    name?: string;
     hint?: string;
     placeholder?: string;
+    inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
     disabled?: boolean;
+    autoFocus?: boolean;
 
-    /** Optional: restrict formats if you want */
-    formats?: string[];
+    scanButtonAriaLabel?: string;
+    modalTitle?: string;
 };
-
-function Field({
-    label,
-    children,
-    hint,
-}: {
-    label: string;
-    children: React.ReactNode;
-    hint?: string;
-}) {
-    return (
-        <div className="mb-3">
-            <label className="form-label fw-semibold">{label}</label>
-            {children}
-            {hint ? <div className="form-text">{hint}</div> : null}
-        </div>
-    );
-}
 
 export default function BarcodeField({
     label,
-    name,
     value,
     onChange,
+    name,
     hint,
     placeholder,
+    inputMode = "numeric",
     disabled,
-    formats,
+    autoFocus,
+
+    scanButtonAriaLabel = "Scan barcode",
+    modalTitle = "Σάρωση Barcode",
 }: Props) {
     const [show, setShow] = React.useState(false);
     const [starting, setStarting] = React.useState(false);
-    const [err, setErr] = React.useState<string | null>(null);
+    const [error, setError] = React.useState<string | null>(null);
 
-    const videoRef = React.useRef<HTMLVideoElement | null>(null);
-    const streamRef = React.useRef<MediaStream | null>(null);
-    const rafRef = React.useRef<number | null>(null);
+    const html5QrRef = React.useRef<any>(null);
 
-    const canScan =
-        typeof window !== "undefined" &&
-        "mediaDevices" in navigator &&
-        typeof navigator.mediaDevices.getUserMedia === "function" &&
-        "BarcodeDetector" in window;
+    // Stable id (no hydration issues)
+    const rid = React.useId();
+    const readerId = React.useMemo(() => `barcode-reader-${rid.replace(/[:]/g, "")}`, [rid]);
 
-    const stop = React.useCallback(() => {
-        if (rafRef.current) {
-            cancelAnimationFrame(rafRef.current);
-            rafRef.current = null;
+    const stopScanner = React.useCallback(async () => {
+        try {
+            const inst = html5QrRef.current;
+            if (!inst) return;
+
+            // stop() is required to release camera
+            await inst.stop();
+            // Some versions expose clear(). If not, ignore.
+            if (typeof inst.clear === "function") {
+                await inst.clear();
+            }
+        } catch {
+            // ignore teardown issues
+        } finally {
+            html5QrRef.current = null;
         }
-        if (streamRef.current) {
-            streamRef.current.getTracks().forEach((t) => t.stop());
-            streamRef.current = null;
-        }
-        if (videoRef.current) {
-            try {
-                (videoRef.current as any).srcObject = null;
-            } catch { }
-        }
-        setStarting(false);
     }, []);
 
-    const close = React.useCallback(() => {
-        stop();
+    const close = React.useCallback(async () => {
         setShow(false);
-        setErr(null);
-    }, [stop]);
-
-    const start = React.useCallback(async () => {
-        if (!canScan) {
-            setErr("Η σάρωση barcode δεν υποστηρίζεται σε αυτόν τον browser.");
-            return;
-        }
-
-        setStarting(true);
-        setErr(null);
-
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { ideal: "environment" } },
-                audio: false,
-            });
-
-            streamRef.current = stream;
-
-            const video = videoRef.current;
-            if (!video) throw new Error("No video element");
-
-            (video as any).srcObject = stream;
-            await video.play();
-
-            const Detector = (window as any).BarcodeDetector;
-            const detector = formats?.length
-                ? new Detector({ formats })
-                : new Detector(); // let browser decide
-
-            const tick = async () => {
-                if (!videoRef.current) return;
-
-                try {
-                    const barcodes = await detector.detect(videoRef.current);
-                    if (barcodes && barcodes.length > 0) {
-                        const raw = barcodes[0]?.rawValue ?? "";
-                        if (raw) {
-                            onChange(raw);
-                            close();
-                            return;
-                        }
-                    }
-                } catch {
-                    // ignore frame errors
-                }
-
-                rafRef.current = requestAnimationFrame(tick);
-            };
-
-            rafRef.current = requestAnimationFrame(tick);
-        } catch (e: any) {
-            setErr(e?.message || "Δεν ήταν δυνατή η πρόσβαση στην κάμερα.");
-            stop();
-        } finally {
-            setStarting(false);
-        }
-    }, [canScan, close, formats, onChange, stop]);
+        setStarting(false);
+        setError(null);
+        await stopScanner();
+    }, [stopScanner]);
 
     React.useEffect(() => {
         if (!show) return;
-        void start();
-        return () => stop();
-    }, [show, start, stop]);
+
+        let cancelled = false;
+
+        (async () => {
+            setStarting(true);
+            setError(null);
+
+            try {
+                const mod = await import("html5-qrcode");
+                if (cancelled) return;
+
+                const Html5Qrcode = mod.Html5Qrcode;
+
+                const inst = new Html5Qrcode(readerId);
+                html5QrRef.current = inst;
+
+                // Prefer back camera; must be called from user gesture (button) + HTTPS.
+                await inst.start(
+                    { facingMode: "environment" },
+                    {
+                        fps: 12,
+                        // Wider box tends to work better for 1D barcodes
+                        qrbox: { width: 280, height: 160 },
+                        aspectRatio: 1.777,
+                    },
+                    (decodedText: string) => {
+                        // Success
+                        onChange(decodedText);
+                        void close();
+                    },
+                    () => {
+                        // Ignore per-frame errors
+                    }
+                );
+            } catch (e: any) {
+                if (!cancelled) {
+                    setError(e?.message || "Δεν ήταν δυνατή η πρόσβαση στην κάμερα.");
+                    await stopScanner();
+                }
+            } finally {
+                if (!cancelled) setStarting(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+            void stopScanner();
+        };
+    }, [show, readerId, onChange, close, stopScanner]);
 
     return (
-        <>
-            <Field label={label} hint={hint}>
-                <div className="input-group">
-                    <input
-                        className="form-control"
-                        name={name}
-                        value={value}
-                        onChange={(e) => onChange(e.target.value)}
-                        inputMode="numeric"
-                        placeholder={placeholder}
-                        disabled={disabled}
-                        autoComplete="off"
-                    />
-                    <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={() => setShow(true)}
-                        disabled={disabled}
-                        aria-label="Scan barcode"
-                        title={canScan ? "Scan barcode" : "Barcode scan not supported"}
-                    >
-                        <i className="bi bi-upc-scan" />
-                    </button>
-                </div>
-            </Field>
+        <div className="mb-3">
+            <label className="form-label fw-semibold">{label}</label>
+
+            <div className="input-group">
+                <input
+                    className="form-control"
+                    name={name}
+                    value={value}
+                    placeholder={placeholder}
+                    inputMode={inputMode}
+                    disabled={disabled}
+                    autoFocus={autoFocus}
+                    onChange={(e) => onChange(e.target.value)}
+                />
+
+                <button
+                    type="button"
+                    className="btn btn-outline-secondary"
+                    onClick={() => setShow(true)}
+                    disabled={disabled}
+                    aria-label={scanButtonAriaLabel}
+                    title={scanButtonAriaLabel}
+                >
+                    <i className="bi bi-upc-scan" />
+                </button>
+            </div>
+
+            {hint ? <div className="form-text">{hint}</div> : null}
 
             <Modal show={show} onHide={close} centered contentClassName="premium-modal">
                 <Modal.Header closeButton>
-                    <Modal.Title className="h6 mb-0">Σάρωση Barcode</Modal.Title>
+                    <Modal.Title className="h6 mb-0">{modalTitle}</Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
-                    {!canScan ? (
-                        <div className="alert alert-warning small mb-0">
-                            Η σάρωση barcode δεν υποστηρίζεται σε αυτόν τον browser. Χρησιμοποιήστε Chrome/Edge/Android ή
-                            πληκτρολογήστε το barcode.
+                    <div className="app-card p-3">
+                        <div className="small text-secondary mb-2">
+                            Στρέψε την κάμερα στο barcode. Κράτα το σταθερό για καλύτερη ανάγνωση.
                         </div>
-                    ) : (
-                        <>
-                            <div className="app-card p-2">
-                                <div
-                                    className="ratio ratio-4x3 overflow-hidden"
-                                    style={{ borderRadius: 16 }}
-                                >
-                                    <video
-                                        ref={videoRef}
-                                        playsInline
-                                        muted
-                                        autoPlay
-                                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                    />
-                                </div>
 
-                                <div className="small text-secondary mt-2 px-1">
-                                    Στρέψε την κάμερα στο barcode. Η σάρωση γίνεται αυτόματα.
-                                </div>
+                        <div
+                            id={readerId}
+                            className="rounded overflow-hidden border"
+                            style={{
+                                width: "100%",
+                                // Let the library decide height from video feed; keep a sensible minimum.
+                                minHeight: 220,
+                            }}
+                        />
+
+                        {starting ? (
+                            <div className="d-flex align-items-center gap-2 mt-3 text-secondary small">
+                                <span className="spinner-border spinner-border-sm" aria-hidden />
+                                Εκκίνηση κάμερας…
                             </div>
+                        ) : null}
 
-                            {starting ? (
-                                <div className="d-flex align-items-center gap-2 small text-secondary mt-3">
-                                    <span className="spinner-border spinner-border-sm" aria-hidden />
-                                    Εκκίνηση κάμερας…
-                                </div>
-                            ) : null}
-
-                            {err ? <div className="alert alert-danger small mt-3 mb-0">{err}</div> : null}
-                        </>
-                    )}
+                        {error ? <div className="alert alert-danger small mt-3 mb-0 py-2">{error}</div> : null}
+                    </div>
                 </Modal.Body>
-
-                <Modal.Footer>
-                    <button type="button" className="btn btn-outline-secondary" onClick={close}>
-                        Κλείσιμο
-                    </button>
-                </Modal.Footer>
             </Modal>
-        </>
+        </div>
     );
 }
