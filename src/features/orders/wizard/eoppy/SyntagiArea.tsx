@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { Order } from '@/types/orders';
 import React from 'react'
 import { FormSelect } from 'react-bootstrap';
+import BarcodeField from './BarcodeField';
 
 function Field({ label, children, hint }: {
     label: string;
@@ -50,15 +51,14 @@ const SyntagiArea = () => {
 
             </div>
 
-            <Field label="Barcode">
-                <input
-                    className="form-control"
-                    inputMode="numeric"
-                    name="barcode"
-                    value={data.barcode ?? ""}
-                    onChange={(e) => dispatch(setDraftProperty({ key: "barcode", value: e.target.value }))}
-                />
-            </Field>
+            <BarcodeField
+                label="Barcode"
+                name="barcode"
+                value={data.barcode ?? ""}
+                onChange={(v) => dispatch(setDraftProperty({ key: "barcode", value: v }))}
+                hint="Πάτησε το εικονίδιο για σάρωση."
+            // formats={["ean_13","ean_8","code_128","qr_code","upc_a","upc_e"]} // optional
+            />
             <div className="row g-2">
                 <div className="col-6">
                     <Field label="Ημ/νία συνταγης">

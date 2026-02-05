@@ -26,7 +26,7 @@ function hasAnyValue(obj: Record<string, any>): boolean {
 export default function SynenaiseisArea() {
     const dispatch = useAppDispatch();
 
-    const files = useAppSelector((s: any) => s.orders?.draft?.files ?? []);
+    const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
     const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
 
     const [status, setStatus] = React.useState<UploadStatus>("idle");
