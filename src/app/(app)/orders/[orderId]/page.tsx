@@ -20,7 +20,8 @@ export default function OrderStartPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    dispatch(setDraftProperty({ key: "groupid", value: null }));
+    dispatch(setDraftProperty({ key: "groupid", value: 4 }));
+    dispatch(setDraftProperty({ key: "type", value: null }));
   }, []);
 
   React.useEffect(() => {

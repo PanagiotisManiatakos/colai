@@ -5,12 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 
 import BottomNav from "@/components/shell/BottomNav";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-
 import { logoutAsync } from "@/features/auth/authSlice";
 
 import Dropdown from "react-bootstrap/Dropdown";
-
-
 
 function shouldShowBack(pathname: string): boolean {
   return pathname !== "/";
@@ -26,19 +23,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const userInfos = useAppSelector((s) => s.auth?.userInfos);
   const fullName = [userInfos?.fname, userInfos?.lname].filter(Boolean).join(" ") || "Λογαριασμός";
 
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+
+  const displayName = mounted ? fullName : "Λογαριασμός";
+
   const onProfile = () => {
-    // change to your actual profile route
     router.push("/settings/profile");
   };
 
   const onLogout = async () => {
     try {
-
       await dispatch(logoutAsync());
       router.replace("/login");
-    } catch (e) {
-
-    }
+    } catch (e) { }
   };
 
   return (
@@ -58,7 +56,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             ) : null}
           </div>
 
-
           <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 44 }}>
             <Dropdown align="end">
               <Dropdown.Toggle
@@ -69,8 +66,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 aria-label="User menu"
                 style={{ maxWidth: 200 }}
               >
-                <span className="text-truncate" style={{ maxWidth: 170 }}>
-                  {fullName}
+                <span
+                  className="text-truncate"
+                  style={{ maxWidth: 170 }}
+                  suppressHydrationWarning
+                >
+                  {displayName}
                 </span>
               </Dropdown.Toggle>
 

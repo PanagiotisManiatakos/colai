@@ -1,3 +1,4 @@
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import React from "react";
 
 type MetricCardProps = {
@@ -163,7 +164,15 @@ function MonthlyTargetCard() {
 
 export default function HomeStats() {
   return (
-    <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
+    <div
+      className="h-100 d-flex flex-column"
+      style={{
+        minHeight: 0,
+        overflowX: "hidden",
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
       <div className="row g-3 mb-3">
         <MetricCard
           title="Παραγγελίες Μήνα"
@@ -185,6 +194,8 @@ export default function HomeStats() {
         <SalesAnalysisCard />
         <MonthlyTargetCard />
       </div>
+      <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
+
     </div>
   );
 }

@@ -49,7 +49,7 @@ export default function OrderEoppyWizard() {
   const [aiStatus, setAiStatus] = React.useState<AiStatus>("idle");
   const [aiMessage, setAiMessage] = React.useState<string | null>(null);
 
-  const files = useAppSelector((s: any) => s.orders?.draft?.files ?? []);
+  const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
   const hasFiles = files.some((o: any) => o?.document_category === "recipe");
   const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
@@ -69,11 +69,7 @@ export default function OrderEoppyWizard() {
   ];
 
 
-  const effectiveSteps = React.useMemo(
-    () => stepDefs.filter(s => s.show !== false),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [shouldShowAiMaterials]
-  );
+  const effectiveSteps = stepDefs.filter((s) => s.show !== false);
 
   const labels = effectiveSteps.map(s => s.label);
   const maxStep = effectiveSteps.length - 1;

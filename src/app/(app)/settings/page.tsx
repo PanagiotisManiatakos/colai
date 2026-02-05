@@ -28,7 +28,15 @@ export default function SettingsPage() {
   }
 
   return (
-    <div>
+    <div
+      className="h-100 d-flex flex-column"
+      style={{
+        minHeight: 0,
+        overflowX: "hidden",
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
       <div className="app-card p-4 mb-3">
         <div className="d-flex align-items-center justify-content-between">
           <div>
@@ -49,8 +57,12 @@ export default function SettingsPage() {
       <div className="app-card p-4 mb-3">
         <div className="fw-semibold mb-2">Install</div>
         <div className="text-secondary small">
-          Android/Chrome: menu → <span className="fw-semibold">Install app</span>.
-          iPhone/Safari: Share → <span className="fw-semibold">Add to Home Screen</span>.
+          <div>
+            Android/Chrome: menu → <span className="fw-semibold">Install app</span>.
+          </div>
+          <div>
+            iPhone/Safari: Share → <span className="fw-semibold">Add to Home Screen</span>.
+          </div>
         </div>
       </div>
 

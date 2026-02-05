@@ -15,12 +15,16 @@ export function PlatformCard({
   onClick: (value: string) => void;
 }) {
   const selectedType = useAppSelector((state) => state.orders.draft.order?.type);
+  const editState = useAppSelector((state) => state.orders.draft.editState);
   const dispatch = useAppDispatch();
   const isSelected = selectedType === type;
 
   const handleClick = () => {
-    dispatch(setDraftProperty({ key: "type", value: type }))
-    onClick(type)
+    if (!editState.loading) {
+
+      dispatch(setDraftProperty({ key: "type", value: type }))
+      onClick(type)
+    }
   }
 
   return (

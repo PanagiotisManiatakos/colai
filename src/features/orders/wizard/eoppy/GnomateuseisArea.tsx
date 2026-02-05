@@ -23,7 +23,7 @@ function isPdf(name: string, mimeType?: string) {
 export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: string | null; aiStatus: AiStatus }) {
     const dispatch = useAppDispatch();
 
-    const files = useAppSelector((s: any) => s.orders?.draft?.files ?? []);
+    const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
     const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
 
     const [status, setStatus] = React.useState<UploadStatus>("idle");
@@ -46,7 +46,6 @@ export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: s
     const isUploadingNowExtra = statusExtra === "uploading";
     const hasFiles = files.some((o: any) => o?.document_category === "recipe");
     const hasAuxFiles = files.some((o: any) => o?.document_category === "recipe_aux");
-    console.log(aiStatus)
 
     return (
         <>

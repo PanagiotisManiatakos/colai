@@ -42,7 +42,7 @@ export default function AIMaterialSelectorModal({
     return (
         <Modal dialogClassName="modal-grow-scroll" show={show} onHide={onClose} centered contentClassName="premium-modal">
             <Modal.Header closeButton>
-                <Modal.Title className="h6 mb-0">Αναζήτηση Ιατρού</Modal.Title>
+                <Modal.Title className="h6 mb-0">Επιλογή υλικών ERP</Modal.Title>
             </Modal.Header>
 
             <Modal.Body>

@@ -12,7 +12,15 @@ export default function OrderDetailsView({ order, mode, value, }: {
   value: Partial<Order>;
 }) {
   return (
-    <div className="d-flex flex-column gap-3">
+    <div
+      className="h-100 d-flex flex-column gap-3"
+      style={{
+        minHeight: 0,
+        overflowX: "hidden",
+        overflowY: "auto",
+        WebkitOverflowScrolling: "touch",
+      }}
+    >
       <div className="app-card p-3">
         <div className="d-flex justify-content-between align-items-start">
           <div>
