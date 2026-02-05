@@ -308,7 +308,7 @@ html[data-bs-theme="dark"] .app-card-soft {
 .app-fab {
   position: fixed;
   z-index: 35;
-  bottom: calc(var(--app-nav-height) + 16px + var(--safe-bottom));
+  bottom: calc(var(--app-nav-height) + 18px + var(--safe-bottom));
   right: 16px;
 }
 
