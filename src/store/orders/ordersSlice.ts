@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { AIMaterials, DiscountRequest, OrdeListOfSelections, Order, OrderFile, OrderListOfAddressPersons, OrderYlika } from "@/types/orders";
+import type { AIMaterials, OrdeListOfSelections, Order, OrderFile, OrderListOfAddressPersons, OrderYlika } from "@/types/orders";
 import type { IDoctorFormData, IPatientFormData, IRecipientFormData } from "@/lib/interface";
 import { RootState } from "@/store/store";
 import { formatStringToISODDateTime, formatUIDate } from "@/lib/utils/date";
@@ -32,7 +32,6 @@ export interface SelectedOrderState {
 
 export interface OrdersState {
   orders: Order[];
-  discountRequests: DiscountRequest[];
   loadingOrders: boolean;
   refreshingOrders: boolean;
   ordersError: string | null;
@@ -170,7 +169,6 @@ export const loadCustomerAddressesAsync = createAsyncThunk<any, { customer_ErpGI
 
 const initialStateBase: OrdersState = {
   orders: [],
-  discountRequests: [],
   loadingOrders: false,
   refreshingOrders: false,
   ordersError: null,
