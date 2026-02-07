@@ -3,50 +3,84 @@
 import React from "react";
 
 import DiscountRequestCard from "@/features/orders/components/DiscountRequestCard";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { SearchBar } from "@/components/ui/SearchBar";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { fetchDiscountRequests } from "@/store/discountRequests/discountRequestsSlice";
+import PullToRefresh from "@/components/ui/PullToRefresh";
+import AppLoader from "@/components/ui/AppLoader";
 
 export default function DiscountRequestsPage() {
-  const requests = useAppSelector((s) => s.orders.discountRequests);
-  const [q, setQ] = React.useState("");
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
-  const filtered = React.useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!term) return requests;
+  const discountRequests = useAppSelector((s) => s.discountRequests);
+  const listLoading = useAppSelector((s) => s.discountRequests.loadingList);
+  const refreshing = useAppSelector((s) => s.discountRequests.refreshingList);
 
-    return requests.filter((r) =>
-      [
-        String(r.id),
-        r.barcode,
-        r.customer_name,
-        r.customer_amka,
-        r.doctor_name,
-        r.doctor_amka,
-        r.status,
-        String(r.requestedPrice),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(term)
-    );
-  }, [requests, q]);
+  const urlSearch = (searchParams.get("search") ?? "").trim();
+  const [q, setQ] = React.useState(urlSearch);
+
+
+  React.useEffect(() => {
+    void dispatch(fetchDiscountRequests(urlSearch ? { q: urlSearch } : undefined));
+  }, [dispatch, urlSearch]);
+
+  const applySearchToUrl = React.useCallback(
+    (next: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      const trimmed = next.trim();
+
+      if (trimmed) params.set("search", trimmed);
+      else params.delete("search");
+
+      const qs = params.toString();
+      router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const onSubmitSearch = React.useCallback(() => {
+    applySearchToUrl(q);
+  }, [applySearchToUrl, q]);
+
+  const onClearSearch = React.useCallback(() => {
+    applySearchToUrl("");
+  }, [applySearchToUrl]);
+
+  const onRefresh = React.useCallback(async () => {
+    await dispatch(fetchDiscountRequests(urlSearch ? { q: urlSearch, force: true } : { force: true })).unwrap();
+  }, [dispatch, urlSearch]);
+
+  const showInitialLoader = listLoading && discountRequests.requests.length === 0;
 
   return (
-    <div className="d-flex flex-column gap-2">
+    <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
       <div className="app-card p-2 mb-3">
-        <SearchBar placeholder="Αναζήτηση αιτήματος…" value={q} onChange={setQ} />
+        <SearchBar
+          placeholder="Αναζήτηση αιτήματος"
+          value={q}
+          onChange={setQ}
+          onSubmit={onSubmitSearch}
+          onClear={onClearSearch}
+        />
       </div>
+      <PullToRefresh useSelfScroll className="flex-grow-1" onRefresh={onRefresh} isRefreshing={refreshing}>
 
-      {filtered.length ? (
-        <div className="d-flex flex-column gap-2">
-          {filtered.map((r) => (
-            <DiscountRequestCard key={r.id} request={r} />
-          ))}
-        </div>
-      ) : (
-        <div className="app-card p-4 text-center text-secondary">Δεν υπάρχουν αιτήματα.</div>
-      )}
+        {showInitialLoader ? (
+          <AppLoader label="Φόρτωση παραγγελιών…" />
+        ) : discountRequests.requests.length ? (
+          <div className="d-flex flex-column gap-2">
+            {discountRequests.requests.map((r) => (
+              <DiscountRequestCard key={r.uid} request={r} />
+            ))}
+          </div>
+        ) : (
+          <div className="app-card p-4 text-center text-secondary">Δεν βρέθηκαν αιτήματα.</div>
+        )}
+      </PullToRefresh>
     </div>
   );
 }

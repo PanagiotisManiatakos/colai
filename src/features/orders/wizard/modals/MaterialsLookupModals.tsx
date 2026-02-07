@@ -2,8 +2,8 @@
 
 import React from "react";
 import { Modal } from "react-bootstrap";
-import { useAppDispatch } from "@/store/hooks";
-import { addDraftYliko, setDraftProperty } from "@/features/orders/ordersSlice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { addDraftYliko, setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
 
 export type MaterialsLookupModal = {
@@ -29,6 +29,7 @@ export default function MaterialsLookupModal({
     const [error, setError] = React.useState<string | null>(null);
     const [results, setResults] = React.useState<MaterialsLookupModal[]>([]);
     const inputRef = React.useRef<HTMLInputElement | null>(null);
+    const draftOrder = useAppSelector((s) => s.orders.draft.order)
 
     React.useEffect(() => {
         if (show) {
@@ -64,18 +65,17 @@ export default function MaterialsLookupModal({
 
     function applyProduct(c: MaterialsLookupModal) {
         dispatch(addDraftYliko({
+            id: draftOrder.id,
+            uid: draftOrder.uid,
+            orderId: draftOrder.id,
+            orderUID: draftOrder.uid,
             erpGid: c.erp_gid || "",
             aiMatchedErpGid: c.erp_gid || "",
-            gid: c.erp_gid || "",
-            erp_code: c.erp_code || "",
             erpCode: c.erp_code || "",
-            erp_name: c.erp_name || "",
             erpName: c.erp_name || "",
-            erp_price: c.erp_price || 0,
-            erp_eoppyprice: c.erp_eoppyprice || 0,
+            erp_Price: c.erp_price || 0,
+            erp_EoppyPrice: c.erp_eoppyprice || 0,
             qty: 1,
-            total_price: c.erp_price || 0,
-            total_eoppyprice: c.erp_eoppyprice || 0,
         }));
 
         onClose();

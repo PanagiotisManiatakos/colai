@@ -1,4 +1,4 @@
-import { setDraftProperty } from '@/features/orders/ordersSlice';
+import { setDraftProperty } from '@/store/orders/ordersSlice';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { Order } from '@/types/orders';
 import React from 'react'
@@ -22,7 +22,7 @@ function Field({ label, children, hint }: {
 const SyntagiArea = () => {
     const data = useAppSelector((s) => s.orders.draft.order);
     const dispatch = useAppDispatch()
-    const discountReasons = useAppSelector(s => s.orders.draft.list_DiscountReasons)
+    const eidiEgrisis = useAppSelector(s => s.staticData.list_Order_EidosEgkrisis)
 
     const handleDateInput = (key: keyof Order, value: string) => {
         if (value.length == 1 && parseInt(value) > 3) return;
@@ -106,7 +106,7 @@ const SyntagiArea = () => {
             <Field label="Είδος">
                 <FormSelect value={data.eidos_Egkrisis ?? undefined} onChange={(e) => dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: e.target.value }))}>
                     <option value={undefined}></option>
-                    {discountReasons.map((x) => {
+                    {eidiEgrisis.map((x) => {
                         return <option key={x.value} value={x.value}>{x.text}</option>
                     })}
                 </FormSelect>

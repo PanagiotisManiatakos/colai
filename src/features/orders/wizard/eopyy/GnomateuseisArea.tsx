@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setDraftProperty, setDraftSyntagiUploaded } from "@/features/orders/ordersSlice";
+import { setDraftProperty, setDraftSyntagiUploaded } from "@/store/orders/ordersSlice";
 import FileUploadButton from "./FileUploadButton";
-import { Order, OrderFile } from "@/types/orders";
+import { OrderFile } from "@/types/orders";
 
 type UploadStatus = "idle" | "uploading" | "error";
 type AiStatus = "idle" | "running" | "done" | "error";
@@ -38,14 +38,14 @@ export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: s
     const [uploadingExtra, setUploadingExtra] = React.useState<UploadingInfo | null>(null);
 
     React.useEffect(() => {
-        dispatch(setDraftProperty({ key: "type", value: "eoppy" }));
+        dispatch(setDraftProperty({ key: "type", value: "eopyy" }));
     }, [dispatch]);
 
 
     const isUploadingNow = status === "uploading";
     const isUploadingNowExtra = statusExtra === "uploading";
-    const hasFiles = files.some((o: any) => o?.document_category === "recipe");
-    const hasAuxFiles = files.some((o: any) => o?.document_category === "recipe_aux");
+    const hasFiles = files.some((o: any) => o?.documentCategory === "recipe");
+    const hasAuxFiles = files.some((o: any) => o?.documentCategory === "recipe_aux");
 
     return (
         <>
@@ -84,7 +84,7 @@ export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: s
                                 <div>
                                     <div className="fw-semibold">{uploading.name}</div>
                                     <div className="small text-secondary">
-                                        {`${(uploading.fileSize / 1024 / 1024).toFixed(2)} MB`}
+                                        {uploading.fileSize}
                                     </div>
                                 </div>
                             </div>
@@ -140,11 +140,10 @@ export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: s
                 {hasFiles ? (
                     <div className="d-flex flex-column gap-2">
                         {files.map((f: OrderFile) => {
-                            const name = f.name ?? f.base64filename ?? f.originalFileName;
-                            const sizeMb = (parseFloat(f.fileSize ?? "0") / 1024 / 1024).toFixed(2)
+                            const name = f.originalFileName ?? f.name ?? f.base64filename;
                             const pdf = isPdf(name ?? "", f.fileType);
 
-                            if (f.document_category == "recipe") {
+                            if (f.documentCategory == "recipe") {
                                 return (
                                     <div
                                         key={`${f.position}-${name}`}
@@ -155,7 +154,7 @@ export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: s
                                             <div>
                                                 <div className="fw-semibold">{name}</div>
                                                 <div className="small text-secondary">
-                                                    {sizeMb ? ` ${sizeMb} MB` : ""}
+                                                    {f.fileSize}
                                                 </div>
                                             </div>
                                         </div>
@@ -243,7 +242,7 @@ export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: s
                             const sizeMb = (parseFloat(f.fileSize ?? "0") / 1024 / 1024).toFixed(2)
                             const pdf = isPdf(name ?? "", f.fileType);
 
-                            if (f.document_category == "recipe_aux") {
+                            if (f.documentCategory == "recipe_aux") {
                                 return (
                                     <div
                                         key={`${f.position}-${name}`}

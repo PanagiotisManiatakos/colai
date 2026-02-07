@@ -9,7 +9,7 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 
 import OrderCard from "@/features/orders/components/OrderCard";
-import { fetchOrders } from "@/features/orders/ordersSlice";
+import { fetchOrders } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 export default function OrdersPage() {
@@ -63,23 +63,23 @@ export default function OrdersPage() {
 
   return (
     <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
+      <div className="app-card p-2 mb-3">
+        <SearchBar
+          placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)"
+          value={q}
+          onChange={setQ}
+          onSubmit={onSubmitSearch}
+          onClear={onClearSearch}
+        />
+      </div>
       <PullToRefresh useSelfScroll className="flex-grow-1" onRefresh={onRefresh} isRefreshing={refreshing}>
-        <div className="app-card p-2 mb-3">
-          <SearchBar
-            placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)"
-            value={q}
-            onChange={setQ}
-            onSubmit={onSubmitSearch}
-            onClear={onClearSearch}
-          />
-        </div>
 
         {showInitialLoader ? (
           <AppLoader label="Φόρτωση παραγγελιών…" />
         ) : orders.length ? (
           <div className="d-flex flex-column gap-2">
             {orders.map((o) => (
-              <OrderCard key={o.id} order={o} onDelete={() => {}} />
+              <OrderCard key={o.id} order={o} onDelete={() => { }} />
             ))}
           </div>
         ) : (

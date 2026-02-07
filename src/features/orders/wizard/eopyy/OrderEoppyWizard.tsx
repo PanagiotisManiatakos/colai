@@ -3,7 +3,7 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addDraftYliko, fetchOrders, loadCustomerAddressesAsync, setAIMaterials, setDraftProperty, submitDraftAsync } from "@/features/orders/ordersSlice";
+import { addDraftYliko, fetchOrders, loadCustomerAddressesAsync, setAIMaterials, setDraftProperty, submitDraftAsync } from "@/store/orders/ordersSlice";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
@@ -49,8 +49,9 @@ export default function OrderEoppyWizard() {
   const [aiStatus, setAiStatus] = React.useState<AiStatus>("idle");
   const [aiMessage, setAiMessage] = React.useState<string | null>(null);
 
+  const draftOrder = useAppSelector((s) => s.orders.draft.order)
   const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
-  const hasFiles = files.some((o: any) => o?.document_category === "recipe");
+  const hasFiles = files.some((o: any) => o?.documentCategory === "recipe");
   const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
   const submitState = useAppSelector((s) => s.orders.draft.submitState)
@@ -182,18 +183,29 @@ export default function OrderEoppyWizard() {
 
         for (let i = 0; i < uniqueAiMaterials.length; i++) {
           dispatch(addDraftYliko({
+            id: draftOrder.id,
+            uid: draftOrder.uid,
+            orderId: draftOrder.id,
+            orderUID: draftOrder.uid,
             erpGid: uniqueAiMaterials[i].erp_products[0].erp_gid || "",
             aiMatchedErpGid: uniqueAiMaterials[i].erp_products[0].erp_gid || "",
-            gid: uniqueAiMaterials[i].erp_products[0].erp_gid || "",
-            erp_code: uniqueAiMaterials[i].erp_products[0].erp_code || "",
             erpCode: uniqueAiMaterials[i].erp_products[0].erp_code || "",
-            erp_name: uniqueAiMaterials[i].erp_products[0].erp_name || "",
             erpName: uniqueAiMaterials[i].erp_products[0].erp_name || "",
-            erp_price: uniqueAiMaterials[i].erp_products[0].erp_price || 0,
-            erp_eoppyprice: uniqueAiMaterials[i].erp_products[0].erp_eoppyprice || 0,
-            qty: uniqueAiMaterials[i].synoliki_posotita_eidous,
-            total_price: uniqueAiMaterials[i].erp_products[0].erp_price || 0,
-            total_eoppyprice: uniqueAiMaterials[i].erp_products[0].erp_eoppyprice || 0,
+            erp_Price: uniqueAiMaterials[i].erp_products[0].erp_price || 0,
+            erp_EoppyPrice: uniqueAiMaterials[i].erp_products[0].erp_eoppyprice || 0,
+            qty: parseFloat(uniqueAiMaterials[i].synoliki_posotita_eidous),
+            eoppy_CleanName: uniqueAiMaterials[i].clean_name,
+            eoppy_Code: uniqueAiMaterials[i].kodikos_ylikou,
+            eoppy_Diagnosi_Code: uniqueAiMaterials[i].kodikos_diagnosis,
+            eoppy_Diagnosi_Name: uniqueAiMaterials[i].perigrafi_diagnosis,
+            eoppy_Diagnosi2_Code: uniqueAiMaterials[i].kodikos_diagnosis2,
+            eoppy_Diagnosi2_Name: uniqueAiMaterials[i].perigrafi_diagnosis2,
+            eoppy_DiarkiaTherapias: String(uniqueAiMaterials[i].diarkeia_therapeias_se_mines),
+            eoppy_SlugName: uniqueAiMaterials[i].slug_name,
+            eoppy_SynPosotita: String(uniqueAiMaterials[i].synoliki_posotita_eidous),
+            eoppy_AnatomPerioxi: uniqueAiMaterials[i].anatomiki_perioxi,
+            eoppy_Symmetoxi: uniqueAiMaterials[i].symmetoxi,
+            eoppy_Sxolia: uniqueAiMaterials[i].sxolia,
           }))
         }
 

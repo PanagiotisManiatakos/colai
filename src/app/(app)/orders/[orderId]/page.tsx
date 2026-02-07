@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { PlatformCard } from "@/components/ui/PlatformCard";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { editDraftAsync, setDraftProperty } from "@/features/orders/ordersSlice";
+import { editDraftAsync, setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
 
 export default function OrderStartPage() {
@@ -58,7 +58,7 @@ export default function OrderStartPage() {
       </div>
 
       <div className="d-flex flex-column gap-2">
-        <PlatformCard title="ΕΟΠΥΥ" type="eoppy" description="Ανέβασε παραπεμπτικό/γνωμάτευση" icon="bi-cloud-upload" onClick={(x) => handleContinue(x)} />
+        <PlatformCard title="ΕΟΠΥΥ" type="eopyy" description="Ανέβασε παραπεμπτικό/γνωμάτευση" icon="bi-cloud-upload" onClick={(x) => handleContinue(x)} />
         <PlatformCard title="Λιανικής" type="retail" description="Συμπλήρωσε στοιχεία" icon="bi-ui-checks" onClick={(x) => handleContinue(x)} />
       </div>
 

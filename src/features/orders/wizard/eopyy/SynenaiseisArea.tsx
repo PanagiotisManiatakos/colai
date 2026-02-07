@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setDraftProperty, setDraftSyntagiUploaded } from "@/features/orders/ordersSlice";
+import { setDraftProperty, setDraftSyntagiUploaded } from "@/store/orders/ordersSlice";
 import FileUploadButton from "./FileUploadButton";
 import { OrderFile } from "@/types/orders";
 
@@ -37,7 +37,7 @@ export default function SynenaiseisArea() {
     const [uploading, setUploading] = React.useState<UploadingInfo | null>(null);
 
     React.useEffect(() => {
-        dispatch(setDraftProperty({ key: "type", value: "eoppy" }));
+        dispatch(setDraftProperty({ key: "type", value: "eopyy" }));
     }, [dispatch]);
 
 
@@ -115,7 +115,7 @@ export default function SynenaiseisArea() {
                         const name = f.name ?? f.base64filename ?? f.originalFileName;
                         const sizeMb = (parseFloat(f.fileSize ?? "0") / 1024 / 1024).toFixed(2)
                         const pdf = isPdf(name ?? "", f.fileType);
-                        if (f.document_category == "consent_form") {
+                        if (f.documentCategory == "consent_form") {
 
                             return (
                                 <div

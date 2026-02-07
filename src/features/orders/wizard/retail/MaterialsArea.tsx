@@ -1,4 +1,4 @@
-import { removeDraftYliko, setDraftProperty, updateDraftYlikoQuantity } from "@/features/orders/ordersSlice";
+import { removeDraftYliko, setDraftProperty, updateDraftYlikoQuantity } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
 import MaterialsLookupModal from "../modals/MaterialsLookupModals";

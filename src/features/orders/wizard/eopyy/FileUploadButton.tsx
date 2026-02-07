@@ -72,7 +72,7 @@ export default function FileUploadButton({
 
         setUploading({
             name: file.name,
-            fileSize: file.size,
+            fileSize: `${(parseFloat(String(file.size) ?? "0") / 1024 / 1024).toFixed(2)} MB`,
             fileType: file.type || "",
         });
 
@@ -98,7 +98,8 @@ export default function FileUploadButton({
                 name: file.name,
                 position,
                 document_category,
-                fileSize: String(file.size),
+                documentCategory: document_category,
+                fileSize: `${(parseFloat(String(file.size) ?? "0") / 1024 / 1024).toFixed(2)} MB`,
                 fileType: file.type,
             }
             )
