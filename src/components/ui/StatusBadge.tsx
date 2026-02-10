@@ -2,7 +2,7 @@ import { useAppSelector } from "@/store/hooks";
 
 const statusB: Record<"0" | "1" | "200" | "500", { variant: string }> = {
   "0": { variant: "warning" },
-  "1": { variant: "success" },
+  "1": { variant: "primary" },
   "200": { variant: "success" },
   "500": { variant: "danger" },
 };
