@@ -10,7 +10,7 @@ import OrderDetailsView from "@/features/orders/components/OrderDetailsView";
 import { fetchOrderById } from "@/features/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
-const ALLOWED_ORDER_TYPES = new Set(["eoppy", "retail"]);
+const ALLOWED_ORDER_TYPES = new Set(["eopyy", "retail"]);
 
 export default function OrderViewPage() {
   const params = useParams<{ orderId: string; orderType: string }>();

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { loginOk, loginFail } from "@/features/auth/authSlice";
@@ -61,13 +62,16 @@ export default function LoginPage() {
     <div className="app-viewport" style={{ minHeight: "100vh" }}>
       <div className="app-content d-flex align-items-center" style={{ paddingBottom: 24 }}>
         <div className="w-100">
+          {/* Logo */}
           <div className="text-center mb-3">
-            <div
-              className="d-inline-flex align-items-center justify-content-center rounded-circle shadow-sm bg-white"
-              style={{ width: 56, height: 56 }}
-            >
-              <i className="bi bi-shield-lock" style={{ fontSize: "1.4rem" }} />
-            </div>
+            <Image
+              src="/logo_auth.png"
+              alt="Mavrogenis"
+              width={520}
+              height={140}
+              priority
+              style={{ width: "min(320px, 85vw)", height: "auto" }}
+            />
           </div>
 
           <div className="app-card p-4">

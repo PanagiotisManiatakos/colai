@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 import BottomNav from "@/components/shell/BottomNav";
@@ -43,8 +44,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="app-viewport d-flex flex-column">
       <header className="app-header">
         <div className="px-3 d-flex align-items-center justify-content-between">
+          <div className="d-flex justify-content-start flex-grow-1">
+            <Image
+              src="/mono_logo.png"
+              alt="App logo"
+              width={120}
+              height={28}
+              priority
+              style={{ height: 28, width: "auto" }}
+            />
+          </div>
+          {/* Left: Back */}
           <div className="d-flex align-items-center gap-2" style={{ minWidth: 44 }}>
-            {showBack ? (
+            {/* {showBack ? (
               <button
                 type="button"
                 className="btn btn-sm btn-outline-secondary app-pill"
@@ -53,9 +65,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               >
                 <i className="bi bi-chevron-left" />
               </button>
-            ) : null}
+            ) : null} */}
           </div>
 
+          {/* Center: Logo */}
+
+          {/* Right: User menu */}
           <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 44 }}>
             <Dropdown align="end">
               <Dropdown.Toggle
@@ -66,11 +81,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 aria-label="User menu"
                 style={{ maxWidth: 200 }}
               >
-                <span
-                  className="text-truncate"
-                  style={{ maxWidth: 170 }}
-                  suppressHydrationWarning
-                >
+                <span className="text-truncate" style={{ maxWidth: 170 }} suppressHydrationWarning>
                   {displayName}
                 </span>
               </Dropdown.Toggle>
