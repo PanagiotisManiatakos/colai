@@ -6,14 +6,14 @@ import { useParams, useSearchParams } from "next/navigation";
 import AppLoader from "@/components/ui/AppLoader";
 import NotFoundView from "@/components/system/NotFoundView";
 
-import { editDraftAsync } from "@/features/orders/ordersSlice";
+import { editDraftAsync } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
-import OrderEoppyWizard from "@/features/orders/wizard/eoppy/OrderEoppyWizard";
+import OrderEoppyWizard from "@/features/orders/wizard/eopyy/OrderEoppyWizard";
 import OrderRetailWizard from "@/features/orders/wizard/retail/OrderRetailWizard";
 
 const WIZARDS: Record<string, React.ComponentType> = {
-  eoppy: OrderEoppyWizard,
+  eopyy: OrderEoppyWizard,
   retail: OrderRetailWizard,
 };
 
@@ -44,6 +44,8 @@ export default function OrderWizardEditPage() {
       isMounted = false;
     };
   }, [dispatch, orderType, uid]);
+
+  console.log()
 
   const Wizard = WIZARDS[orderType];
   if (!Wizard) return <NotFoundView />;

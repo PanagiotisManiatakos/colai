@@ -19,7 +19,7 @@ function isActive(pathname: string, href: string): boolean {
 export default function BottomNav() {
   const pathname = usePathname();
   const pendingDiscounts = useAppSelector((s) =>
-    s.orders.discountRequests.filter((r) => r.status === "ΕΚΚΡΕΜΕΙ").length
+    s.discountRequests.requests.filter((r) => r.statusId == -1).length
   );
 
   const items: Item[] = [

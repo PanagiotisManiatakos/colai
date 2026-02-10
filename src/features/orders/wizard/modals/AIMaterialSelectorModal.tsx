@@ -2,9 +2,9 @@
 
 import React from "react";
 import { Modal } from "react-bootstrap";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { AIMaterials, AIMaterialsErpProducts } from "@/types/orders";
-import { addDraftYliko, removeAIMaterial } from "../../ordersSlice";
+import { addDraftYliko, removeAIMaterial } from "../../../../store/orders/ordersSlice";
 
 export default function AIMaterialSelectorModal({
     show,
@@ -18,21 +18,33 @@ export default function AIMaterialSelectorModal({
     idx: number
 }) {
     const dispatch = useAppDispatch();
+    const { id, uid } = useAppSelector((s) => s.orders.draft.order)
 
-    function applyMaterial(c: AIMaterialsErpProducts, qty: number) {
+    function applyMaterial(c: AIMaterialsErpProducts, qty: string) {
         dispatch(addDraftYliko({
+            id,
+            uid,
+            orderId: id,
+            orderUID: uid,
             erpGid: c.erp_gid || "",
             aiMatchedErpGid: c.erp_gid || "",
-            gid: c.erp_gid || "",
-            erp_code: c.erp_code || "",
             erpCode: c.erp_code || "",
-            erp_name: c.erp_name || "",
             erpName: c.erp_name || "",
-            erp_price: c.erp_price || 0,
-            erp_eoppyprice: c.erp_eoppyprice || 0,
-            qty,
-            total_price: c.erp_price || 0,
-            total_eoppyprice: c.erp_eoppyprice || 0,
+            erp_Price: c.erp_price || 0,
+            erp_EoppyPrice: c.erp_eoppyprice || 0,
+            qty: parseFloat(qty),
+            eoppy_CleanName: aiMaterials.clean_name,
+            eoppy_Code: aiMaterials.kodikos_ylikou,
+            eoppy_Diagnosi_Code: aiMaterials.kodikos_diagnosis,
+            eoppy_Diagnosi_Name: aiMaterials.perigrafi_diagnosis,
+            eoppy_Diagnosi2_Code: aiMaterials.kodikos_diagnosis2,
+            eoppy_Diagnosi2_Name: aiMaterials.perigrafi_diagnosis2,
+            eoppy_DiarkiaTherapias: String(aiMaterials.diarkeia_therapeias_se_mines),
+            eoppy_SlugName: aiMaterials.slug_name,
+            eoppy_Sxolia: aiMaterials.sxolia,
+            eoppy_AnatomPerioxi: aiMaterials.anatomiki_perioxi,
+            eoppy_Symmetoxi: aiMaterials.symmetoxi,
+            eoppy_SynPosotita: String(aiMaterials.synoliki_posotita_eidous)
         }));
 
         dispatch(removeAIMaterial(idx));

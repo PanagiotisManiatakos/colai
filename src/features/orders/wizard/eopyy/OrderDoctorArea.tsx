@@ -1,4 +1,4 @@
-import { setDraftProperty } from "@/features/orders/ordersSlice";
+import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
 import DoctorLookupModal from "../modals/DoctorLookupModal";

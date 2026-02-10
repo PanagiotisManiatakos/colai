@@ -3,7 +3,7 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchOrders, submitDraftAsync } from "@/features/orders/ordersSlice";
+import { fetchOrders, submitDraftAsync } from "@/store/orders/ordersSlice";
 import OrderRetailCustomerArea from "./OrderRetailCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";

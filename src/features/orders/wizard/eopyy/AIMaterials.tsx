@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { removeAIMaterial } from "@/features/orders/ordersSlice";
+import { removeAIMaterial } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import SwipeToDeleteYliko from "@/components/ui/SwipeToDeleteYliko";
 import AIMaterialSelectorModal from "../modals/AIMaterialSelectorModal";

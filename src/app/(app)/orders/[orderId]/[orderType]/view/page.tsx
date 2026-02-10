@@ -7,7 +7,7 @@ import AppLoader from "@/components/ui/AppLoader";
 import NotFoundView from "@/components/system/NotFoundView";
 
 import OrderDetailsView from "@/features/orders/components/OrderDetailsView";
-import { fetchOrderById } from "@/features/orders/ordersSlice";
+import { fetchOrderById } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 const ALLOWED_ORDER_TYPES = new Set(["eopyy", "retail"]);

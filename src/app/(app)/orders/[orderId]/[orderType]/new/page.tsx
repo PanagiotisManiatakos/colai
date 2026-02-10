@@ -5,13 +5,13 @@ import { useParams } from "next/navigation";
 
 import NotFoundView from "@/components/system/NotFoundView";
 import { useAppDispatch } from "@/store/hooks";
-import { setDraftProperty } from "@/features/orders/ordersSlice";
+import { setDraftProperty } from "@/store/orders/ordersSlice";
 
-import OrderEoppyWizard from "@/features/orders/wizard/eoppy/OrderEoppyWizard";
+import OrderEoppyWizard from "@/features/orders/wizard/eopyy/OrderEoppyWizard";
 import OrderRetailWizard from "@/features/orders/wizard/retail/OrderRetailWizard";
 
 const WIZARDS: Record<string, React.ComponentType> = {
-  eoppy: OrderEoppyWizard,
+  eopyy: OrderEoppyWizard,
   retail: OrderRetailWizard,
 };
 

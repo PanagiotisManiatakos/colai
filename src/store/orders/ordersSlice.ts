@@ -1,10 +1,10 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import type { AIMaterials, DiscountRequest, OrdeListOfSelections, Order, OrderFile, OrderListOfAddressPersons, OrderYlika } from "@/types/orders";
+import type { AIMaterials, OrdeListOfSelections, Order, OrderFile, OrderListOfAddressPersons, OrderYlika } from "@/types/orders";
 import type { IDoctorFormData, IPatientFormData, IRecipientFormData } from "@/lib/interface";
 import { RootState } from "@/store/store";
-import { formatStringToISODDateTime } from "@/lib/utils/date";
+import { formatStringToISODDateTime, formatUIDate } from "@/lib/utils/date";
 
-type OrderDraftType = "eoppy" | "non_eoppy";
+type OrderDraftType = "eopyy" | "non_eoppy";
 
 export interface DraftState {
   editState: { loading: boolean; error: string | null };
@@ -32,7 +32,6 @@ export interface SelectedOrderState {
 
 export interface OrdersState {
   orders: Order[];
-  discountRequests: DiscountRequest[];
   loadingOrders: boolean;
   refreshingOrders: boolean;
   ordersError: string | null;
@@ -170,7 +169,6 @@ export const loadCustomerAddressesAsync = createAsyncThunk<any, { customer_ErpGI
 
 const initialStateBase: OrdersState = {
   orders: [],
-  discountRequests: [],
   loadingOrders: false,
   refreshingOrders: false,
   ordersError: null,
@@ -191,7 +189,6 @@ const initialStateBase: OrdersState = {
   ordersQuery: "",
   ordersFetchedAt: 0,
 };
-
 
 const LS_KEY = "orders";
 
@@ -272,28 +269,24 @@ const ordersSlice = createSlice({
       persistStateToLocalStorage(state);
     },
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
-      state.draft.ylika.push({ ...action.payload, kostos_RETAIL: action.payload.erp_price, kostos_EOPPY: action.payload.erp_eoppyprice });
-      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_RETAIL) || 0), 0);
-      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
+      state.draft.ylika.push(action.payload);
+      state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
+
       persistStateToLocalStorage(state);
     },
     updateDraftYlikoQuantity: (state, action: PayloadAction<{ index: number; quantity: number }>) => {
       const { index, quantity } = action.payload;
       if (state.draft.ylika[index]) {
         state.draft.ylika[index].qty = quantity;
-        state.draft.ylika[index].kostos_RETAIL = quantity * state.draft.ylika[index].erp_price
-        state.draft.ylika[index].kostos_EOPPY = quantity * state.draft.ylika[index].erp_eoppyprice
       }
-      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_RETAIL) || 0), 0);
-      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
-      state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x[state.draft.order.type == 'eoppy' ? "kostos_EOPPY" : "kostos_RETAIL"]) || 0), 0);
+
+      state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
 
       persistStateToLocalStorage(state);
     },
     removeDraftYliko: (state, action: PayloadAction<number>) => {
       state.draft.ylika.splice(action.payload, 1);
-      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_RETAIL) || 0), 0);
-      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
+      state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
 
       persistStateToLocalStorage(state);
     },
@@ -376,8 +369,11 @@ const ordersSlice = createSlice({
       state.draft.editState.loading = false;
       if (action.payload.ok) {
         state.draft.order = action.payload.data.order
+        state.draft.order.dateOfSyntagi = formatUIDate(action.payload.data.order.dateOfSyntagi)
+        state.draft.order.dateIsxyeiApo = formatUIDate(action.payload.data.order.dateIsxyeiApo)
+        state.draft.order.dateIsxyeiEos = formatUIDate(action.payload.data.order.dateIsxyeiEos)
         state.draft.ylika = action.payload.data.items;
-        state.draft.files = action.payload.files;
+        state.draft.files = action.payload.data.files;
         state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons
         state.draft.list_LogosParalipti = action.payload.data.list_LogosParalipti
         state.draft.list_SygeniaParalipti = action.payload.data.list_SygeniaParalipti
@@ -397,6 +393,14 @@ const ordersSlice = createSlice({
     });
     b.addCase(submitDraftAsync.fulfilled, (state, action) => {
       state.draft.submitState.loading = false;
+      if (action.payload.ok && action.payload.result) {
+        state.draft.order = {} as Order;
+        state.draft.ai_ylika = [] as AIMaterials[];
+        state.draft.files = [] as OrderFile[];
+        state.draft.ylika = [] as OrderYlika[];
+      } else {
+        state.draft.submitState.error = action.payload.message
+      }
     });
     b.addCase(submitDraftAsync.rejected, (state, action) => {
       state.draft.submitState.loading = false;

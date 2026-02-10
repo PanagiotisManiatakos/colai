@@ -116,21 +116,31 @@ export type Order = {
 };
 
 export type OrderYlika = {
-  gid: string;
+  id: number;
+  uid?: string;
+  orderId: number;
+  orderUID?: string;
+  lineNum?: number;
   erpGid?: string;
-  aiMatchedErpGid?: string;
-  erp_code: string;
   erpCode?: string;
-  erp_name: string;
   erpName?: string;
-  price?: number;
-  erp_price: number;
-  erp_eoppyprice: number;
-  total_price: number;
-  total_eoppyprice: number;
   qty: number;
-  kostos_RETAIL?: number;
-  kostos_EOPPY?: number
+  price?: number;
+  eoppy_Code?: string;
+  eoppy_Diagnosi_Code?: string;
+  eoppy_Diagnosi_Name?: string;
+  eoppy_Symmetoxi?: string;
+  eoppy_DiarkiaTherapias?: string;
+  eoppy_SynPosotita?: string;
+  eoppy_Sxolia?: string;
+  eoppy_Diagnosi2_Code?: string;
+  eoppy_Diagnosi2_Name?: string;
+  eoppy_CleanName?: string;
+  eoppy_SlugName?: string;
+  eoppy_AnatomPerioxi?: string;
+  erp_Price: number;
+  erp_EoppyPrice: number;
+  aiMatchedErpGid?: string;
 };
 
 export type OrderFile = {
@@ -158,7 +168,7 @@ export type AIMaterials = {
   anatomiki_perioxi: string;
   clean_name: string;
   diagnosi_pos_ayds: string;
-  diarkeia_therapeias_se_mines: number;
+  diarkeia_therapeias_se_mines: string;
   erp_products: AIMaterialsErpProducts[];
   kodikos_diagnosis: string;
   kodikos_diagnosis2: string;
@@ -170,7 +180,7 @@ export type AIMaterials = {
   slug_name: string;
   sxolia: string;
   symmetoxi: string;
-  synoliki_posotita_eidous: number;
+  synoliki_posotita_eidous: string;
   xronia_pathisi: string;
 }
 
@@ -202,10 +212,4 @@ export type OrderAddress = {
   address: string;
   city: string;
   tk: string;
-}
-
-export interface DiscountRequest extends Order {
-  kind: "discountRequest";
-  requestedPrice: number;
-  status: "ΕΚΚΡΕΜΕΙ" | "ΕΓΚΡΙΘΗΚΕ" | "ΑΠΟΡΡΙΦΘΗΚΕ";
 }

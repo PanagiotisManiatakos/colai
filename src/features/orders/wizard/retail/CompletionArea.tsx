@@ -1,4 +1,4 @@
-import { setDraftProperty } from "@/features/orders/ordersSlice";
+import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { formatCurrencyGR } from "@/lib/utils/number";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
@@ -57,8 +57,8 @@ export default function CompletionArea() {
                         onChange={(e) => {
                             dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 2 : 1 }))
                             if (e.target.checked) {
-                                dispatch(setDraftProperty({ key: "appliedPriceList", value: "eoppy" }));
-                                const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
+                                dispatch(setDraftProperty({ key: "appliedPriceList", value: "eopyy" }));
+                                const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.erp_EoppyPrice) || 0), 0);
                                 dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
                             } else {
                                 dispatch(setDraftProperty({ key: "appliedPriceList", value: null }))
@@ -80,16 +80,16 @@ export default function CompletionArea() {
                             <Field label="Εφαρμογή">
                                 <FormSelect name="appliedPriceList" value={data.appliedPriceList} onChange={(e) => {
                                     dispatch(setDraftProperty({ key: "appliedPriceList", value: e.target.value }))
-                                    if (e.target.value == "eoppy") {
-                                        const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.kostos_EOPPY) || 0), 0);
+                                    if (e.target.value == "eopyy") {
+                                        const pricesEOPPY = ylika.reduce((acc, x) => acc + (Number(x.erp_EoppyPrice) || 0), 0);
                                         dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
                                     } else {
-                                        const pricesRETAIL = ylika.reduce((acc, x) => acc + (Number(x.kostos_RETAIL) || 0), 0);
+                                        const pricesRETAIL = ylika.reduce((acc, x) => acc + (Number(x.erp_Price) || 0), 0);
                                         dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesRETAIL) }));
                                     }
                                 }}>
                                     <option value="retail">Λιανική</option>
-                                    <option value="eoppy">ΕΟΠΠΥ</option>
+                                    <option value="eopyy">ΕΟΠΠΥ</option>
                                 </FormSelect>
                             </Field>
                         </div>

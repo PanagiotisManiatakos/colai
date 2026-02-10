@@ -3,7 +3,7 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
-import { setDraftProperty } from "@/features/orders/ordersSlice";
+import { setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
 
 export type DoctorLookupModal = {

@@ -3,7 +3,7 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
-import { loadCustomerAddressesAsync, setDraftProperty } from "@/features/orders/ordersSlice";
+import { loadCustomerAddressesAsync, setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
 
 export type CustomerSearchResult = {

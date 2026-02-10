@@ -7,7 +7,7 @@ import { formatUIDate } from "@/lib/utils/date";
 import Link from "next/link";
 import { Modal, Button } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
-import { deleteOrderAsync } from "@/features/orders/ordersSlice";
+import { deleteOrderAsync } from "@/store/orders/ordersSlice";
 import { useRouter } from "next/navigation";
 
 const ACTION_WIDTH = 88;
