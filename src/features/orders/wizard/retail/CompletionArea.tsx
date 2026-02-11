@@ -62,9 +62,7 @@ export default function CompletionArea() {
                             } else {
                                 dispatch(setDraftProperty({ key: "appliedPriceList", value: "eopyy" }));
                                 const pricesEOPPY = ylika.reduce((acc, x) => acc + ((Number(x.erp_EoppyPrice) || 0) * Number(x.qty) || 0), 0);
-                                dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
-
-
+                                dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }))
                             }
                         }
                         }
