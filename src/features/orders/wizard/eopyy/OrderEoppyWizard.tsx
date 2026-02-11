@@ -121,32 +121,36 @@ export default function OrderEoppyWizard() {
       if (when) issues.push({ step, field, message });
     };
 
-    const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
-    add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
+    if (draftOrder.isTempSave != 0) {
 
-    if (draftOrder.hasOtherRecipientBool) {
-      add("customer", "recipient_reason_id", true, isBlank(draftOrder.recipient_reason_id));
-      add("customer", "recipient_relation_id", true, isBlank(draftOrder.recipient_relation_id));
-      add("customer", "recipient_name", true, isBlank(draftOrder.recipient_name));
 
-      const rAmka = onlyDigits(draftOrder.recipient_amka ?? "");
-      add("customer", "recipient_amka", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", rAmka.length !== 11);
-      add("customer", "recipient_afm", true, isBlank(draftOrder.recipient_afm));
-      add("customer", "recipient_tel", true, isBlank(draftOrder.recipient_tel));
-      add("customer", "recipient_passport", true, isBlank(draftOrder.recipient_passport));
-      add("customer", "recipient_address", true, isBlank(draftOrder.recipient_address));
-      add("customer", "recipient_city", true, isBlank(draftOrder.recipient_city));
-      add("customer", "recipient_tk", true, isBlank(draftOrder.recipient_tk));
+      const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
+      add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
+
+      if (draftOrder.hasOtherRecipientBool) {
+        add("customer", "recipient_reason_id", true, isBlank(draftOrder.recipient_reason_id));
+        add("customer", "recipient_relation_id", true, isBlank(draftOrder.recipient_relation_id));
+        add("customer", "recipient_name", true, isBlank(draftOrder.recipient_name));
+
+        const rAmka = onlyDigits(draftOrder.recipient_amka ?? "");
+        add("customer", "recipient_amka", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", rAmka.length !== 11);
+        add("customer", "recipient_afm", true, isBlank(draftOrder.recipient_afm));
+        add("customer", "recipient_tel", true, isBlank(draftOrder.recipient_tel));
+        add("customer", "recipient_passport", true, isBlank(draftOrder.recipient_passport));
+        add("customer", "recipient_address", true, isBlank(draftOrder.recipient_address));
+        add("customer", "recipient_city", true, isBlank(draftOrder.recipient_city));
+        add("customer", "recipient_tk", true, isBlank(draftOrder.recipient_tk));
+      }
+
+      if (draftOrder.shipTo_other_address == 1) {
+        add("customer", "customer_other_address", true, isBlank(draftOrder.customer_other_address));
+        add("customer", "customer_other_city", true, isBlank(draftOrder.customer_other_city));
+        add("customer", "customer_other_tk", true, isBlank(draftOrder.customer_other_tk));
+
+      }
+
+      add("symmetoxi", "EopyyVerifyNoParticipation", true, draftOrder.EopyyVerifyNoParticipation == 0 && !(draftOrder.symmPercentage > 0));
     }
-
-    if (draftOrder.shipTo_other_address == 1) {
-      add("customer", "customer_other_address", true, isBlank(draftOrder.customer_other_address));
-      add("customer", "customer_other_city", true, isBlank(draftOrder.customer_other_city));
-      add("customer", "customer_other_tk", true, isBlank(draftOrder.customer_other_tk));
-
-    }
-
-    add("symmetoxi", "EopyyVerifyNoParticipation", true, draftOrder.EopyyVerifyNoParticipation == 0 && !(draftOrder.symmPercentage > 0));
 
 
     return issues;
