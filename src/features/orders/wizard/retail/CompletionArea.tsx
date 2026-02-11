@@ -24,7 +24,7 @@ export default function CompletionArea() {
 
     React.useEffect(() => {
         if (!data.shipMethodId) dispatch(setDraftProperty({ key: "shipMethodId", value: 5 }))
-        if (!data.isTempSave) dispatch(setDraftProperty({ key: "isTempSave", value: 1 }))
+        if (!data.isTempSave) dispatch(setDraftProperty({ key: "isTempSave", value: 0 }))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
@@ -58,7 +58,7 @@ export default function CompletionArea() {
                             dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 1 : 2 }))
                             if (e.target.checked) {
                                 dispatch(setDraftProperty({ key: "appliedPriceList", value: null }))
-                                dispatch(setDraftProperty({ key: "posoDiscounted", value: 0 }));
+                                dispatch(setDraftProperty({ key: "posoDiscounted", value: null }));
                             } else {
                                 dispatch(setDraftProperty({ key: "appliedPriceList", value: "eopyy" }));
                                 const pricesEOPPY = ylika.reduce((acc, x) => acc + ((Number(x.erp_EoppyPrice) || 0) * Number(x.qty) || 0), 0);
@@ -86,7 +86,7 @@ export default function CompletionArea() {
                                 dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
                             } else {
                                 dispatch(setDraftProperty({ key: "appliedPriceList", value: null }))
-                                dispatch(setDraftProperty({ key: "posoDiscounted", value: 0 }));
+                                dispatch(setDraftProperty({ key: "posoDiscounted", value: null }));
 
                             }
                         }

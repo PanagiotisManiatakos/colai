@@ -215,9 +215,9 @@ export default function OrderCard({
                   <div className="fw-medium">{order.customer_amka}</div>
                 </div>
                 <div className="col-12">
-                  <div className="small text-secondary">Ιατρός</div>
-                  <div className="fw-medium">{order.doctor_name}</div>
-                  <div className="text-secondary small">AMKA: {order.doctor_amka}</div>
+                  <div className="small text-secondary">{order.doctorSuggested_name ? 'Συστήνων ιατρός' : 'Ιατρός'}</div>
+                  <div className="fw-medium">{order.doctorSuggested_name ?? order.doctor_name}</div>
+                  <div className="text-secondary small">AMKA: {order.doctorSuggested_name ? order.doctorSuggested_amka : order.doctor_amka}</div>
                 </div>
               </div>
 

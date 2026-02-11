@@ -164,7 +164,7 @@ const SyntagiArea = () => {
                     </Field>
                 </div>
             </div>
-            <div className="row g-2">
+            {/* <div className="row g-2">
                 <div className="col-6">
                     <Field label="Βάρος">
                         <input
@@ -187,7 +187,7 @@ const SyntagiArea = () => {
                         />
                     </Field>
                 </div>
-            </div>
+            </div> */}
         </div>
     )
 }

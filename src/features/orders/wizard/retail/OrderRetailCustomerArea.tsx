@@ -247,6 +247,7 @@ export default function OrderRetailCustomerArea() {
                     checked={data.shipTo_other_address == 1}
                     onChange={(e) => {
                         dispatch(setDraftProperty({ key: "shipTo_other_address", value: e.target.checked ? 1 : 0 }))
+                        dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: e.target.checked }))
                         if (e.target.checked) {
                             dispatch(setDraftProperty({ key: "address_ErpGID", value: null }))
                         } else if (data.person_ErpGID && data.person_ErpGID != "") {

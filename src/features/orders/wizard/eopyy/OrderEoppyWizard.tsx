@@ -17,8 +17,11 @@ import RunAiButton from "./RunAIButton";
 import AIMaterials from "./AIMaterials";
 import { AIMaterials as AIMaterialsType } from "@/types/orders";
 
-const steps = ["Γνωματεύσεις", "Ασθενής", "Ιατρός", "Υλικά", "Συνταγη", "Συμμετοχή", "Συνάινεση", "Touchdown"] as const;
 type AiStatus = "idle" | "running" | "done" | "error";
+type WizardIssue = { step: StepKey; field: string; message: string | boolean };
+
+const isBlank = (v: any) => v == null || String(v).trim() === "";
+const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
 type StepKey =
   | "gnomateuseis"
@@ -48,6 +51,7 @@ export default function OrderEoppyWizard() {
   const router = useRouter()
   const [aiStatus, setAiStatus] = React.useState<AiStatus>("idle");
   const [aiMessage, setAiMessage] = React.useState<string | null>(null);
+  const [issues, setIssues] = React.useState<WizardIssue[]>([]);
 
   const draftOrder = useAppSelector((s) => s.orders.draft.order)
   const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
@@ -59,12 +63,12 @@ export default function OrderEoppyWizard() {
 
   const stepDefs: StepDef[] = [
     { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} /> },
-    { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea /> },
+    { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
     { key: "aiMaterials", label: "ΑΙ επιλογές", show: shouldShowAiMaterials.length > 0, render: () => <AIMaterials /> },
     { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
     { key: "syntagi", label: "Συνταγη", render: () => <SyntagiArea /> },
-    { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea /> },
+    { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea errors={errorsByField} clearError={clearError} /> },
     { key: "synenaiseis", label: "Συνάινεση", render: () => <SynenaiseisArea /> },
     { key: "touchdown", label: "Touchdown", render: () => <Touchdown /> },
   ];
@@ -75,6 +79,30 @@ export default function OrderEoppyWizard() {
   const labels = effectiveSteps.map(s => s.label);
   const maxStep = effectiveSteps.length - 1;
   const current = effectiveSteps[step];
+
+  const clearError = React.useCallback((field: string) => {
+    setIssues((prev) => prev.filter((x) => x.field !== field));
+  }, []);
+
+  const errorsByField = React.useMemo(() => {
+    const m: Record<string, string | boolean> = {};
+    for (const it of issues) if (!m[it.field]) m[it.field] = it.message; // keep first error per field
+    return m;
+  }, [issues]);
+
+  function goToStepByKey(key: StepKey) {
+    const idx = effectiveSteps.findIndex((s) => s.key === key);
+    if (idx >= 0) setStep(idx);
+  }
+
+  function focusField(fieldName: string) {
+    window.setTimeout(() => {
+      const esc = (window as any).CSS?.escape ? (window as any).CSS.escape(fieldName) : fieldName;
+      const el = document.querySelector(`[name="${esc}"]`) as HTMLElement | null;
+      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+      (el as any)?.focus?.();
+    }, 60);
+  }
 
   React.useEffect(() => {
     setStep(s => Math.min(s, Math.max(0, effectiveSteps.length - 1)));
@@ -87,8 +115,58 @@ export default function OrderEoppyWizard() {
     setStep((s) => Math.max(s - 1, 0));
   }
 
+  const validateEoppyOrder = () => {
+    const issues: WizardIssue[] = [];
+    const add = (step: StepKey, field: string, message: string | boolean, when: boolean) => {
+      if (when) issues.push({ step, field, message });
+    };
+
+    const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
+    add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
+
+    if (draftOrder.hasOtherRecipientBool) {
+      add("customer", "recipient_reason_id", true, isBlank(draftOrder.recipient_reason_id));
+      add("customer", "recipient_relation_id", true, isBlank(draftOrder.recipient_relation_id));
+      add("customer", "recipient_name", true, isBlank(draftOrder.recipient_name));
+
+      const rAmka = onlyDigits(draftOrder.recipient_amka ?? "");
+      add("customer", "recipient_amka", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", rAmka.length !== 11);
+      add("customer", "recipient_afm", true, isBlank(draftOrder.recipient_afm));
+      add("customer", "recipient_tel", true, isBlank(draftOrder.recipient_tel));
+      add("customer", "recipient_passport", true, isBlank(draftOrder.recipient_passport));
+      add("customer", "recipient_address", true, isBlank(draftOrder.recipient_address));
+      add("customer", "recipient_city", true, isBlank(draftOrder.recipient_city));
+      add("customer", "recipient_tk", true, isBlank(draftOrder.recipient_tk));
+    }
+
+    if (draftOrder.shipTo_other_address == 1) {
+      add("customer", "customer_other_address", true, isBlank(draftOrder.customer_other_address));
+      add("customer", "customer_other_city", true, isBlank(draftOrder.customer_other_city));
+      add("customer", "customer_other_tk", true, isBlank(draftOrder.customer_other_tk));
+
+    }
+
+    add("symmetoxi", "EopyyVerifyNoParticipation", true, draftOrder.EopyyVerifyNoParticipation == 0 && !(draftOrder.symmPercentage > 0));
+
+
+    return issues;
+
+  }
+
 
   async function onSave() {
+    const found = validateEoppyOrder();
+
+    if (found.length > 0) {
+      setIssues(found);
+
+      const first = found[0];
+      goToStepByKey(first.step);
+      focusField(first.field);
+      return;
+    }
+
+    setIssues([]);
     try {
       const result = await dispatch(submitDraftAsync()).unwrap();
       if (result.result) {
@@ -152,7 +230,7 @@ export default function OrderEoppyWizard() {
         doctor.ygeionomiki_domi && dispatch(setDraftProperty({ key: "doctor_Domi", value: doctor.ygeionomiki_domi }))
         //SUGGESTED DOCTOR
         const suggestedDoctor = data.jsonDoc.systinon_iatros
-        const hasSuggestedDoctor = hasAnyValue(suggestedDoctor);
+        const hasSuggestedDoctor = suggestedDoctor ? hasAnyValue(suggestedDoctor) : null;
         hasSuggestedDoctor && dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: hasSuggestedDoctor }))
         hasSuggestedDoctor && dispatch(setDraftProperty({ key: "has_suggested_doctor", value: hasSuggestedDoctor ? 1 : 0 }))
         if (hasSuggestedDoctor) {
@@ -170,6 +248,8 @@ export default function OrderEoppyWizard() {
         gnomatevsi.katigoria_paroxis && dispatch(setDraftProperty({ key: "katigoriaParoxis", value: gnomatevsi.katigoria_paroxis }))
         gnomatevsi.eidos_egkrisis && dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: gnomatevsi.eidos_egkrisis }))
         dispatch(setDraftProperty({ key: "symmPercentage", value: gnomatevsi.symmetoxi_percentage }))
+        gnomatevsi.symmetoxi_percentage == 0 && dispatch(setDraftProperty({ key: "EopyyVerifyNoParticipation", value: 0 }))
+
         gnomatevsi.diagnosi1_gid && dispatch(setDraftProperty({ key: "diagnosi1_GID", value: gnomatevsi.diagnosi1_gid }))
         gnomatevsi.kodikos_diagnosis && dispatch(setDraftProperty({ key: "eoppy_Diagnosi_Code", value: gnomatevsi.kodikos_diagnosis }))
         gnomatevsi.perigrafi_diagnosis && dispatch(setDraftProperty({ key: "eoppy_Diagnosi_Name", value: gnomatevsi.perigrafi_diagnosis }))
@@ -178,8 +258,8 @@ export default function OrderEoppyWizard() {
         gnomatevsi.perigrafi_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Name", value: gnomatevsi.perigrafi_diagnosis2 }))
         //AI MATERIALS
         const aiMaterials = data.jsonDoc.ylika
-        const uniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter((x: AIMaterialsType) => x.erp_products.length == 1)
-        const nonUniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter((x: AIMaterialsType) => x.erp_products.length > 1)
+        const uniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter((x: AIMaterialsType) => x.erp_products?.length && x.erp_products?.length == 1)
+        const nonUniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter((x: AIMaterialsType) => x.erp_products?.length != 1 || !x.erp_products)
 
         for (let i = 0; i < uniqueAiMaterials.length; i++) {
           dispatch(addDraftYliko({

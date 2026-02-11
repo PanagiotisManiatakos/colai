@@ -10,7 +10,7 @@ export default function Touchdown() {
     const submitState = useAppSelector((s) => s.orders.draft.submitState)
 
     React.useEffect(() => {
-        if (!data.isTempSave) dispatch(setDraftProperty({ key: "isTempSave", value: 1 }))
+        if (!data.isTempSave) dispatch(setDraftProperty({ key: "isTempSave", value: 0 }))
     }, [])
 
     return (
@@ -26,9 +26,9 @@ export default function Touchdown() {
                         type="checkbox"
                         checked={data.isTempSave == 1}
                         onChange={(e) => dispatch(setDraftProperty({ key: "isTempSave", value: e.target.checked ? 1 : 0 }))}
-                        name="payFullOrDiscount"
+                        name="isTempSave"
                     />
-                    <label className="form-check-label" htmlFor="payFullOrDiscount">
+                    <label className="form-check-label" htmlFor="isTempSave">
                         Προσωρινή αποθήκευση
                     </label>
                 </div>
