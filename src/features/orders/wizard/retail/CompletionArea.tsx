@@ -53,6 +53,32 @@ export default function CompletionArea() {
                     <input
                         className="form-check-input"
                         type="checkbox"
+                        checked={data.payFullOrDiscount == 1}
+                        onChange={(e) => {
+                            dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 1 : 2 }))
+                            if (e.target.checked) {
+                                dispatch(setDraftProperty({ key: "appliedPriceList", value: null }))
+                                dispatch(setDraftProperty({ key: "posoDiscounted", value: 0 }));
+                            } else {
+                                dispatch(setDraftProperty({ key: "appliedPriceList", value: "eopyy" }));
+                                const pricesEOPPY = ylika.reduce((acc, x) => acc + ((Number(x.erp_EoppyPrice) || 0) * Number(x.qty) || 0), 0);
+                                dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(pricesEOPPY) }));
+
+
+                            }
+                        }
+                        }
+                        id="payFullOrDiscount"
+                    />
+                    <label className="form-check-label" htmlFor="payFullOrDiscount">
+                        Πληρωμή όλου του ποσού
+                    </label>
+                </div>
+
+                <div className="form-check form-switch mb-2 switch-lg">
+                    <input
+                        className="form-check-input"
+                        type="checkbox"
                         checked={data.payFullOrDiscount == 2}
                         onChange={(e) => {
                             dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 2 : 1 }))
