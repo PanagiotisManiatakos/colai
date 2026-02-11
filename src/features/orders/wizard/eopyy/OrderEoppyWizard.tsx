@@ -122,8 +122,6 @@ export default function OrderEoppyWizard() {
     };
 
     if (draftOrder.isTempSave != 0) {
-
-
       const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
       add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
 
@@ -149,7 +147,7 @@ export default function OrderEoppyWizard() {
 
       }
 
-      add("symmetoxi", "EopyyVerifyNoParticipation", true, draftOrder.EopyyVerifyNoParticipation == 0 && !(draftOrder.symmPercentage > 0));
+      add("symmetoxi", "EopyyVerifyNoParticipation", true, draftOrder.EopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
     }
 
 

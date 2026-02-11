@@ -3,93 +3,14 @@ import { formatCurrencyGR } from '@/lib/utils/number';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import React from 'react'
 import { FormSelect } from 'react-bootstrap';
+import FormErrorsContext from '@/components/ui/FormErrorContect';
+import OrderField from '@/components/ui/OrderField';
+import OrderSwitchField from '@/components/ui/OrdeSwitchField';
 
 type Props = {
     errors?: Record<string, string | boolean>;
     clearError?: (field: string) => void;
 };
-
-type ErrorCtx = {
-    errors: Record<string, string | boolean>;
-    clearError?: (field: string) => void;
-};
-
-const FormErrorsContext = React.createContext<ErrorCtx>({ errors: {} });
-
-function mergeClassName(a?: string, b?: string) {
-    return [a, b].filter(Boolean).join(" ");
-}
-
-function Field({ label, children, hint }: { label?: string; children: React.ReactNode; hint?: string }) {
-    const { errors, clearError } = React.useContext(FormErrorsContext);
-
-    const childIsEl = React.isValidElement(children);
-    const name = childIsEl ? (children.props as any)?.name : undefined;
-    const error = name ? errors[name] : undefined;
-
-    const enhancedChild = childIsEl
-        ? React.cloneElement(children as any, {
-            className: mergeClassName((children.props as any).className, error ? "is-invalid" : ""),
-            "aria-invalid": !!error,
-
-            onChange: (...args: any[]) => {
-                (children.props as any)?.onChange?.(...args);
-                if (name && error && clearError) clearError(name);
-            },
-            onBlur: (...args: any[]) => {
-                (children.props as any)?.onBlur?.(...args);
-                if (name && error && clearError) clearError(name);
-            },
-        })
-        : children;
-
-    return (
-        <div className={label ? "mb-3" : ""}>
-            {label && <label className="form-label fw-semibold">{label}</label>}
-            {enhancedChild}
-            {error ? <div className="invalid-feedback d-block">{error}</div> : hint ? <div className="form-text">{hint}</div> : null}
-        </div>
-    );
-}
-
-function SwitchField({
-    name,
-    id,
-    label,
-    checked,
-    onChange,
-}: {
-    name: string;
-    id: string;
-    label: string;
-    checked: boolean;
-    onChange: (checked: boolean) => void;
-}) {
-    const { errors, clearError } = React.useContext(FormErrorsContext);
-    const error = errors[name];
-
-    return (
-        <div className="form-check form-switch mb-2 switch-lg">
-            <input
-                className={mergeClassName("form-check-input", error ? "is-invalid" : "")}
-                type="checkbox"
-                name={name}
-                id={id}
-                checked={!!checked}
-                aria-invalid={!!error}
-                onChange={(e) => {
-                    onChange(e.target.checked);
-                    if (error && clearError) clearError(name);
-                }}
-            />
-            <label className="form-check-label" htmlFor={id}>
-                {label}
-            </label>
-
-            {error && error !== true ? <div className="invalid-feedback d-block">{error}</div> : null}
-        </div>
-    );
-}
 
 const SymmetoxiArea = ({ errors, clearError }: Props) => {
     const data = useAppSelector((s) => s.orders.draft.order);
@@ -103,7 +24,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
 
                 </div>
 
-                <Field label="%">
+                <OrderField label="%">
                     <input
                         className="form-control"
                         name="symmPercentage"
@@ -129,11 +50,11 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                             dispatch(setDraftProperty({ key: "symmPercentage", value: n }));
                         }}
                     />
-                </Field>
+                </OrderField>
 
                 <div className="row g-2">
                     <div className="col-6">
-                        <Field label="Αξία υλικών">
+                        <OrderField label="Αξία υλικών">
                             <input
                                 className="form-control"
                                 name="kostos"
@@ -142,10 +63,10 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                                 readOnly
                                 value={formatCurrencyGR(data.kostos ?? "")}
                             />
-                        </Field>
+                        </OrderField>
                     </div>
                     <div className="col-6">
-                        <Field label="Συμμετοχή ασθενή">
+                        <OrderField label="Συμμετοχή ασθενή">
                             <input
                                 className="form-control"
                                 name="posoSymmetoxis"
@@ -154,7 +75,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                                 readOnly
                                 value={formatCurrencyGR((data.kostos ?? 0) * (data.symmPercentage ?? 0) / 100)}
                             />
-                        </Field>
+                        </OrderField>
                     </div>
                 </div>
 
@@ -208,7 +129,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                     </div>
                 </>
                 }
-                {!(data.symmPercentage > 0) && <SwitchField
+                {!(data.symmPercentage > 0) && <OrderSwitchField
                     name="EopyyVerifyNoParticipation"
                     id="EopyyVerifyNoParticipation"
                     label="Επιβεβαίωση μηδενικής συμμετοχής"
@@ -219,12 +140,12 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                 />}
                 {data.payFullOrDiscount == 2 && <>
                     <div className="app-divider my-2" />
-                    <Field label="Λόγος έκπτωσης">
+                    <OrderField label="Λόγος έκπτωσης">
                         <FormSelect name="" value={data.discount_reason_id} onChange={(e) => dispatch(setDraftProperty({ key: "discount_reason_id", value: e.target.value }))}>
                             {discountReasons.map(d => <option key={d.value} value={d.value}>{d.text}</option>)}
                         </FormSelect>
-                    </Field>
-                    <Field label="Τελικό ποσό">
+                    </OrderField>
+                    <OrderField label="Τελικό ποσό">
                         <input
                             className="form-control"
                             name="posoDiscounted"
@@ -247,7 +168,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                                 dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(e.target.value.replaceAll(".", "").replaceAll(",", ".")) }))
                             }}
                         />
-                    </Field>
+                    </OrderField>
                 </>}
             </FormErrorsContext.Provider>
         </div>

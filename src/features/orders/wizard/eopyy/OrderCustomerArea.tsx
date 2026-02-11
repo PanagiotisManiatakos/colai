@@ -4,7 +4,7 @@ import CustomerLookupModal from "../modals/CustomerLookupModal";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
-import OrderField from "@/components/ui/OrdeField";
+import OrderField from "@/components/ui/OrderField";
 
 type Props = {
     errors?: Record<string, string | boolean>;
