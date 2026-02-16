@@ -23,5 +23,6 @@ export type DiscountRequest = {
     dateDiscountReviewed: string | null;
     discountReviewedByName: string | null;
     discount_reason: string | null
+    group_EOPPY_id: number
 
 }

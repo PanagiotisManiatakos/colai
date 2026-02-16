@@ -12,8 +12,28 @@ export interface DiscountRequestState {
   query: string;
   requestsFetchedAt: number;
   userCanMakeAction: boolean;
+  review: {
+    loading: boolean;
+    error: string | null
+  }
 }
 
+export const reviewDiscountRequest = createAsyncThunk<any, { id: number; uid: string; isapproved: number; overrideamount?: number }>(
+  "discountRequests/reviewDiscountRequest",
+  async ({ id, uid, isapproved, overrideamount = 0 }) => {
+    const res = await fetch(`/api/discountRequests/review`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, uid, isapproved, overrideamount }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data?.ok) {
+      throw new Error(data?.message || "Failed to load orders");
+    }
+    return { ...data, id, isapproved };
+  }
+);
 
 export const fetchDiscountRequests = createAsyncThunk<any, { q?: string; force?: boolean } | void, { state: RootState }>(
   "discountRequests/fetchDiscountRequests",
@@ -92,7 +112,11 @@ const initialStateBase: DiscountRequestState = {
   error: null,
   query: "",
   requestsFetchedAt: 0,
-  userCanMakeAction: false
+  userCanMakeAction: false,
+  review: {
+    loading: false,
+    error: null
+  }
 };
 
 const discountRequestsSlice = createSlice({
@@ -114,7 +138,7 @@ const discountRequestsSlice = createSlice({
         state.error = payload.message
       } else {
         state.requests = payload.data.mydata
-        state.userCanMakeAction = payload.userCanMakeAction
+        state.userCanMakeAction = payload.data.userCanMakeAction
 
         const q =
           typeof action.meta.arg === "object" && action.meta.arg?.q
@@ -132,6 +156,26 @@ const discountRequestsSlice = createSlice({
 
       state.error = action.error.message || "Failed to load discount requests";
     });
+
+    b.addCase(reviewDiscountRequest.pending, (state) => {
+      state.review.loading = true;
+      state.review.error = null;
+    })
+    b.addCase(reviewDiscountRequest.fulfilled, (state, action) => {
+      state.review.loading = false;
+      if (action.payload.result && action.payload.type === "success") {
+        const req = state.requests.find((r) => r.id === action.payload.id);
+        if (req) {
+          req.isDiscountApproved = action.payload.isapproved;
+        }
+      } else {
+        state.review.error = action.payload.message ?? action.payload.exmessage;
+      }
+    })
+    b.addCase(reviewDiscountRequest.rejected, (state, action) => {
+      state.review.loading = false;
+      state.review.error = action.error.message ?? "";
+    })
   }
 });
 
