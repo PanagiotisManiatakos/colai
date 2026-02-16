@@ -8,6 +8,10 @@ export type AuthUser = {
     lname?: string;
     userUID?: string
     userID?: number
+    isSeller?: boolean;
+    isManager?: boolean;
+    isSuperAdmin?: boolean;
+    isSalesAdmin?: boolean
 };
 
 export type AuthState = {

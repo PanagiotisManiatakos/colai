@@ -104,7 +104,11 @@ export default function OrderDoctorArea() {
                     name="has_suggested_doctor"
                     type="checkbox"
                     checked={data.has_suggested_doctor == 1}
-                    onChange={(e) => dispatch(setDraftProperty({ key: "has_suggested_doctor", value: e.target.checked ? 1 : 0 }))}
+                    onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: e.target.checked ? 1 : 0 }))
+                        dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: e.target.checked }))
+
+                    }}
                 />
                 <label className="form-check-label" htmlFor="has_suggested_doctor">
                     Έχω συστήνων ιατρό

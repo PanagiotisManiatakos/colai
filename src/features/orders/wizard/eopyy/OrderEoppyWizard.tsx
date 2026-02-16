@@ -147,7 +147,7 @@ export default function OrderEoppyWizard() {
 
       }
 
-      add("symmetoxi", "EopyyVerifyNoParticipation", true, draftOrder.EopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
+      add("symmetoxi", "eopyyVerifyNoParticipation", true, draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
     }
 
 
@@ -250,7 +250,7 @@ export default function OrderEoppyWizard() {
         gnomatevsi.katigoria_paroxis && dispatch(setDraftProperty({ key: "katigoriaParoxis", value: gnomatevsi.katigoria_paroxis }))
         gnomatevsi.eidos_egkrisis && dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: gnomatevsi.eidos_egkrisis }))
         dispatch(setDraftProperty({ key: "symmPercentage", value: gnomatevsi.symmetoxi_percentage }))
-        gnomatevsi.symmetoxi_percentage == 0 && dispatch(setDraftProperty({ key: "EopyyVerifyNoParticipation", value: 0 }))
+        gnomatevsi.symmetoxi_percentage == 0 && dispatch(setDraftProperty({ key: "eopyyVerifyNoParticipation", value: 0 }))
 
         gnomatevsi.diagnosi1_gid && dispatch(setDraftProperty({ key: "diagnosi1_GID", value: gnomatevsi.diagnosi1_gid }))
         gnomatevsi.kodikos_diagnosis && dispatch(setDraftProperty({ key: "eoppy_Diagnosi_Code", value: gnomatevsi.kodikos_diagnosis }))

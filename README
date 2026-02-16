@@ -13,3 +13,17 @@ OTRAN DEN EXEI EKPTOSI NA ERXETAI SAN NULL TO POSODISCOUNTED
 Otan exei annoia tha paralavei allos ektos tou astheni
 an η ημρομοηνια γεννηση tou einai mikrotero apo 18 apo to date now ειναι υποχρεωτικο να παραλαβει αλλος και αρα να φορτωσουμε συναινεση
 προσωρινή αποθηκευση προτινόμενο το οχι 
+
+Κατα το login, μου επιστρεφει isSeller (μπορει να κανει insert νεας παραγγελιας)
+isManager κάνει μονο έγκριση σε εκπτώσεις (Έγκριση, Απόρριψη, Αλλαγη ποσού)
+isSeller κανει νεες παραγγελιες
+isSuperAdmin, isSalesAdmin (μόνο βλέπουν) υπερισψυουν και δεν καταχωρουν αν ειναι και σελλερ η μανατζερ
+
+Αιτήματα Επτωσεων
+
+ΝΑ ΞΕΡΩ ΑΝ ΕΙΝΑΙ ΛΙΑΝΙΚΗ Η ΕΟΠΠΥ
+ΝΑ ΦΑΙΝΕΤΑΙ Ο ΠΩΛΗΤΗΣ
+Ο ΠΕΛΑΤΗ
+ISNULL(SYSTINON, IATROS)
+ΚΟΣΤΟΣ - ΤΕΛΙΚΟ - ΠΟΣΟ ΕΚΠΤΩΣΗΣ
+

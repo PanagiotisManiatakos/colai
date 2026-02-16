@@ -130,12 +130,15 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                 </>
                 }
                 {!(data.symmPercentage > 0) && <OrderSwitchField
-                    name="EopyyVerifyNoParticipation"
-                    id="EopyyVerifyNoParticipation"
+                    name="eopyyVerifyNoParticipation"
+                    id="eopyyVerifyNoParticipation"
                     label="Επιβεβαίωση μηδενικής συμμετοχής"
-                    checked={data.EopyyVerifyNoParticipation == 1}
-                    onChange={(checked) =>
-                        dispatch(setDraftProperty({ key: "EopyyVerifyNoParticipation", value: checked ? 1 : 0 }))
+                    checked={data.eopyyVerifyNoParticipation == 1}
+                    onChange={(checked) => {
+
+                        dispatch(setDraftProperty({ key: "eopyyVerifyNoParticipation", value: checked ? 1 : 0 }))
+                        !data.eidos_Egkrisis && dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: 1 }))
+                    }
                     }
                 />}
                 {data.payFullOrDiscount == 2 && <>

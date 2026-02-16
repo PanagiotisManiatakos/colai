@@ -113,7 +113,7 @@ export type Order = {
   isTempSave: number;
   aiCalculated: boolean;
   hasAnoia: boolean;
-  EopyyVerifyNoParticipation: number;
+  eopyyVerifyNoParticipation: number;
 };
 
 export type OrderYlika = {

@@ -52,7 +52,11 @@ export default function OrderDoctorArea() {
                     className="form-check-input"
                     type="checkbox"
                     checked={data.has_suggested_doctor == 1}
-                    onChange={(e) => dispatch(setDraftProperty({ key: "has_suggested_doctor", value: e.target.checked ? 1 : 0 }))}
+                    onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: e.target.checked ? 1 : 0 }))
+                        dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: e.target.checked }))
+
+                    }}
                     id="has_suggested_doctor"
                 />
                 <label className="form-check-label" htmlFor="has_suggested_doctor">

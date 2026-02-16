@@ -49,7 +49,6 @@ export default function OrderStartPage() {
         <h1 className="h5 fw-semibold mb-1">Επιλογή πλατφόρμας</h1>
         <p className="text-secondary small mb-0">Διάλεξε ροή εργασίας για να ξεκινήσεις.</p>
       </div>
-
       <div className="app-card p-3">
         <label className="form-label small text-secondary mb-2">Κατηγορία</label>
         <FormSelect value={groupid} onChange={(e) => dispatch(setDraftProperty({ key: "groupid", value: Number(e.target.value) }))} aria-label="Κατηγορία">
@@ -67,7 +66,8 @@ export default function OrderStartPage() {
           {error}
         </Alert>
       ) : null}
-      {editState.loading && <AppLoader />}
+      {editState.loading && <AppLoader card={false} overlay label="" />}
+
 
       {/* <div className="d-flex gap-2 pt-1">
         <button

@@ -17,6 +17,7 @@ export default function OrdersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const userInfo = useAppSelector((s) => s.auth.userInfos)
 
   const orders = useAppSelector((s) => s.orders.orders);
   const listLoading = useAppSelector((s) => s.orders.loadingOrders);
@@ -87,7 +88,7 @@ export default function OrdersPage() {
         )}
       </PullToRefresh>
 
-      <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
+      {userInfo?.isSeller && <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />}
     </div>
   );
 }

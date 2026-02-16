@@ -1,4 +1,6 @@
+'use client'
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
+import { useAppSelector } from "@/store/hooks";
 import React from "react";
 
 type MetricCardProps = {
@@ -163,6 +165,8 @@ function MonthlyTargetCard() {
 }
 
 export default function HomeStats() {
+  const userInfo = useAppSelector((s) => s.auth.userInfos)
+
   return (
     <div
       className="h-100 d-flex flex-column"
@@ -194,7 +198,7 @@ export default function HomeStats() {
         <SalesAnalysisCard />
         <MonthlyTargetCard />
       </div>
-      <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
+      {userInfo?.isSeller && <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />}
 
     </div>
   );

@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { cookieName } from "@/lib/auth";
 
-
 export async function GET(req: Request) {
     const jar = cookies();
     const token = (await jar).get(cookieName)?.value;

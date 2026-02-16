@@ -6,9 +6,10 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatUIDate } from "@/lib/utils/date";
 import Link from "next/link";
 import { Modal, Button } from "react-bootstrap";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { deleteOrderAsync } from "@/store/orders/ordersSlice";
 import { useRouter } from "next/navigation";
+import { formatCurrencyGR } from "@/lib/utils/number";
 
 const ACTION_WIDTH = 88;
 
@@ -19,15 +20,21 @@ export default function OrderCard({
   order: Order;
   onDelete?: (id: number) => void;
 }) {
-  const canSwipeDelete = order.statusId === 0;
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const userInfo = useAppSelector((s) => s.auth.userInfos)
+  const list_order_types = useAppSelector((s) => s.staticData.list_Order_Types);
+  const list_group_eoppy = useAppSelector((s) => s.staticData.list_GroupEoppy);
+
+  const canSwipeDelete = order.statusId === 0 && userInfo?.isSeller;
 
   const [x, setX] = React.useState(0);
   const [dragging, setDragging] = React.useState(false);
 
   const [showConfirm, setShowConfirm] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
+
+  const [open, setOpen] = React.useState(false);
 
   const startRef = React.useRef({
     x: 0,
@@ -124,9 +131,9 @@ export default function OrderCard({
 
       setShowConfirm(false);
       setX(0);
-      setDeleting(false);
       onDelete?.(order.id);
     } finally {
+      setDeleting(false);
     }
   }
 
@@ -143,6 +150,46 @@ export default function OrderCard({
 
   const reveal = canSwipeDelete ? Math.min(1, Math.max(0, -x / ACTION_WIDTH)) : 0;
 
+  const typeText = list_order_types?.find((t) => t.value == order.type)?.text ?? "";
+  const groupText = list_group_eoppy?.find((g) => g.value == String(order.group_EOPPY_id))?.text ?? "";
+
+  const doctorLabel = order.has_suggested_doctor == 1 ? "Συστήνων ιατρός" : "Ιατρός";
+  const doctorName = order.has_suggested_doctor == 1 ? order.doctorSuggested_name : order.doctor_name;
+  const doctorAmka = order.has_suggested_doctor == 1 ? order.doctorSuggested_amka : order.doctor_amka;
+
+  const chipStyle: React.CSSProperties = {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    padding: "5px 8px",
+    borderRadius: 999,
+    fontSize: 12,
+    border: "1px solid var(--bs-border-color-translucent)",
+    // background: "var(--bs-body-bg)",
+    lineHeight: 1,
+    whiteSpace: "nowrap",
+  };
+
+  const softPrimaryStyle: React.CSSProperties = {
+    background: "rgba(var(--bs-primary-rgb), .12)",
+    color: "var(--bs-primary)",
+    border: "1px solid rgba(var(--bs-primary-rgb), .18)",
+  };
+
+  const cardStyle: React.CSSProperties = {
+    // borderRadius: 16,
+    overflow: "hidden",
+    // background: "var(--bs-body-bg)",
+    // border: "1px solid var(--bs-border-color-translucent)",
+    // boxShadow: "0 10px 24px rgba(0,0,0,.06)",
+  };
+
+  const headerStyle: React.CSSProperties = {
+    padding: "14px 14px 12px",
+    // background: open ? "rgba(var(--bs-secondary-rgb), .06)" : "var(--bs-body-bg)",
+    borderBottom: open ? "1px solid var(--bs-border-color-translucent)" : "1px solid transparent",
+  };
+
   return (
     <>
       <div
@@ -151,7 +198,10 @@ export default function OrderCard({
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel}
-        style={{ touchAction: canSwipeDelete ? "pan-y" : "auto" }}
+        style={{
+          touchAction: canSwipeDelete ? "pan-y" : "auto",
+          userSelect: dragging ? "none" : "auto",
+        }}
       >
         {canSwipeDelete ? (
           <div
@@ -168,8 +218,17 @@ export default function OrderCard({
               className="btn btn-danger swipe-delete"
               onClick={onClickDelete}
               aria-label="Delete order"
+              style={{
+                width: 52,
+                height: 52,
+                borderRadius: 14,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 10px 18px rgba(220,53,69,.22)",
+              }}
             >
-              <i className="bi bi-trash3" />
+              <i className="bi bi-trash3" style={{ fontSize: 18 }} />
             </button>
           </div>
         ) : null}
@@ -182,51 +241,150 @@ export default function OrderCard({
             zIndex: 1,
           }}
         >
-          <details className="app-card p-3">
+          <details
+            className="app-card"
+            style={cardStyle}
+            onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
+          >
             <summary
-              className="d-flex align-items-center justify-content-between"
-              style={{ listStyle: "none", cursor: "pointer" }}
+              className="d-flex align-items-start justify-content-between gap-3"
+              style={{
+                ...headerStyle,
+                listStyle: "none",
+                cursor: "pointer",
+                WebkitTapHighlightColor: "transparent",
+              }}
               onClickCapture={blockClickIfSwiping}
               onPointerUpCapture={blockClickIfSwiping}
             >
-              <div className="me-3">
-                <div className="d-flex align-items-center gap-2">
-                  <span className="badge bg-primary-subtle text-primary">#{order.id}</span>
-                  <div className="fw-semibold">{order.barcode}</div>
+              <div style={{ minWidth: 0 }}>
+                <div className="d-flex flex-wrap align-items-center gap-2">
+                  <span style={{ ...chipStyle, ...softPrimaryStyle }}>
+                    <i className="bi bi-hash" />
+                    <span className="fw-semibold">{order.id}</span>
+                  </span>
+
+                  {typeText ? <span style={chipStyle}>{typeText}</span> : null}
+                  {groupText ? <span style={chipStyle}>{groupText}</span> : null}
                 </div>
-                <div className="text-secondary small mt-1">{order.customer_name}</div>
+
+                <div
+                  className="mt-2"
+                  style={{
+                    color: "var(--bs-body-color)",
+                    fontWeight: 650,
+                    fontSize: 15,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={order.customer_name}
+                >
+                  {order.customer_name ?? ""}
+                </div>
+
+                <div
+                  className="text-secondary"
+                  style={{
+                    fontSize: 13,
+                    marginTop: 2,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={doctorName}
+                >
+                  {order.has_suggested_doctor == 1 ? `${order.doctorSuggested_name ?? ""}` : `${order.doctor_name ?? ""}`}
+                </div>
               </div>
-              <div className="text-end">
+
+              <div className="text-end" style={{ flexShrink: 0 }}>
                 <StatusBadge status={order.statusId} />
-                <div className="small text-secondary mt-1">Υλικά: {order.countYlika}</div>
+
+                <div
+                  className="mt-2 fw-semibold"
+                  style={{
+                    fontSize: 15,
+                    letterSpacing: 0.2,
+                  }}
+                >
+                  {Number(order.posoDiscounted) > 0 ? formatCurrencyGR(order.posoDiscounted) : formatCurrencyGR(order.posoSymmetoxis)}€
+                </div>
+
+                <span
+                  className="mt-2"
+                  style={{
+                    ...chipStyle,
+                    background: "rgba(var(--bs-secondary-rgb), .08)",
+                  }}
+                >
+                  <i className="bi bi-box-seam" />
+                  <span className="small">Υλικά: {order.countYlika}</span>
+                </span>
+                {/* <div
+                  className="d-inline-flex align-items-center gap-2 text-secondary"
+                  style={{ fontSize: 13, marginTop: 4 }}
+                >
+                  <i
+                    className={`bi ${open ? "bi-chevron-up" : "bi-chevron-down"}`}
+                    style={{
+                      transition: "transform 160ms ease",
+                      transform: open ? "translateY(-1px)" : "translateY(1px)",
+                    }}
+                  />
+                  <span>{open ? "Λιγότερα" : "Περισσότερα"}</span>
+                </div> */}
               </div>
             </summary>
 
-            <div className="mt-3">
-              <div className="app-divider my-2" />
-
-              <div className="row g-2">
-                <div className="col-12">
+            <div style={{ padding: "14px 14px 14px" }}>
+              <div className="row g-3">
+                <div className="col-8">
                   <div className="small text-secondary">Ημερομηνία Συνταγής</div>
                   <div className="fw-medium">{formatUIDate(order.dateOfSyntagi)}</div>
                 </div>
-                <div className="col-12">
-                  <div className="small text-secondary">ΑΜΚΑ Πελάτη</div>
-                  <div className="fw-medium">{order.customer_amka}</div>
+                <div className="col-4">
+                  <div className="small text-secondary">Συμμετοχή</div>
+                  <div className="fw-medium">{formatCurrencyGR(order.posoSymmetoxis)} €</div>
                 </div>
+
+                <div className="col-8">
+                  <div className="small text-secondary">ΑΜΚΑ Πελάτη</div>
+                  <div className="fw-medium" style={{ letterSpacing: 0.3 }}>
+                    {order.customer_amka}
+                  </div>
+                </div>
+                <div className="col-4">
+                  <div className="small text-secondary">Έκπτωση</div>
+                  <div className="fw-medium">{formatCurrencyGR(order.posoDiscounted)} €</div>
+                </div>
+
                 <div className="col-12">
-                  <div className="small text-secondary">{order.doctorSuggested_name ? 'Συστήνων ιατρός' : 'Ιατρός'}</div>
-                  <div className="fw-medium">{order.doctorSuggested_name ?? order.doctor_name}</div>
-                  <div className="text-secondary small">AMKA: {order.doctorSuggested_name ? order.doctorSuggested_amka : order.doctor_amka}</div>
+                  <div className="small text-secondary">{doctorLabel}</div>
+                  <div className="fw-medium">{doctorName}</div>
+                  <div className="text-secondary small">AMKA: {doctorAmka}</div>
                 </div>
               </div>
 
-              <div className="d-flex gap-2 mt-3">
+              <div
+                style={{
+                  height: 1,
+                  background: "var(--bs-border-color-translucent)",
+                  margin: "14px 0",
+                }}
+              />
+
+              <div className="d-flex gap-2">
                 {order.statusId === 0 ? (
                   <button
                     type="button"
                     className="btn btn-outline-secondary flex-fill"
                     onClick={() => router.push(`/orders/${order.id}/${order.type}/edit?uid=${order.uid}`)}
+                    style={{
+                      borderRadius: 14,
+                      padding: "10px 12px",
+                      fontWeight: 600,
+                    }}
                   >
                     <i className="bi bi-pencil-fill me-2" />
                     Επεξεργασία
@@ -236,6 +394,12 @@ export default function OrderCard({
                 <Link
                   href={`/orders/${order.id}/${order.type}/view?uid=${order.uid}`}
                   className="btn btn-primary flex-fill"
+                  style={{
+                    borderRadius: 14,
+                    padding: "10px 12px",
+                    fontWeight: 700,
+                    boxShadow: "0 10px 18px rgba(var(--bs-primary-rgb), .22)",
+                  }}
                 >
                   <i className="bi bi-eye me-2" />
                   Προβολή
@@ -253,7 +417,13 @@ export default function OrderCard({
         backdrop={deleting ? "static" : true}
         keyboard={!deleting}
       >
-        <Modal.Header closeButton={!deleting}>
+        <Modal.Header
+          closeButton={!deleting}
+          style={{
+            borderBottom: "1px solid var(--bs-border-color-translucent)",
+            background: "rgba(var(--bs-danger-rgb), .04)",
+          }}
+        >
           <Modal.Title className="fw-semibold">Επιβεβαίωση διαγραφής</Modal.Title>
         </Modal.Header>
 
@@ -261,23 +431,30 @@ export default function OrderCard({
           <div className="d-flex align-items-start gap-3">
             <div
               className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{ width: 44, height: 44, background: "rgba(220, 53, 69, 0.12)" }}
+              style={{
+                width: 46,
+                height: 46,
+                background: "rgba(var(--bs-danger-rgb), .12)",
+                border: "1px solid rgba(var(--bs-danger-rgb), .18)",
+              }}
             >
               <i className="bi bi-exclamation-triangle-fill text-danger" />
             </div>
 
-            <div>
-              <div className="fw-semibold mb-1">Είστε σίγουροι πως θέλετε να διαγράψετε την παραγγελία;</div>
+            <div style={{ minWidth: 0 }}>
+              <div className="fw-semibold mb-1">
+                Είστε σίγουροι πως θέλετε να διαγράψετε την παραγγελία #{order.id};
+              </div>
               <div className="text-secondary small">Η ενέργεια αυτή δεν μπορεί να αναιρεθεί.</div>
             </div>
           </div>
         </Modal.Body>
 
-        <Modal.Footer>
-          <Button variant="outline-secondary" onClick={closeModal} disabled={deleting}>
+        <Modal.Footer style={{ borderTop: "1px solid var(--bs-border-color-translucent)" }}>
+          <Button variant="outline-secondary" onClick={closeModal} disabled={deleting} style={{ borderRadius: 12 }}>
             Ακύρωση
           </Button>
-          <Button variant="danger" onClick={confirmDelete} disabled={deleting}>
+          <Button variant="danger" onClick={confirmDelete} disabled={deleting} style={{ borderRadius: 12 }}>
             {deleting ? (
               <>
                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
