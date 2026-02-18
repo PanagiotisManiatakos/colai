@@ -70,7 +70,20 @@ export default function OrderEoppyWizard() {
     { key: "syntagi", label: "Συνταγη", render: () => <SyntagiArea /> },
     { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea errors={errorsByField} clearError={clearError} /> },
     { key: "synenaiseis", label: "Συνάινεση", render: () => <SynenaiseisArea /> },
-    { key: "touchdown", label: "Touchdown", render: () => <Touchdown /> },
+    {
+      key: "touchdown",
+      label: "Touchdown",
+      render: () => (
+        <Touchdown
+          issues={touchdownIssues}
+          stepLabels={Object.fromEntries(stepDefs.map((s) => [s.key, s.label])) as Record<string, string>}
+          onGoToIssue={(it) => {
+            goToStepByKey(it.step as StepKey);
+            focusField(it.field);
+          }}
+        />
+      ),
+    },
   ];
 
 
@@ -86,7 +99,7 @@ export default function OrderEoppyWizard() {
 
   const errorsByField = React.useMemo(() => {
     const m: Record<string, string | boolean> = {};
-    for (const it of issues) if (!m[it.field]) m[it.field] = it.message; // keep first error per field
+    for (const it of issues) if (!m[it.field]) m[it.field] = it.message;
     return m;
   }, [issues]);
 
@@ -114,14 +127,16 @@ export default function OrderEoppyWizard() {
   function goPrev() {
     setStep((s) => Math.max(s - 1, 0));
   }
+  const currentKey = effectiveSteps[step]?.key;
 
-  const validateEoppyOrder = () => {
+
+  const validateEoppyOrder = React.useCallback((): WizardIssue[] => {
     const issues: WizardIssue[] = [];
     const add = (step: StepKey, field: string, message: string | boolean, when: boolean) => {
       if (when) issues.push({ step, field, message });
     };
 
-    if (draftOrder.isTempSave != 0) {
+    if (draftOrder.isTempSave != 1) {
       const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
       add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
 
@@ -144,16 +159,18 @@ export default function OrderEoppyWizard() {
         add("customer", "customer_other_address", true, isBlank(draftOrder.customer_other_address));
         add("customer", "customer_other_city", true, isBlank(draftOrder.customer_other_city));
         add("customer", "customer_other_tk", true, isBlank(draftOrder.customer_other_tk));
-
       }
 
       add("symmetoxi", "eopyyVerifyNoParticipation", true, draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
     }
 
-
     return issues;
+  }, [draftOrder]);
 
-  }
+  const touchdownIssues = React.useMemo(() => {
+    if (currentKey !== "touchdown") return [];
+    return validateEoppyOrder();
+  }, [currentKey, validateEoppyOrder]);
 
 
   async function onSave() {

@@ -1,7 +1,8 @@
 'use client'
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
-import { useAppSelector } from "@/store/hooks";
-import React from "react";
+import { fetchDashboardData } from "@/store/dashboard/slice";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import React, { useEffect } from "react";
 
 type MetricCardProps = {
   title: string;
@@ -165,7 +166,17 @@ function MonthlyTargetCard() {
 }
 
 export default function HomeStats() {
+  const dispatch = useAppDispatch();
   const userInfo = useAppSelector((s) => s.auth.userInfos)
+  const dashBoard = useAppSelector((s) => s.dashboard)
+
+  React.useEffect(() => {
+    if (!dashBoard.loading && !dashBoard.error) {
+      // Only fetch if we haven't already loaded data or encountered an error
+      dispatch(fetchDashboardData());
+    }
+  }, []);
+
 
   return (
     <div

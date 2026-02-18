@@ -308,7 +308,7 @@ export default function OrderCard({
                     letterSpacing: 0.2,
                   }}
                 >
-                  {Number(order.posoDiscounted) > 0 ? formatCurrencyGR(order.posoDiscounted) : formatCurrencyGR(order.posoSymmetoxis)}€
+                  {formatCurrencyGR(order.kostos)}€
                 </div>
 
                 <span
@@ -339,16 +339,19 @@ export default function OrderCard({
 
             <div style={{ padding: "14px 14px 14px" }}>
               <div className="row g-3">
-                <div className="col-8">
-                  <div className="small text-secondary">Ημερομηνία Συνταγής</div>
+                <div className="col-4">
+                  <div className="small text-secondary">Ημ/νία Συνταγής</div>
                   <div className="fw-medium">{formatUIDate(order.dateOfSyntagi)}</div>
+                </div>
+                <div className="col-4">
+                  <div className="small text-secondary">Αξία συνταγής</div>
+                  <div className="fw-medium">{formatCurrencyGR(order.kostos)} €</div>
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Συμμετοχή</div>
                   <div className="fw-medium">{formatCurrencyGR(order.posoSymmetoxis)} €</div>
                 </div>
-
-                <div className="col-8">
+                <div className="col-4">
                   <div className="small text-secondary">ΑΜΚΑ Πελάτη</div>
                   <div className="fw-medium" style={{ letterSpacing: 0.3 }}>
                     {order.customer_amka}
@@ -356,6 +359,10 @@ export default function OrderCard({
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Έκπτωση</div>
+                  <div className="fw-medium">{formatCurrencyGR(order.calculatedDiscPercent)} %</div>
+                </div>
+                <div className="col-4">
+                  <div className="small text-secondary">Πληρωτέο</div>
                   <div className="fw-medium">{formatCurrencyGR(order.posoDiscounted)} €</div>
                 </div>
 

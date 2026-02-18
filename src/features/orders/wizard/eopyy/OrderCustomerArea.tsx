@@ -5,6 +5,7 @@ import React from "react";
 import { FormSelect } from "react-bootstrap";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
 import OrderField from "@/components/ui/OrderField";
+import OtpInput from "@/components/ui/OTPInput";
 
 type Props = {
     errors?: Record<string, string | boolean>;
@@ -57,18 +58,15 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
             <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
                 <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
                     <div className="d-flex flex-row justify-content-start align-items-center gap-2">
-                        <div className="fw-semibold">Στοιχεία ασθενή</div>
+                        <div className="fw-semibold">OTP</div>
                         <OrderField>
-
-
-                            <input
-                                className="form-control"
+                            <OtpInput
                                 name="customer_tel_otp"
-                                inputMode="tel"
-                                placeholder="OTP"
-                                style={{ maxWidth: 120 }}
+                                length={6}
                                 value={data.customer_tel_otp ?? ""}
-                                onChange={(e) => dispatch(setDraftProperty({ key: "customer_tel_otp", value: e.target.value }))}
+                                onChange={(otp) =>
+                                    dispatch(setDraftProperty({ key: "customer_tel_otp", value: otp }))
+                                }
                             />
                         </OrderField>
                     </div>

@@ -120,8 +120,8 @@ export default function MaterialsLookupModal({
                                     className="list-group-item list-group-item-action"
                                     onClick={() => applyProduct(r)}
                                 >
-                                    <div className="fw-semibold">{r.erp_name || "—"}</div>
-                                    <div className="small text-secondary">Κωδικός: {r.erp_code || "—"}</div>
+                                    <div className="fw-semibold">{r.erp_code || "—"}</div>
+                                    <div className="small text-secondary">{r.erp_name || "—"}</div>
                                 </button>
                             ))}
                         </div>
