@@ -70,7 +70,6 @@ export default function MaterialsLookupModal({
             orderId: draftOrder.id,
             orderUID: draftOrder.uid,
             erpGid: c.erp_gid || "",
-            aiMatchedErpGid: c.erp_gid || "",
             erpCode: c.erp_code || "",
             erpName: c.erp_name || "",
             erp_Price: c.erp_price || 0,
