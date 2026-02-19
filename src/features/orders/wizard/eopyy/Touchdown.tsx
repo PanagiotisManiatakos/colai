@@ -6,7 +6,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
 import { Alert } from "react-bootstrap";
 
-type WizardIssueLike = { step: string; field: string; message: string | boolean };
+type WizardIssueLike = { step: string; field: string; message: string | boolean, error: string | null };
 
 type Props = {
     issues?: WizardIssueLike[];
@@ -32,8 +32,6 @@ export default function Touchdown({ issues = [], onGoToIssue, stepLabels }: Prop
             return true;
         });
     }, [issues]);
-
-    const msgText = (m: string | boolean, fallbackField: string) => typeof m === "string" ? m : `Υποχρεωτικό πεδίο: ${fallbackField}`;
 
     return (
         <>
@@ -61,8 +59,8 @@ export default function Touchdown({ issues = [], onGoToIssue, stepLabels }: Prop
 
                         <div className="mt-3 d-flex flex-column gap-2">
                             {uniqueIssues.map((it, idx) => {
-                                const stepPrefix = stepLabels?.[it.step] ? `${stepLabels[it.step]} · ` : "";
-                                const text = msgText(it.message, it.field);
+                                const stepPrefix = stepLabels?.[it.step] ? `${stepLabels[it.step]} ` : "";
+                                const text = it.error;
 
                                 return (
                                     <button
@@ -75,7 +73,7 @@ export default function Touchdown({ issues = [], onGoToIssue, stepLabels }: Prop
                                         <div className="d-flex align-items-start gap-2">
                                             <i className="bi bi-arrow-return-right text-danger mt-1" />
                                             <div className="flex-grow-1">
-                                                <div className="small text-body-secondary">{stepPrefix}{it.field}</div>
+                                                <div className="small text-body-secondary">{stepPrefix}</div>
                                                 <div className="fw-semibold">{text}</div>
                                             </div>
                                             <i className="bi bi-chevron-right text-body-secondary mt-1" />

@@ -18,7 +18,7 @@ import AIMaterials from "./AIMaterials";
 import { AIMaterials as AIMaterialsType } from "@/types/orders";
 
 type AiStatus = "idle" | "running" | "done" | "error";
-type WizardIssue = { step: StepKey; field: string; message: string | boolean };
+type WizardIssue = { step: StepKey; field: string; message: string | boolean; error: string | null };
 
 const isBlank = (v: any) => v == null || String(v).trim() === "";
 const onlyDigits = (s: string) => s.replace(/\D/g, "");
@@ -132,36 +132,36 @@ export default function OrderEoppyWizard() {
 
   const validateEoppyOrder = React.useCallback((): WizardIssue[] => {
     const issues: WizardIssue[] = [];
-    const add = (step: StepKey, field: string, message: string | boolean, when: boolean) => {
-      if (when) issues.push({ step, field, message });
+    const add = (step: StepKey, field: string, message: string | boolean, error: string | null = null, when: boolean) => {
+      if (when) issues.push({ step, field, message, error });
     };
 
     if (draftOrder.isTempSave != 1) {
       const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
-      add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
+      add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
 
       if (draftOrder.hasOtherRecipientBool) {
-        add("customer", "recipient_reason_id", true, isBlank(draftOrder.recipient_reason_id));
-        add("customer", "recipient_relation_id", true, isBlank(draftOrder.recipient_relation_id));
-        add("customer", "recipient_name", true, isBlank(draftOrder.recipient_name));
+        add("customer", "recipient_reason_id", true, "Συμπληρώστε αιτία παραλαβής", isBlank(draftOrder.recipient_reason_id));
+        add("customer", "recipient_relation_id", true, "Συμπληρώστε τη σχέση με τον παραλήπτη", isBlank(draftOrder.recipient_relation_id));
+        add("customer", "recipient_name", true, "Συμπληρώστε το όνομα παραλήπτη", isBlank(draftOrder.recipient_name));
 
         const rAmka = onlyDigits(draftOrder.recipient_amka ?? "");
-        add("customer", "recipient_amka", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", rAmka.length !== 11);
-        add("customer", "recipient_afm", true, isBlank(draftOrder.recipient_afm));
-        add("customer", "recipient_tel", true, isBlank(draftOrder.recipient_tel));
-        add("customer", "recipient_passport", true, isBlank(draftOrder.recipient_passport));
-        add("customer", "recipient_address", true, isBlank(draftOrder.recipient_address));
-        add("customer", "recipient_city", true, isBlank(draftOrder.recipient_city));
-        add("customer", "recipient_tk", true, isBlank(draftOrder.recipient_tk));
+        add("customer", "recipient_amka", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", rAmka.length !== 11);
+        add("customer", "recipient_afm", true, "ΑΦΜ παραλήπτη", isBlank(draftOrder.recipient_afm));
+        add("customer", "recipient_tel", true, "Τηλεφωνο παραλήπτη", isBlank(draftOrder.recipient_tel));
+        add("customer", "recipient_passport", true, "Αριθμό διαβατηρίου παραλήπτη", isBlank(draftOrder.recipient_passport));
+        add("customer", "recipient_address", true, "Διεύθυνση παραλήπτη", isBlank(draftOrder.recipient_address));
+        add("customer", "recipient_city", true, "Πόλη παραλήπτη", isBlank(draftOrder.recipient_city));
+        add("customer", "recipient_tk", true, "ΤΚ παραλήπτη", isBlank(draftOrder.recipient_tk));
       }
 
       if (draftOrder.shipTo_other_address == 1) {
-        add("customer", "customer_other_address", true, isBlank(draftOrder.customer_other_address));
-        add("customer", "customer_other_city", true, isBlank(draftOrder.customer_other_city));
-        add("customer", "customer_other_tk", true, isBlank(draftOrder.customer_other_tk));
+        add("customer", "customer_other_address", true, "Διεύθυνση παραδοσης", isBlank(draftOrder.customer_other_address));
+        add("customer", "customer_other_city", true, "Πόλη παραδοσης", isBlank(draftOrder.customer_other_city));
+        add("customer", "customer_other_tk", true, "ΤΚ παραδοσης", isBlank(draftOrder.customer_other_tk));
       }
 
-      add("symmetoxi", "eopyyVerifyNoParticipation", true, draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
+      add("symmetoxi", "eopyyVerifyNoParticipation", true, "Μηδενική συμμετοχή", draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
     }
 
     return issues;

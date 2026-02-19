@@ -68,7 +68,7 @@ jobs:
           local-dir: deploy/
           server-dir: ./
 
-          dangerous-clean-slate: true
+          dangerous-clean-slate: false
           exclude: |
             **/.git*
             **/.git*/**
