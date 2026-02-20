@@ -5,6 +5,9 @@ import { formatUIDate } from "@/lib/utils/date";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import OrderDetailsViewCustomerInfo from "../view/OrderDetailsViewCustomerInfo";
 import OrderDetailsViewDoctorInfo from "../view/OrderDetailsViewDoctorInfo";
+import OrderDetailsViewSystinon from "../view/OrderDetailsViewSystinon";
+import OrderDetailsYlikaInfo from "../view/OrderDetailsYlikaInfo";
+import OrderDetailsSyntagiInfo from "../view/OrderDetailsSyntagiInfo";
 
 export default function OrderDetailsView({ order, mode, value, }: {
   order: Order;
@@ -40,45 +43,12 @@ export default function OrderDetailsView({ order, mode, value, }: {
 
       <OrderDetailsViewDoctorInfo order={order} />
 
-      <div className="app-card p-3">
-        <div className="fw-semibold mb-2">Σχόλια</div>
-        <textarea
-          className="form-control"
-          rows={3}
-          readOnly={true}
-          value={(value.sellerComments ?? order.sellerComments) || ""}
-        />
-      </div>
+      {order.hasOtherSystinonIatroBool && <OrderDetailsViewSystinon order={order} />}
 
-      <div className="app-card p-3" style={{ marginBottom: 14 }}>
-        <div className="fw-semibold mb-2">Παράδοση</div>
+      <OrderDetailsYlikaInfo />
 
-        <div className="form-check form-switch">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            readOnly={true}
-            checked={Boolean((value.deliveryMorning ?? order.deliveryMorning) ? 1 : 0)}
-            id="deliveryMorning"
-          />
-          <label className="form-check-label" htmlFor="deliveryMorning">
-            Παράδοση πρωί
-          </label>
-        </div>
+      <OrderDetailsSyntagiInfo />
 
-        <div className="form-check form-switch mt-2">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            readOnly={true}
-            checked={Boolean((value.deliverySunday ?? order.deliverySunday) ? 1 : 0)}
-            id="deliverySunday"
-          />
-          <label className="form-check-label" htmlFor="deliverySunday">
-            Παράδοση Κυριακή
-          </label>
-        </div>
-      </div>
     </div>
   );
 }

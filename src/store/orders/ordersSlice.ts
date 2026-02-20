@@ -23,7 +23,10 @@ export interface DraftState {
 }
 
 export interface SelectedOrderState {
-  order: Order
+  order: Order;
+  ylika: OrderYlika[];
+  files: OrderFile[];
+  checkErrors: any;
   loading: boolean;
   loadingError: string | null;
   saving: boolean;
@@ -354,6 +357,9 @@ const ordersSlice = createSlice({
       state.selected.loading = false;
       state.selected.loadingError = null;
       state.selected.order = action.payload?.order;
+      state.selected.ylika = action.payload?.items;
+      state.selected.files = action.payload?.files;
+      state.selected.checkErrors = action.payload?.check_errors;
     });
     b.addCase(fetchOrderById.rejected, (state, action) => {
       if (!state.selected) state.selected = {} as SelectedOrderState;
