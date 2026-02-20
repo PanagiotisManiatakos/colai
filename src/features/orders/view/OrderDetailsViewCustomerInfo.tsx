@@ -18,7 +18,7 @@ export default function OrderDetailsViewCustomerInfo({ order }: { order: Order; 
         }}>
         <div>
 
-          Στοιχεία Πελάτη/Ασθενή
+          Πελάτης/Ασθενής
           {order.customer_ErpGID ? <i className="bi bi-check-lg ms-2"></i> : <i className="bi bi-ban ms-2"></i>}
         </div>
         {customerOpen ? <MdOutlineKeyboardArrowUp className="ms-2" /> : <MdOutlineKeyboardArrowDown />}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import PwaInstallTopBanner from "./PwaInstallTopBanner";
 
 function getViewportHeight() {
   return window.visualViewport?.height ?? window.innerHeight;
@@ -44,5 +45,5 @@ export function ViewportRuntime() {
     };
   }, []);
 
-  return null;
+  return <PwaInstallTopBanner />;
 }

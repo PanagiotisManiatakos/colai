@@ -59,63 +59,65 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="app-viewport" style={{ minHeight: "100vh" }}>
-      <div className="app-content d-flex align-items-center" style={{ paddingBottom: 24 }}>
-        <div className="w-100">
-          {/* Logo */}
-          <div className="text-center mb-3">
-            <Image
-              src="/logo_auth.png"
-              alt="Mavrogenis"
-              width={520}
-              height={140}
-              priority
-              style={{ width: "min(320px, 85vw)", height: "auto" }}
-            />
-          </div>
+    <>
+      <div className="app-viewport" style={{ minHeight: "100vh" }}>
+        <div className="app-content d-flex align-items-center" style={{ paddingBottom: 24 }}>
+          <div className="w-100">
+            {/* Logo */}
+            <div className="text-center mb-3">
+              <Image
+                src="/logo_auth.png"
+                alt="Mavrogenis"
+                width={520}
+                height={140}
+                priority
+                style={{ width: "min(320px, 85vw)", height: "auto" }}
+              />
+            </div>
 
-          <div className="app-card p-4">
-            {error ? <div className="alert alert-danger py-2 small">{error}</div> : null}
+            <div className="app-card p-4">
+              {error ? <div className="alert alert-danger py-2 small">{error}</div> : null}
 
-            <form onSubmit={onSubmit}>
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Username</label>
-                <input
-                  className="form-control"
-                  autoComplete="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-              </div>
+              <form onSubmit={onSubmit}>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Username</label>
+                  <input
+                    className="form-control"
+                    autoComplete="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                  />
+                </div>
 
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Password</label>
-                <input
-                  className="form-control"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+                <div className="mb-3">
+                  <label className="form-label fw-semibold">Password</label>
+                  <input
+                    className="form-control"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
 
-              <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                {loading ? (
-                  <span className="d-inline-flex align-items-center gap-2">
-                    <span className="spinner-border spinner-border-sm" aria-hidden />
-                    Συνδέεται…
-                  </span>
-                ) : (
-                  <span>
-                    <i className="bi bi-box-arrow-in-right me-2" />
-                    Σύνδεση
-                  </span>
-                )}
-              </button>
-            </form>
+                <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+                  {loading ? (
+                    <span className="d-inline-flex align-items-center gap-2">
+                      <span className="spinner-border spinner-border-sm" aria-hidden />
+                      Συνδέεται…
+                    </span>
+                  ) : (
+                    <span>
+                      <i className="bi bi-box-arrow-in-right me-2" />
+                      Σύνδεση
+                    </span>
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
