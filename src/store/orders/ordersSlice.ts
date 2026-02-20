@@ -286,6 +286,8 @@ const ordersSlice = createSlice({
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
       state.draft.ylika.push(action.payload);
       state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
+      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_EoppyPrice || 0)), 0);
+      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
 
       const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
       const kostos = Number(state.draft.order.kostos ?? 0);
@@ -304,6 +306,8 @@ const ordersSlice = createSlice({
       }
 
       state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
+      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_EoppyPrice || 0)), 0);
+      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
 
       const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
       const kostos = Number(state.draft.order.kostos ?? 0);
@@ -320,6 +324,8 @@ const ordersSlice = createSlice({
     removeDraftYliko: (state, action: PayloadAction<number>) => {
       state.draft.ylika.splice(action.payload, 1);
       state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
+      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_EoppyPrice || 0)), 0);
+      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
 
       const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
       const kostos = Number(state.draft.order.kostos ?? 0);

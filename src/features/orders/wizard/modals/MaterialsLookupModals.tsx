@@ -12,6 +12,8 @@ export type MaterialsLookupModal = {
     erp_gid?: string;
     erp_name?: string;
     erp_price?: number;
+    fuzzy_matched?: number;
+    matched_by?: string;
 };
 
 export default function MaterialsLookupModal({
@@ -75,6 +77,9 @@ export default function MaterialsLookupModal({
             erp_Price: c.erp_price || 0,
             erp_EoppyPrice: c.erp_eoppyprice || 0,
             qty: 1,
+            fuzzyMatched: c.fuzzy_matched,
+            aiMatchedBy: c.matched_by,
+            aiMatchedErpGid: c.erp_gid,
         }));
 
         onClose();

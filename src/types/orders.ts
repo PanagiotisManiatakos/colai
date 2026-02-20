@@ -142,6 +142,8 @@ export type OrderYlika = {
   erp_Price: number;
   erp_EoppyPrice: number;
   aiMatchedErpGid?: string;
+  aiMatchedBy?: string;
+  fuzzyMatched?: number;
 };
 
 export type OrderFile = {
@@ -183,6 +185,8 @@ export type AIMaterials = {
   symmetoxi: string;
   synoliki_posotita_eidous: string;
   xronia_pathisi: string;
+  matched_by?: string;
+  fuzzy_matched?: number;
 }
 
 export type AIMaterialsErpProducts = {
@@ -191,6 +195,8 @@ export type AIMaterialsErpProducts = {
   erp_gid: string;
   erp_name: string;
   erp_price: number;
+  matched_by?: string;
+  fuzzy_matched?: number;
 }
 
 export type OrdeListOfSelections = {

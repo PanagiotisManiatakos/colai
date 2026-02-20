@@ -267,6 +267,7 @@ export default function OrderEoppyWizard() {
         gnomatevsi.katigoria_paroxis && dispatch(setDraftProperty({ key: "katigoriaParoxis", value: gnomatevsi.katigoria_paroxis }))
         gnomatevsi.eidos_egkrisis && dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: gnomatevsi.eidos_egkrisis }))
         dispatch(setDraftProperty({ key: "symmPercentage", value: gnomatevsi.symmetoxi_percentage }))
+        dispatch(setDraftProperty({ key: "symm", value: gnomatevsi.symmetoxi }))
         gnomatevsi.symmetoxi_percentage == 0 && dispatch(setDraftProperty({ key: "eopyyVerifyNoParticipation", value: 0 }))
 
         gnomatevsi.diagnosi1_gid && dispatch(setDraftProperty({ key: "diagnosi1_GID", value: gnomatevsi.diagnosi1_gid }))
@@ -305,6 +306,8 @@ export default function OrderEoppyWizard() {
             eoppy_AnatomPerioxi: uniqueAiMaterials[i].anatomiki_perioxi,
             eoppy_Symmetoxi: uniqueAiMaterials[i].symmetoxi,
             eoppy_Sxolia: uniqueAiMaterials[i].sxolia,
+            aiMatchedBy: uniqueAiMaterials[i].matched_by,
+            fuzzyMatched: uniqueAiMaterials[i].fuzzy_matched,
           }))
         }
 

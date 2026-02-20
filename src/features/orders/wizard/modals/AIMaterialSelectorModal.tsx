@@ -44,7 +44,9 @@ export default function AIMaterialSelectorModal({
             eoppy_Sxolia: aiMaterials.sxolia,
             eoppy_AnatomPerioxi: aiMaterials.anatomiki_perioxi,
             eoppy_Symmetoxi: aiMaterials.symmetoxi,
-            eoppy_SynPosotita: String(aiMaterials.synoliki_posotita_eidous)
+            eoppy_SynPosotita: String(aiMaterials.synoliki_posotita_eidous),
+            aiMatchedBy: c.matched_by,
+            fuzzyMatched: c.fuzzy_matched,
         }));
 
         dispatch(removeAIMaterial(idx));
