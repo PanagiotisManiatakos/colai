@@ -29,6 +29,9 @@ html[data-bs-theme="dark"] {
   --app-bg-2: #121826;
   --app-text: #ffffff;
   --app-muted: rgba(255, 255, 255, 0.62);
+
+  --pwa-top-safe-area: env(safe-area-inset-top);
+  --pwa-bottom-safe-area: env(safe-area-inset-bottom);
 }
 
 html[data-pwa="true"]:root{
@@ -513,7 +516,7 @@ html[data-bs-theme="dark"] .btn-ai {
 
 /* Full-height modal with scrollable results area */
 .modal-grow-scroll .modal-content {
-  max-height: calc(100dvh - 1.5rem - var(--safe-top) - var(--safe-bottom));
+  max-height: calc(100dvh - 1.5rem - var(--pwa-top-safe-area) - var(--pwa-bottom-safe-area));
   display: flex;
   flex-direction: column;
 }
