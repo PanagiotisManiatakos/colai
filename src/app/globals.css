@@ -29,14 +29,13 @@ html[data-bs-theme="dark"] {
   --app-bg-2: #121826;
   --app-text: #ffffff;
   --app-muted: rgba(255, 255, 255, 0.62);
-
-  --pwa-top-safe-area: env(safe-area-inset-top);
-  --pwa-bottom-safe-area: env(safe-area-inset-bottom);
 }
 
 html[data-pwa="true"]:root{
   --app-nav-height:100px;
-  --safe-bottom:0px
+  --safe-bottom:0px;
+  --pwa-top-safe-area: env(safe-area-inset-top);
+  --pwa-bottom-safe-area: env(safe-area-inset-bottom);
 }
 
 html[data-pwa="true"] {
@@ -44,6 +43,9 @@ html[data-pwa="true"] {
   --safe-bottom: 0px;
   --safe-left: 0px;
   --safe-right: 0px;
+
+  --pwa-top-safe-area: env(safe-area-inset-top);
+  --pwa-bottom-safe-area: env(safe-area-inset-bottom);
 }
 
 html[data-pwa="true"] .app-header {
