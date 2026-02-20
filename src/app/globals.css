@@ -512,13 +512,14 @@ html[data-bs-theme="dark"] .btn-ai {
 }
 
 /* Full-height modal with scrollable results area */
-html[data-pwa="true"]  .modal-grow-scroll .modal-dialog {
-  max-height: calc(100dvh- env(safe-area-inset-top) - env(safe-area-inset-bottom));
-}
 .modal-grow-scroll .modal-content {
   max-height: calc(100dvh - 1.5rem - var(--safe-top) - var(--safe-bottom));
   display: flex;
   flex-direction: column;
+}
+
+html[data-pwa="true"]  .modal-grow-scroll .modal-content {
+  max-height: calc(100dvh- env(safe-area-inset-top) - env(safe-area-inset-bottom));
 }
 
 .modal-grow-scroll .modal-body {
