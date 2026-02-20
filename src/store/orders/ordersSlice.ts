@@ -265,6 +265,18 @@ const ordersSlice = createSlice({
         ...state.draft.order,
         [action.payload.key]: action.payload.value
       };
+
+      if (["symmPercentage", "kostos", "eidos_Egkrisis"].includes(action.payload.key)) {
+        const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+        const kostos = Number(state.draft.order.kostos ?? 0);
+        const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
+        if (kostos > 400 && eidosEgkrisis == 1) {
+          state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+        } else {
+          state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
+        }
+      }
+
       persistStateToLocalStorage(state);
     },
     setAIMaterials(state, action: PayloadAction<AIMaterials[]>) {
@@ -275,6 +287,14 @@ const ordersSlice = createSlice({
       state.draft.ylika.push(action.payload);
       state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
 
+      const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const kostos = Number(state.draft.order.kostos ?? 0);
+      const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
+      if (kostos > 400 && eidosEgkrisis == 1) {
+        state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+      } else {
+        state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
+      }
       persistStateToLocalStorage(state);
     },
     updateDraftYlikoQuantity: (state, action: PayloadAction<{ index: number; quantity: number }>) => {
@@ -285,11 +305,30 @@ const ordersSlice = createSlice({
 
       state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
 
+      const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const kostos = Number(state.draft.order.kostos ?? 0);
+      const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
+      if (kostos > 400 && eidosEgkrisis == 1) {
+        state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+      } else {
+        state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
+      }
+
+
       persistStateToLocalStorage(state);
     },
     removeDraftYliko: (state, action: PayloadAction<number>) => {
       state.draft.ylika.splice(action.payload, 1);
       state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
+
+      const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const kostos = Number(state.draft.order.kostos ?? 0);
+      const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
+      if (kostos > 400 && eidosEgkrisis == 1) {
+        state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+      } else {
+        state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
+      }
 
       persistStateToLocalStorage(state);
     },

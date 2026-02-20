@@ -505,9 +505,15 @@ html[data-bs-theme="dark"] .btn-ai {
   background-position: right center; /* keep knob aligned */
 }
 
+.modal-grow-scroll .modal-dialog {
+  /* Bootstrap default vertical margin is ~.5rem/.75rem depending version */
+  margin-top: calc(0.75rem + var(--safe-top));
+  margin-bottom: calc(0.75rem + var(--safe-bottom));
+}
+
 /* Full-height modal with scrollable results area */
 .modal-grow-scroll .modal-content {
-  max-height: calc(100dvh - 1.5rem); /* keeps top/bottom breathing space */
+  max-height: calc(100dvh - 1.5rem - var(--safe-top) - var(--safe-bottom));
   display: flex;
   flex-direction: column;
 }

@@ -16,6 +16,8 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
     const data = useAppSelector((s) => s.orders.draft.order);
     const dispatch = useAppDispatch()
     const discountReasons = useAppSelector(s => s.orders.draft.list_DiscountReasons)
+
+    const posoSymetoxis = (Number(data.kostos ?? 0) * Number(data.symmPercentage ?? 0)) / 100;
     return (
         <div className="app-card p-4">
             <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
@@ -69,7 +71,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                         <OrderField label="Συμμετοχή ασθενή">
                             <input
                                 className="form-control"
-                                name="posoSymmetoxis"
+                                name="posoSymmetoxisOld"
                                 inputMode="numeric"
                                 disabled
                                 readOnly
@@ -78,6 +80,20 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                         </OrderField>
                     </div>
                 </div>
+
+                {data.eidos_Egkrisis == 1 &&
+                    <div className="row g-2">
+                        <OrderField label="Συμμετοχή βάση πλαφόν rule">
+                            <input
+                                className="form-control"
+                                name="posoSymmetoxis"
+                                inputMode="numeric"
+                                disabled
+                                readOnly
+                                value={formatCurrencyGR(data.posoSymmetoxis ?? 0)}
+                            />
+                        </OrderField>
+                    </div>}
 
 
                 {data.symmPercentage > 0 && <>
@@ -91,7 +107,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                                 dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 1 : 2 }))
                                 if (!e.target.checked) {
                                     dispatch(setDraftProperty({ key: "discount_reason_id", value: discountReasons?.[0]?.value }))
-                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR((data.kostos ?? 0) * (data.symmPercentage ?? 0) / 100) }))
+                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(data.posoSymmetoxis ?? 0) }))
                                 } else {
                                     dispatch(setDraftProperty({ key: "discount_reason_id", value: null }))
                                     dispatch(setDraftProperty({ key: "posoDiscounted", value: null }))
@@ -114,7 +130,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                                 dispatch(setDraftProperty({ key: "payFullOrDiscount", value: e.target.checked ? 2 : 1 }))
                                 if (e.target.checked) {
                                     dispatch(setDraftProperty({ key: "discount_reason_id", value: discountReasons?.[0]?.value }))
-                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR((data.kostos ?? 0) * (data.symmPercentage ?? 0) / 100) }))
+                                    dispatch(setDraftProperty({ key: "posoDiscounted", value: formatCurrencyGR(data.posoSymmetoxis ?? 0) }))
                                 } else {
                                     dispatch(setDraftProperty({ key: "discount_reason_id", value: null }))
                                     dispatch(setDraftProperty({ key: "posoDiscounted", value: null }))
@@ -156,7 +172,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                             value={data.posoDiscounted ?? 0}
                             onChange={(e) => {
                                 const raw = e.target.value.replaceAll(".", "").replaceAll(",", ".");
-                                const maxAllowed = ((Number(data.kostos ?? 0) * Number(data.symmPercentage ?? 0)) / 100) || 0;
+                                const maxAllowed = data.posoSymmetoxis ?? 0;
 
                                 if (raw === "") {
                                     dispatch(setDraftProperty({ key: "posoDiscounted", value: "" }));

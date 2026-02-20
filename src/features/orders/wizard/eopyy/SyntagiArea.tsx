@@ -104,7 +104,7 @@ const SyntagiArea = () => {
                 />
             </Field>
             <Field label="Είδος">
-                <FormSelect value={data.eidos_Egkrisis ?? undefined} onChange={(e) => dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: e.target.value }))}>
+                <FormSelect name="eidos_Egkrisis" value={data.eidos_Egkrisis ?? undefined} onChange={(e) => dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: e.target.value }))}>
                     <option value={undefined}></option>
                     {eidiEgrisis.map((x) => {
                         return <option key={x.value} value={x.value}>{x.text}</option>
