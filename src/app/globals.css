@@ -524,7 +524,7 @@ html[data-bs-theme="dark"] .btn-ai {
 }
 
 html[data-pwa="true"]  .modal-grow-scroll .modal-content {
-  max-height: calc(100dvh- var(--pwa-top-safe-area) - var(--pwa-bottom-safe-area));
+  max-height: calc(100dvh - 1.5rem- var(--pwa-top-safe-area) - var(--pwa-bottom-safe-area));
 }
 
 .modal-grow-scroll .modal-body {
