@@ -24,12 +24,22 @@ jobs:
       - name: Set NEXT_PUBLIC_APP_VERSION from package.json
         run: echo "NEXT_PUBLIC_APP_VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_ENV
 
+      # ✅ NEW: create .env.production from secrets + computed version
+      - name: Create .env.production
+        run: |
+          cat > .env.production <<EOF
+          AMSA_API_BASE_URL=${{ secrets.AMSA_API_BASE_URL }}
+          NEXT_PUBLIC_APP_ENV=production
+          NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
+          EOF
+
+          # sanity checks (no secret printing)
+          test -f .env.production
+          grep -q '^AMSA_API_BASE_URL=' .env.production
+          echo ".env.production created ✅"
+
+      # ✅ CHANGE: remove DOTENV_CONFIG_PATH (Next doesn't use it here). next build loads .env.production automatically.
       - name: Build
-        env:
-          DOTENV_CONFIG_PATH: .env.production
-          NEXT_PUBLIC_APP_ENV: production
-          NODE_ENV: production
-          NEXT_PUBLIC_APP_VERSION: ${{ env.NEXT_PUBLIC_APP_VERSION }}
         run: npm run build
 
       - name: Prepare deploy folder (standalone)
@@ -47,12 +57,16 @@ jobs:
           # public assets
           cp -R public deploy/public
 
+          # ✅ NEW: deploy env file so runtime has it too
+          cp .env.production deploy/.env.production
+
       - name: Debug (must have BUILD_ID)
         run: |
           ls -la deploy
           ls -la deploy/.next || true
           test -f deploy/.next/BUILD_ID
-          echo "BUILD_ID found ✅"
+          test -f deploy/.env.production
+          echo "BUILD_ID + .env.production found ✅"
 
       - name: FTP Deploy (incremental)
         uses: SamKirkland/FTP-Deploy-Action@v4.3.6
