@@ -40,8 +40,6 @@ export function usePwaInstallPrompt() {
 
     const canInstall = !!deferred && !installed;
 
-    console.log(canInstall)
-
     const promptInstall = async () => {
         if (!deferred) return { outcome: "dismissed" as const };
         await deferred.prompt();
