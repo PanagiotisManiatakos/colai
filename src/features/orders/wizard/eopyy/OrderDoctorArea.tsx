@@ -102,26 +102,63 @@ export default function OrderDoctorArea() {
                 <input
                     className="form-check-input"
                     name="has_suggested_doctor"
-                    type="checkbox"
-                    checked={data.has_suggested_doctor == 1}
+                    id="has_suggested_doctor_0"
+                    type="radio"
+                    checked={data.has_suggested_doctor == 0}
                     onChange={(e) => {
-                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: e.target.checked ? 1 : 0 }))
-                        dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: e.target.checked }))
+                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: 0 }))
+                        dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: false }))
 
                     }}
                 />
-                <label className="form-check-label" htmlFor="has_suggested_doctor">
-                    Έχω συστήνων ιατρό
+                <label className="form-check-label" htmlFor="has_suggested_doctor_0">
+                    Χωρίς συστήνων ιατρό
                 </label>
             </div>
 
-            {data.has_suggested_doctor == 1 &&
+            <div className="form-check form-switch mb-2 switch-lg">
+                <input
+                    className="form-check-input"
+                    name="has_suggested_doctor"
+                    id="has_suggested_doctor_2"
+                    type="radio"
+                    checked={data.has_suggested_doctor == 1}
+                    onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: 1 }))
+                        dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: false }))
+
+                    }}
+                />
+                <label className="form-check-label" htmlFor="has_suggested_doctor_2">
+                    Ο ίδιος
+                </label>
+            </div>
+
+            <div className="form-check form-switch mb-2 switch-lg">
+                <input
+                    className="form-check-input"
+                    name="has_suggested_doctor"
+                    id="has_suggested_doctor_3"
+                    type="radio"
+                    checked={data.has_suggested_doctor == 2}
+                    onChange={(e) => {
+                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: 2 }))
+                        dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: true }))
+
+                    }}
+                />
+                <label className="form-check-label" htmlFor="has_suggested_doctor_3">
+                    Άλλος συστήνων ιατρό
+                </label>
+            </div>
+
+            {data.has_suggested_doctor == 2 &&
 
                 <>
                     <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
                         <div className="fw-semibold">Συστήνων ιατρός</div>
 
-                        {data.has_suggested_doctor == 1 &&
+                        {data.has_suggested_doctor == 2 &&
                             <button
                                 type="button"
                                 className="btn-icon-pill"

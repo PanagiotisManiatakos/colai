@@ -29,6 +29,7 @@ export type Order = {
   customer_other_address: string;
   customer_other_city: string;
   customer_other_tk: string;
+  customer_notes: string;
   has_other_recipient: number; // 0/1
   recipient_relation_id: number;
   recipient_relation: string;
@@ -43,13 +44,14 @@ export type Order = {
   recipient_tk: string;
   recipient_tel: string;
   recipient_ErpGID: string;
+  recipient_notes: string;
   doctor_amka: string;
   doctor_name: string;
   doctor_afm: string;
   doctor_Domi: string;
   doctor_DomiTypos: string;
   doctor_ErpGID: string;
-  has_suggested_doctor: number; // 0/1
+  has_suggested_doctor: number; // 0/1/2
   doctorSuggested_amka: string;
   doctorSuggested_name: string;
   doctorSuggested_afm: string;

@@ -28,7 +28,7 @@ export default function OrderDoctorArea() {
             <div style={{ height: 51 }} className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
                 <div className="fw-semibold">Ιατρός</div>
 
-                {data.has_suggested_doctor == 1 &&
+                {data.has_suggested_doctor == 2 &&
                     <button
                         type="button"
                         className="btn-icon-pill"
@@ -51,9 +51,9 @@ export default function OrderDoctorArea() {
                 <input
                     className="form-check-input"
                     type="checkbox"
-                    checked={data.has_suggested_doctor == 1}
+                    checked={data.has_suggested_doctor == 2}
                     onChange={(e) => {
-                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: e.target.checked ? 1 : 0 }))
+                        dispatch(setDraftProperty({ key: "has_suggested_doctor", value: e.target.checked ? 2 : 0 }))
                         dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: e.target.checked }))
 
                     }}
@@ -64,7 +64,7 @@ export default function OrderDoctorArea() {
                 </label>
             </div>
 
-            {data.has_suggested_doctor == 1 &&
+            {data.has_suggested_doctor == 2 &&
 
                 <>
                     <Field label="ΑΜΚΑ Ιατρού">

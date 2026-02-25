@@ -180,7 +180,18 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                     </div>
                 </div>
 
-                <div className="app-divider my-2" />
+
+                <OrderField label="Σχόλια">
+                    <textarea
+                        className="form-control"
+                        name="customer_notes"
+                        rows={6}
+                        value={data.customer_notes ?? ""}
+                        onChange={(e) => dispatch(setDraftProperty({ key: "customer_notes", value: e.target.value }))}
+                    />
+                </OrderField>
+
+                <hr className="app-divider my-2" />
 
                 <OrderField label="Αποστολή">
                     <FormSelect name="shipMethodId" value={data.shipMethodId ?? ""} onChange={(e) => dispatch(setDraftProperty({ key: "shipMethodId", value: e.target.value }))}>
@@ -371,6 +382,15 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                                     />
                                 </OrderField>
                             </div>
+                            <OrderField label="Σχόλια">
+                                <textarea
+                                    className="form-control"
+                                    name="recipient_notes"
+                                    rows={6}
+                                    value={data.recipient_notes ?? ""}
+                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_notes", value: e.target.value }))}
+                                />
+                            </OrderField>
                         </div>
                     </>
                 }

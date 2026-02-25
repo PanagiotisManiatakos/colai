@@ -251,7 +251,7 @@ export default function OrderEoppyWizard() {
         const suggestedDoctor = data.jsonDoc.systinon_iatros
         const hasSuggestedDoctor = suggestedDoctor ? hasAnyValue(suggestedDoctor) : null;
         hasSuggestedDoctor && dispatch(setDraftProperty({ key: "hasOtherSystinonIatroBool", value: hasSuggestedDoctor }))
-        hasSuggestedDoctor && dispatch(setDraftProperty({ key: "has_suggested_doctor", value: hasSuggestedDoctor ? 1 : 0 }))
+        hasSuggestedDoctor && dispatch(setDraftProperty({ key: "has_suggested_doctor", value: hasSuggestedDoctor ? 2 : 0 }))
         if (hasSuggestedDoctor) {
           suggestedDoctor.amka_iatrou && dispatch(setDraftProperty({ key: "doctorSuggested_amka", value: suggestedDoctor.amka_iatrou }))
           suggestedDoctor.onomateponymo_iatrou && dispatch(setDraftProperty({ key: "doctorSuggested_name", value: suggestedDoctor.onomateponymo_iatrou }))

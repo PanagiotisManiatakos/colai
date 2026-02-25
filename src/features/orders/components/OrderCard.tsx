@@ -153,9 +153,9 @@ export default function OrderCard({
   const typeText = list_order_types?.find((t) => t.value == order.type)?.text ?? "";
   const groupText = list_group_eoppy?.find((g) => g.value == String(order.group_EOPPY_id))?.text ?? "";
 
-  const doctorLabel = order.has_suggested_doctor == 1 ? "Συστήνων ιατρός" : "Ιατρός";
-  const doctorName = order.has_suggested_doctor == 1 ? order.doctorSuggested_name : order.doctor_name;
-  const doctorAmka = order.has_suggested_doctor == 1 ? order.doctorSuggested_amka : order.doctor_amka;
+  const doctorLabel = order.has_suggested_doctor == 2 ? "Συστήνων ιατρός" : "Ιατρός";
+  const doctorName = order.has_suggested_doctor == 2 ? order.doctorSuggested_name : order.doctor_name;
+  const doctorAmka = order.has_suggested_doctor == 2 ? order.doctorSuggested_amka : order.doctor_amka;
 
   const chipStyle: React.CSSProperties = {
     display: "inline-flex",
@@ -294,7 +294,7 @@ export default function OrderCard({
                   }}
                   title={doctorName}
                 >
-                  {order.has_suggested_doctor == 1 ? `${order.doctorSuggested_name ?? ""}` : `${order.doctor_name ?? ""}`}
+                  {order.has_suggested_doctor == 2 ? `${order.doctorSuggested_name ?? ""}` : `${order.doctor_name ?? ""}`}
                 </div>
               </div>
 

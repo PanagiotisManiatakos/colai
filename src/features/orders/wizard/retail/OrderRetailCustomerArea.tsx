@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import CustomerLookupModal from "../modals/CustomerLookupModal";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
+import OrderField from "@/components/ui/OrderField";
 
 function Field({ label, children, hint }: {
     label: string;
@@ -172,7 +173,17 @@ export default function OrderRetailCustomerArea() {
                 </div>
             </div>
 
-            <div className="app-divider my-2" />
+            <OrderField label="Σχόλια">
+                <textarea
+                    className="form-control"
+                    name="customer_notes"
+                    rows={6}
+                    value={data.customer_notes ?? ""}
+                    onChange={(e) => dispatch(setDraftProperty({ key: "customer_notes", value: e.target.value }))}
+                />
+            </OrderField>
+
+            <hr className="app-divider my-2" />
 
             <Field label="Αποστολή">
                 <FormSelect name="shipMethodId" value={data.shipMethodId ?? ""} onChange={(e) => dispatch(setDraftProperty({ key: "shipMethodId", value: e.target.value }))}>
