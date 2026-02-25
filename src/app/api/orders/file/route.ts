@@ -22,7 +22,6 @@ export async function POST(req: NextRequest) {
     const ab = await file.arrayBuffer();
     const base64file = Buffer.from(ab).toString("base64");
     const base64filename = file.name;
-
     const payload = {
         order_uid,
         document_category,

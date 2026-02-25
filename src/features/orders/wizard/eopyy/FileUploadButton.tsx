@@ -41,6 +41,7 @@ type Props = {
     setProgress: (f: number) => void
     setUploading: (f: any) => void
     dispatchFileToRedux: (f: any) => void
+    dispatchResultsToRedux?: (f: any) => void
 };
 
 export default function FileUploadButton({
@@ -58,7 +59,8 @@ export default function FileUploadButton({
     setStatus,
     setProgress,
     setUploading,
-    dispatchFileToRedux
+    dispatchFileToRedux,
+    dispatchResultsToRedux
 }: Props) {
     const inputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -90,6 +92,10 @@ export default function FileUploadButton({
                 setStatus("error");
                 setMessage(data?.message || "Upload failed");
                 return;
+            }
+
+            if (document_category == "consent_form") {
+                dispatchResultsToRedux && dispatchResultsToRedux({ score: data?.dataobject?.score, infos_list: data?.dataobject?.infos_list })
             }
 
             dispatchFileToRedux({

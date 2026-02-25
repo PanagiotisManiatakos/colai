@@ -2,9 +2,10 @@
 
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setDraftProperty, setDraftSyntagiUploaded } from "@/store/orders/ordersSlice";
+import { setDraftProperty, setDraftSyntagiUploaded, setSynaineseisResults } from "@/store/orders/ordersSlice";
 import FileUploadButton from "./FileUploadButton";
 import { OrderFile } from "@/types/orders";
+import { Alert, Row } from "react-bootstrap";
 
 type UploadStatus = "idle" | "uploading" | "error";
 
@@ -28,6 +29,7 @@ export default function SynenaiseisArea() {
 
     const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
     const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
+    const synaineseisResults = useAppSelector((s: any) => s.orders?.draft?.synaineseisResults);
 
     const [status, setStatus] = React.useState<UploadStatus>("idle");
     const [progress, setProgress] = React.useState<number>(0);
@@ -55,6 +57,7 @@ export default function SynenaiseisArea() {
                         disabled={isUploadingNow}
                         accept="application/pdf,image/*"
                         dispatchFileToRedux={(d: any) => dispatch(setDraftSyntagiUploaded(d))}
+                        dispatchResultsToRedux={(d: any) => dispatch(setSynaineseisResults(d))}
                         position={files.length}
                         document_category="consent_form"
                         setMessage={(s: any) => setMessage(s)}
@@ -144,6 +147,14 @@ export default function SynenaiseisArea() {
             ) : (
                 <div className="small text-secondary">Πάτα + για να ανεβάσεις συνάινεση.</div>
             )}
+
+            {synaineseisResults?.score && <>
+                <Alert className="mt-2 p-3 d-flex flex-column" variant={synaineseisResults?.score > 70 ? "success" :
+                    (synaineseisResults?.score > 50 ? "waring" : "danger")}>
+                    <span>Score: {synaineseisResults?.score}</span>
+                    {synaineseisResults?.infos_list.map((x: String, key: number) => <span key={key}>{x}</span>)}
+                </Alert>
+            </>}
         </div>
     );
 }

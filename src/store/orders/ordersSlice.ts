@@ -20,6 +20,10 @@ export interface DraftState {
   preselected_address_GID?: string;
   preselected_person_GID?: string;
   ai_ylika: AIMaterials[];
+  synaineseisResults: {
+    infos_list: String[],
+    score: number
+  } | null
 }
 
 export interface SelectedOrderState {
@@ -187,10 +191,12 @@ const initialStateBase: OrdersState = {
     list_TroposApostolis: [] as OrdeListOfSelections[],
     list_AddressesPersons: [] as OrderListOfAddressPersons[],
     ai_ylika: [] as AIMaterials[],
+    synaineseisResults: null
   },
   selected: null,
   ordersQuery: "",
   ordersFetchedAt: 0,
+
 };
 
 const LS_KEY = "orders";
@@ -282,6 +288,9 @@ const ordersSlice = createSlice({
     setAIMaterials(state, action: PayloadAction<AIMaterials[]>) {
       state.draft.ai_ylika = action.payload;
       persistStateToLocalStorage(state);
+    },
+    setSynaineseisResults(state, action) {
+      state.draft.synaineseisResults = action.payload
     },
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
       state.draft.ylika.push(action.payload);
@@ -476,6 +485,7 @@ const ordersSlice = createSlice({
 
 export const {
   startDraft,
+  setSynaineseisResults,
   deletedDraftTemplate,
   setDraftSyntagiUploaded,
   patchDraftPatient,
