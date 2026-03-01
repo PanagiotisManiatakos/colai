@@ -274,10 +274,12 @@ const ordersSlice = createSlice({
 
       if (["symmPercentage", "kostos", "eidos_Egkrisis"].includes(action.payload.key)) {
         const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+        const type = state.draft.order.type
         const kostos = Number(state.draft.order.kostos ?? 0);
         const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
-        if (kostos > 400 && eidosEgkrisis == 1) {
-          state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+        const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+        if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
+          state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
         } else {
           state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
         }
@@ -299,10 +301,13 @@ const ordersSlice = createSlice({
       state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
 
       const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const type = state.draft.order.type
       const kostos = Number(state.draft.order.kostos ?? 0);
       const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
-      if (kostos > 400 && eidosEgkrisis == 1) {
-        state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+      const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      console.log({ eidosEgkrisis, type, kostos, symmPercentage, maxPosoKostousGiaSymmetoxi })
+      if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
       } else {
         state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
       }
@@ -319,10 +324,12 @@ const ordersSlice = createSlice({
       state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
 
       const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const type = state.draft.order.type
       const kostos = Number(state.draft.order.kostos ?? 0);
       const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
-      if (kostos > 400 && eidosEgkrisis == 1) {
-        state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+      const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
       } else {
         state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
       }
@@ -337,10 +344,12 @@ const ordersSlice = createSlice({
       state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
 
       const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const type = state.draft.order.type
       const kostos = Number(state.draft.order.kostos ?? 0);
       const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
-      if (kostos > 400 && eidosEgkrisis == 1) {
-        state.draft.order.posoSymmetoxis = ((400 * symmPercentage) / 100) + (kostos - 400);
+      const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
       } else {
         state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
       }

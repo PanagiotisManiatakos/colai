@@ -116,6 +116,7 @@ export type Order = {
   aiCalculated: boolean;
   hasAnoia: boolean;
   eopyyVerifyNoParticipation: number;
+  maxPosoKostousGiaSymmetoxi?: number;
 };
 
 export type OrderYlika = {

@@ -83,16 +83,33 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
 
                 {data.eidos_Egkrisis == 1 &&
                     <div className="row g-2">
-                        <OrderField label="Συμμετοχή βάση πλαφόν rule">
-                            <input
-                                className="form-control"
-                                name="posoSymmetoxis"
-                                inputMode="numeric"
-                                disabled
-                                readOnly
-                                value={formatCurrencyGR(data.posoSymmetoxis ?? 0)}
-                            />
-                        </OrderField>
+                        <div className="col-6">
+
+                            <OrderField label="Max ποσό συμμ.">
+                                <input
+                                    className="form-control"
+                                    name="maxPosoKostousGiaSymmetoxi"
+                                    inputMode="numeric"
+                                    disabled
+                                    readOnly
+                                    value={formatCurrencyGR(data.maxPosoKostousGiaSymmetoxi ?? 0)}
+                                />
+                            </OrderField>
+                        </div>
+
+                        <div className="col-6">
+
+                            <OrderField label="Συμμετοχή (πλαφόν)">
+                                <input
+                                    className="form-control"
+                                    name="posoSymmetoxis"
+                                    inputMode="numeric"
+                                    disabled
+                                    readOnly
+                                    value={formatCurrencyGR(data.posoSymmetoxis ?? 0)}
+                                />
+                            </OrderField>
+                        </div>
                     </div>}
 
 
