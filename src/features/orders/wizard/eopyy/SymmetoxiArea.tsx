@@ -17,7 +17,6 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
     const dispatch = useAppDispatch()
     const discountReasons = useAppSelector(s => s.orders.draft.list_DiscountReasons)
 
-    const posoSymetoxis = (Number(data.kostos ?? 0) * Number(data.symmPercentage ?? 0)) / 100;
     return (
         <div className="app-card p-4">
             <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
@@ -68,14 +67,14 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                         </OrderField>
                     </div>
                     <div className="col-6">
-                        <OrderField label="Συμμετοχή ασθενή">
+                        <OrderField label="Συμμετοχή ΕΟΠΥΥ">
                             <input
                                 className="form-control"
                                 name="posoSymmetoxisOld"
                                 inputMode="numeric"
                                 disabled
                                 readOnly
-                                value={formatCurrencyGR((data.kostos ?? 0) * (data.symmPercentage ?? 0) / 100)}
+                                value={formatCurrencyGR((data.maxPosoKostousGiaSymmetoxi ?? 0) * (data.symmPercentage ?? 0) / 100)}
                             />
                         </OrderField>
                     </div>
@@ -85,7 +84,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                     <div className="row g-2">
                         <div className="col-6">
 
-                            <OrderField label="Max ποσό συμμ.">
+                            <OrderField label="Αξία πλαφόν">
                                 <input
                                     className="form-control"
                                     name="maxPosoKostousGiaSymmetoxi"
@@ -99,7 +98,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
 
                         <div className="col-6">
 
-                            <OrderField label="Συμμετοχή (πλαφόν)">
+                            <OrderField label="Υπέρβαση πλαφόν">
                                 <input
                                     className="form-control"
                                     name="posoSymmetoxis"
@@ -162,7 +161,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                     </div>
                 </>
                 }
-                {!(data.symmPercentage > 0) && <OrderSwitchField
+                {(data.symmPercentage > 0) && <OrderSwitchField
                     name="eopyyVerifyNoParticipation"
                     id="eopyyVerifyNoParticipation"
                     label="Επιβεβαίωση μηδενικής συμμετοχής"

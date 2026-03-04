@@ -66,8 +66,8 @@ export default function OrderEoppyWizard() {
     { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
     { key: "aiMaterials", label: "ΑΙ επιλογές", show: shouldShowAiMaterials.length > 0, render: () => <AIMaterials /> },
-    { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
     { key: "syntagi", label: "Συνταγη", render: () => <SyntagiArea /> },
+    { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
     { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea errors={errorsByField} clearError={clearError} /> },
     { key: "synenaiseis", label: "Συνάινεση", render: () => <SynenaiseisArea /> },
     {
