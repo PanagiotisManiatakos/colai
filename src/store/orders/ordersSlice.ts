@@ -279,7 +279,8 @@ const ordersSlice = createSlice({
         const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
         const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
         if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
-          state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
+          const diafora = kostos - maxPosoKostousGiaSymmetoxi;
+          state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > 6 ? diafora : 0);
         } else {
           state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
         }
@@ -305,7 +306,6 @@ const ordersSlice = createSlice({
       const kostos = Number(state.draft.order.kostos ?? 0);
       const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
       const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
-      console.log({ eidosEgkrisis, type, kostos, symmPercentage, maxPosoKostousGiaSymmetoxi })
       if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
         state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
       } else {

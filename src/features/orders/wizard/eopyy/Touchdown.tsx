@@ -5,6 +5,7 @@ import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
 import { Alert } from "react-bootstrap";
+import OrderField from "@/components/ui/OrderField";
 
 type WizardIssueLike = { step: string; field: string; message: string | boolean, error: string | null };
 
@@ -91,6 +92,16 @@ export default function Touchdown({ issues = [], onGoToIssue, stepLabels }: Prop
                 <div style={{ height: 51 }} className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
                     <div className="fw-semibold">Touchdown</div>
                 </div>
+
+                <OrderField label="Σχόλια παραγγελίας">
+                    <textarea
+                        className="form-control"
+                        name="sellerComments"
+                        rows={6}
+                        value={data.sellerComments ?? ""}
+                        onChange={(e) => dispatch(setDraftProperty({ key: "sellerComments", value: e.target.value }))}
+                    />
+                </OrderField>
 
                 <div className="form-check form-switch mb-2 switch-lg">
                     <input
