@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import RunAiButton from "./RunAIButton";
 import AIMaterials from "./AIMaterials";
 import { AIMaterials as AIMaterialsType } from "@/types/orders";
+import YpervasiPlafonArea from "./YpervasiPlafonArea";
 
 type AiStatus = "idle" | "running" | "done" | "error";
 type WizardIssue = { step: StepKey; field: string; message: string | boolean; error: string | null };
@@ -30,6 +31,7 @@ type StepKey =
   | "aiMaterials"
   | "materials"
   | "syntagi"
+  | "ypervasiPlafon"
   | "symmetoxi"
   | "synenaiseis"
   | "touchdown";
@@ -60,14 +62,20 @@ export default function OrderEoppyWizard() {
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
   const submitState = useAppSelector((s) => s.orders.draft.submitState)
   const shouldShowAiMaterials = useAppSelector(s => s.orders.draft.ai_ylika);
+  const maxPosoKostousGiaSymmetoxi = useAppSelector(s => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi);
+  const kostos = useAppSelector(s => s.orders?.draft?.order?.kostos);
+  const ypervasiPlafon = (kostos ?? 0) - (maxPosoKostousGiaSymmetoxi ?? 0)
+
+  const shouldShowWarningPlafon = ypervasiPlafon > 6;
 
   const stepDefs: StepDef[] = [
     { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} /> },
     { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
+    { key: "syntagi", label: "Συνταγη", render: () => <SyntagiArea /> },
     { key: "aiMaterials", label: "ΑΙ επιλογές", show: shouldShowAiMaterials.length > 0, render: () => <AIMaterials /> },
     { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
-    { key: "syntagi", label: "Συνταγη", render: () => <SyntagiArea /> },
+    { key: "ypervasiPlafon", label: "Υπέρβαση πλαφόν", show: shouldShowWarningPlafon, render: () => <YpervasiPlafonArea /> },
     { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea errors={errorsByField} clearError={clearError} /> },
     { key: "synenaiseis", label: "Συνάινεση", render: () => <SynenaiseisArea /> },
     {
@@ -161,7 +169,7 @@ export default function OrderEoppyWizard() {
         add("customer", "customer_other_tk", true, "ΤΚ παραδοσης", isBlank(draftOrder.customer_other_tk));
       }
 
-      add("symmetoxi", "eopyyVerifyNoParticipation", true, "Μηδενική συμμετοχή", draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
+      add("symmetoxi", "eopyyVerifyNoParticipation", true, "Μηδενική συμμετοχή", draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.posoSymmetoxis > 0));
     }
 
     return issues;
