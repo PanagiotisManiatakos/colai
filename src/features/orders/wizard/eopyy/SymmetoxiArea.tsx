@@ -1,7 +1,6 @@
 import { setDraftProperty } from '@/store/orders/ordersSlice';
 import { formatCurrencyGR } from '@/lib/utils/number';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import React from 'react'
 import { FormSelect } from 'react-bootstrap';
 import FormErrorsContext from '@/components/ui/FormErrorContect';
 import OrderField from '@/components/ui/OrderField';
@@ -18,6 +17,9 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
     const discountReasons = useAppSelector(s => s.orders.draft.list_DiscountReasons)
 
     const posoSymetoxis = (Number(data.kostos ?? 0) * Number(data.symmPercentage ?? 0)) / 100;
+    const maxPosoKostousGiaSymmetoxi = data.maxPosoKostousGiaSymmetoxi ?? 0;
+    const symmetoxiEoppy = data.kostos > maxPosoKostousGiaSymmetoxi ? (Number(data.maxPosoKostousGiaSymmetoxi ?? 0) * Number(data.symmPercentage ?? 0)) / 100 : posoSymetoxis;
+    const ypervasiPlafon = (data.kostos ?? 0) - (data.maxPosoKostousGiaSymmetoxi ?? 0)
     return (
         <div className="app-card p-4">
             <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
@@ -68,38 +70,52 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                         </OrderField>
                     </div>
                     <div className="col-6">
-                        <OrderField label="Συμμετοχή ασθενή">
+                        <OrderField label="Συμμετοχή ΕΟΠΥΥ">
                             <input
                                 className="form-control"
                                 name="posoSymmetoxisOld"
                                 inputMode="numeric"
                                 disabled
                                 readOnly
-                                value={formatCurrencyGR((data.kostos ?? 0) * (data.symmPercentage ?? 0) / 100)}
+                                value={formatCurrencyGR(symmetoxiEoppy)}
                             />
                         </OrderField>
                     </div>
                 </div>
 
                 {data.eidos_Egkrisis == 1 &&
-                    <div className="row g-2">
-                        <div className="col-6">
+                    <>
+                        <div className="row g-2">
+                            <div className="col-6">
 
-                            <OrderField label="Max ποσό συμμ.">
-                                <input
-                                    className="form-control"
-                                    name="maxPosoKostousGiaSymmetoxi"
-                                    inputMode="numeric"
-                                    disabled
-                                    readOnly
-                                    value={formatCurrencyGR(data.maxPosoKostousGiaSymmetoxi ?? 0)}
-                                />
-                            </OrderField>
+                                <OrderField label="Πλαφόν">
+                                    <input
+                                        className="form-control"
+                                        name="maxPosoKostousGiaSymmetoxi"
+                                        inputMode="numeric"
+                                        disabled
+                                        readOnly
+                                        value={formatCurrencyGR(data.maxPosoKostousGiaSymmetoxi ?? 0)}
+                                    />
+                                </OrderField>
+                            </div>
+
+                            <div className="col-6">
+
+                                <OrderField label="Υπέρβαση πλαφόν">
+                                    <input
+                                        className="form-control"
+                                        name="ypervasiPlafon"
+                                        inputMode="numeric"
+                                        disabled
+                                        readOnly
+                                        value={formatCurrencyGR(ypervasiPlafon > 0 ? ypervasiPlafon : 0)}
+                                    />
+                                </OrderField>
+                            </div>
                         </div>
-
                         <div className="col-6">
-
-                            <OrderField label="Συμμετοχή (πλαφόν)">
+                            <OrderField label="Πληρωτέο">
                                 <input
                                     className="form-control"
                                     name="posoSymmetoxis"
@@ -110,10 +126,11 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                                 />
                             </OrderField>
                         </div>
-                    </div>}
+                    </>
+                }
 
 
-                {data.symmPercentage > 0 && <>
+                {data.posoSymmetoxis > 0 && <>
                     <div className="form-check form-switch mb-2 switch-lg">
 
                         <input
@@ -162,7 +179,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
                     </div>
                 </>
                 }
-                {!(data.symmPercentage > 0) && <OrderSwitchField
+                {!(data.posoSymmetoxis > 0) && <OrderSwitchField
                     name="eopyyVerifyNoParticipation"
                     id="eopyyVerifyNoParticipation"
                     label="Επιβεβαίωση μηδενικής συμμετοχής"
