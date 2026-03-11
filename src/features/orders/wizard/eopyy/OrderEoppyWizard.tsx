@@ -58,9 +58,11 @@ export default function OrderEoppyWizard() {
   const draftOrder = useAppSelector((s) => s.orders.draft.order)
   const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
   const hasFiles = files.some((o: any) => o?.documentCategory === "recipe");
+  const hasConsentFormFiles = files.some((o: any) => o?.documentCategory === "consent_form");
   const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
   const submitState = useAppSelector((s) => s.orders.draft.submitState)
+  const showSYnainesiPanel = !draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "" && !hasConsentFormFiles
   const shouldShowAiMaterials = useAppSelector(s => s.orders.draft.ai_ylika);
   const maxPosoKostousGiaSymmetoxi = useAppSelector(s => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi);
   const kostos = useAppSelector(s => s.orders?.draft?.order?.kostos);
@@ -77,7 +79,7 @@ export default function OrderEoppyWizard() {
     { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
     { key: "ypervasiPlafon", label: "Υπέρβαση πλαφόν", show: shouldShowWarningPlafon, render: () => <YpervasiPlafonArea /> },
     { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea errors={errorsByField} clearError={clearError} /> },
-    { key: "synenaiseis", label: "Συνάινεση", render: () => <SynenaiseisArea /> },
+    { key: "synenaiseis", label: "Συνάινεση", show: showSYnainesiPanel, render: () => <SynenaiseisArea /> },
     {
       key: "touchdown",
       label: "Touchdown",
@@ -167,6 +169,10 @@ export default function OrderEoppyWizard() {
         add("customer", "customer_other_address", true, "Διεύθυνση παραδοσης", isBlank(draftOrder.customer_other_address));
         add("customer", "customer_other_city", true, "Πόλη παραδοσης", isBlank(draftOrder.customer_other_city));
         add("customer", "customer_other_tk", true, "ΤΚ παραδοσης", isBlank(draftOrder.customer_other_tk));
+      }
+
+      if (!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "" && !hasConsentFormFiles) {
+        add("synenaiseis", "", true, "Νέος πελάτης, δεν έχεις ανεβάσει συναίνεση", isBlank(draftOrder.customer_other_address));
       }
 
       add("symmetoxi", "eopyyVerifyNoParticipation", true, "Μηδενική συμμετοχή", draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.posoSymmetoxis > 0));

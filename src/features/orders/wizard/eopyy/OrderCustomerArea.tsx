@@ -88,13 +88,16 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                     initialQuery={data.customer_amka ?? data.customer_name ?? ""}
                 />
 
-                <OrderField label="Ονοματεπώνυμο">
+                <OrderField label={`Ονοματεπώνυμο`}>
                     <input
                         className="form-control"
                         name="customer_name"
                         value={data.customer_name ?? ""}
                         onChange={(e) => dispatch(setDraftProperty({ key: "customer_name", value: e.target.value }))}
                     />
+                    <span>
+
+                    </span>
                 </OrderField>
 
                 <div className="row g-2">
