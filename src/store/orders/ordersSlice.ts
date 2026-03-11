@@ -15,6 +15,7 @@ export interface DraftState {
   list_LogosParalipti: OrdeListOfSelections[]
   list_SygeniaParalipti: OrdeListOfSelections[]
   list_DiscountReasons: OrdeListOfSelections[]
+  list_KatigoriesParoxis: OrdeListOfSelections[]
   list_TroposApostolis: OrdeListOfSelections[]
   list_AddressesPersons: OrderListOfAddressPersons[]
   preselected_address_GID?: string;
@@ -117,7 +118,8 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
       dateIsxyeiApo: formatStringToISODDateTime(draft.order.dateIsxyeiApo),
       dateIsxyeiEos: formatStringToISODDateTime(draft.order.dateIsxyeiEos),
       posoDiscounted: parseFloat(String(draft.order.posoDiscounted)),
-      posoSymmetoxis: parseFloat(String(draft.order.posoSymmetoxis))
+      posoSymmetoxis: parseFloat(String(draft.order.posoSymmetoxis)),
+      appVersion: process.env.NEXT_PUBLIC_APP_VERSION
     },
     ylika: draft.ylika,
     isTempSave: draft.order.isTempSave
@@ -186,6 +188,7 @@ const initialStateBase: OrdersState = {
     ylika: [] as OrderYlika[],
     files: [] as OrderFile[],
     list_DiscountReasons: [] as OrdeListOfSelections[],
+    list_KatigoriesParoxis: [] as OrdeListOfSelections[],
     list_LogosParalipti: [] as OrdeListOfSelections[],
     list_SygeniaParalipti: [] as OrdeListOfSelections[],
     list_TroposApostolis: [] as OrdeListOfSelections[],
@@ -219,6 +222,7 @@ function loadStateFromLocalStorage(): OrdersState | null {
         ylika: (parsed?.ylika ?? initialStateBase.draft.ylika) as OrderYlika[],
         files: (parsed?.files ?? initialStateBase.draft.files) as OrderFile[],
         list_DiscountReasons: (parsed?.list_DiscountReasons ?? initialStateBase.draft.list_DiscountReasons) as OrdeListOfSelections[],
+        list_KatigoriesParoxis: (parsed?.list_KatigoriesParoxis ?? initialStateBase.draft.list_KatigoriesParoxis) as OrdeListOfSelections[],
         list_LogosParalipti: (parsed?.list_LogosParalipti ?? initialStateBase.draft.list_LogosParalipti) as OrdeListOfSelections[],
         list_SygeniaParalipti: (parsed?.list_SygeniaParalipti ?? initialStateBase.draft.list_SygeniaParalipti) as OrdeListOfSelections[],
         list_TroposApostolis: (parsed?.list_TroposApostolis ?? initialStateBase.draft.list_TroposApostolis) as OrdeListOfSelections[],
@@ -240,6 +244,7 @@ function persistStateToLocalStorage(state: OrdersState) {
     ylika: state.draft.ylika,
     files: state.draft.files,
     list_DiscountReasons: state.draft.list_DiscountReasons,
+    list_KatigoriesParoxis: state.draft.list_KatigoriesParoxis,
     list_LogosParalipti: state.draft.list_LogosParalipti,
     list_SygeniaParalipti: state.draft.list_SygeniaParalipti,
     list_TroposApostolis: state.draft.list_TroposApostolis,
@@ -272,15 +277,16 @@ const ordersSlice = createSlice({
         [action.payload.key]: action.payload.value
       };
 
-      if (["symmPercentage", "kostos", "eidos_Egkrisis"].includes(action.payload.key)) {
+      if (["symmPercentage", "kostos", "eidos_Egkrisis", "plafonGiftAmount", "maxPosoKostousGiaSymmetoxi"].includes(action.payload.key)) {
         const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
         const type = state.draft.order.type
         const kostos = Number(state.draft.order.kostos ?? 0);
         const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
         const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+        const plafonGiftAmount = Number(state.draft.order.plafonGiftAmount ?? 0);
         if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
           const diafora = kostos - maxPosoKostousGiaSymmetoxi;
-          state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > 6 ? diafora : 0);
+          state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > plafonGiftAmount ? diafora : 0);
         } else {
           state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
         }
@@ -306,8 +312,10 @@ const ordersSlice = createSlice({
       const kostos = Number(state.draft.order.kostos ?? 0);
       const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
       const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      const plafonGiftAmount = Number(state.draft.order.plafonGiftAmount ?? 0);
       if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
-        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
+        const diafora = kostos - maxPosoKostousGiaSymmetoxi;
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > plafonGiftAmount ? diafora : 0);
       } else {
         state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
       }
@@ -328,12 +336,13 @@ const ordersSlice = createSlice({
       const kostos = Number(state.draft.order.kostos ?? 0);
       const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
       const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      const plafonGiftAmount = Number(state.draft.order.plafonGiftAmount ?? 0);
       if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
-        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
+        const diafora = kostos - maxPosoKostousGiaSymmetoxi;
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > plafonGiftAmount ? diafora : 0);
       } else {
         state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
       }
-
 
       persistStateToLocalStorage(state);
     },
@@ -348,8 +357,10 @@ const ordersSlice = createSlice({
       const kostos = Number(state.draft.order.kostos ?? 0);
       const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
       const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      const plafonGiftAmount = Number(state.draft.order.plafonGiftAmount ?? 0);
       if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
-        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (kostos - maxPosoKostousGiaSymmetoxi);
+        const diafora = kostos - maxPosoKostousGiaSymmetoxi;
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > plafonGiftAmount ? diafora : 0);
       } else {
         state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
       }
@@ -444,6 +455,7 @@ const ordersSlice = createSlice({
         state.draft.ylika = action.payload.data.items;
         state.draft.files = action.payload.data.files;
         state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons
+        state.draft.list_KatigoriesParoxis = action.payload.data.list_KatigoriesParoxis
         state.draft.list_LogosParalipti = action.payload.data.list_LogosParalipti
         state.draft.list_SygeniaParalipti = action.payload.data.list_SygeniaParalipti
         state.draft.list_TroposApostolis = action.payload.data.list_TroposApostolis

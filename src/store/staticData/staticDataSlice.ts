@@ -12,6 +12,7 @@ export interface StaticDatatState {
     list_OtherRecipientRelationship: StaticDataList[];
     list_ShipMethod: StaticDataList[];
     list_DiscountReasons: StaticDataList[];
+    list_KatigoriesParoxis: StaticDataList[];
     list_Order_Statuses: StaticDataList[];
     list_Discount_Statuses: StaticDataList[];
     list_Order_Types: StaticDataList[];
@@ -71,6 +72,7 @@ function loadStateFromLocalStorage(): StaticDatatState | null {
             list_OtherRecipientRelationship: (parsed.list_OtherRecipientRelationship ?? initialStateBase.list_OtherRecipientRelationship),
             list_ShipMethod: (parsed.list_ShipMethod ?? initialStateBase.list_ShipMethod),
             list_DiscountReasons: (parsed.list_DiscountReasons ?? initialStateBase.list_DiscountReasons),
+            list_KatigoriesParoxis: (parsed.list_KatigoriesParoxis ?? initialStateBase.list_KatigoriesParoxis),
             list_Order_Statuses: (parsed.list_Order_Statuses ?? initialStateBase.list_Order_Statuses),
             list_Discount_Statuses: (parsed.list_Discount_Statuses ?? initialStateBase.list_Discount_Statuses),
             list_Order_Types: (parsed.list_Order_Types ?? initialStateBase.list_Order_Types),
@@ -101,6 +103,7 @@ const initialStateBase: StaticDatatState = {
     list_OtherRecipientRelationship: [] as StaticDataList[],
     list_ShipMethod: [] as StaticDataList[],
     list_DiscountReasons: [] as StaticDataList[],
+    list_KatigoriesParoxis: [] as StaticDataList[],
     list_Order_Statuses: [] as StaticDataList[],
     list_Discount_Statuses: [] as StaticDataList[],
     list_Order_Types: [] as StaticDataList[],
@@ -128,6 +131,7 @@ const staticDataSlice = createSlice({
                 state.list_OtherRecipientRelationship = payload.list_OtherRecipientRelationship;
                 state.list_ShipMethod = payload.list_ShipMethod;
                 state.list_DiscountReasons = payload.list_DiscountReasons;
+                state.list_KatigoriesParoxis = payload.list_KatigoriesParoxis;
                 state.list_Order_Statuses = payload.list_Order_Statuses;
                 state.list_Discount_Statuses = payload.list_Discount_Statuses;
                 state.list_Order_Types = payload.list_Order_Types;
