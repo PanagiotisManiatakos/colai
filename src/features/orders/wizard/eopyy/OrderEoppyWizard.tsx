@@ -62,7 +62,7 @@ export default function OrderEoppyWizard() {
   const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
   const submitState = useAppSelector((s) => s.orders.draft.submitState)
-  const showSYnainesiPanel = !draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "" && !hasConsentFormFiles
+  const showSYnainesiPanel = !draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == ""
   const shouldShowAiMaterials = useAppSelector(s => s.orders.draft.ai_ylika);
   const maxPosoKostousGiaSymmetoxi = useAppSelector(s => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi);
   const kostos = useAppSelector(s => s.orders?.draft?.order?.kostos);
@@ -171,7 +171,7 @@ export default function OrderEoppyWizard() {
         add("customer", "customer_other_tk", true, "ΤΚ παραδοσης", isBlank(draftOrder.customer_other_tk));
       }
 
-      if (!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "" && !hasConsentFormFiles) {
+      if ((!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "") && hasConsentFormFiles.length == 0) {
         add("synenaiseis", "", true, "Νέος πελάτης, δεν έχεις ανεβάσει συναίνεση", isBlank(draftOrder.customer_other_address));
       }
 
@@ -179,7 +179,7 @@ export default function OrderEoppyWizard() {
     }
 
     return issues;
-  }, [draftOrder]);
+  }, [draftOrder, hasConsentFormFiles]);
 
   const touchdownIssues = React.useMemo(() => {
     if (currentKey !== "touchdown") return [];
