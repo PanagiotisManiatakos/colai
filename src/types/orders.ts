@@ -117,6 +117,7 @@ export type Order = {
   hasAnoia: boolean;
   eopyyVerifyNoParticipation: number;
   maxPosoKostousGiaSymmetoxi?: number;
+  plafonGiftAmount?: number;
 };
 
 export type OrderYlika = {
@@ -207,6 +208,8 @@ export type OrdeListOfSelections = {
   selected: boolean;
   text: string;
   value: string;
+  plafonAmount?: number;
+  plafonGiftAmount?: number;
 }
 
 

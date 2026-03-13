@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import RunAiButton from "./RunAIButton";
 import AIMaterials from "./AIMaterials";
 import { AIMaterials as AIMaterialsType } from "@/types/orders";
+import YpervasiPlafonArea from "./YpervasiPlafonArea";
 
 type AiStatus = "idle" | "running" | "done" | "error";
 type WizardIssue = { step: StepKey; field: string; message: string | boolean; error: string | null };
@@ -30,6 +31,7 @@ type StepKey =
   | "aiMaterials"
   | "materials"
   | "syntagi"
+  | "ypervasiPlafon"
   | "symmetoxi"
   | "synenaiseis"
   | "touchdown";
@@ -56,20 +58,28 @@ export default function OrderEoppyWizard() {
   const draftOrder = useAppSelector((s) => s.orders.draft.order)
   const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
   const hasFiles = files.some((o: any) => o?.documentCategory === "recipe");
+  const hasConsentFormFiles = files.some((o: any) => o?.documentCategory === "consent_form");
   const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
   const submitState = useAppSelector((s) => s.orders.draft.submitState)
+  const showSYnainesiPanel = !draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "" && !hasConsentFormFiles
   const shouldShowAiMaterials = useAppSelector(s => s.orders.draft.ai_ylika);
+  const maxPosoKostousGiaSymmetoxi = useAppSelector(s => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi);
+  const kostos = useAppSelector(s => s.orders?.draft?.order?.kostos);
+  const ypervasiPlafon = (kostos ?? 0) - (maxPosoKostousGiaSymmetoxi ?? 0)
+
+  const shouldShowWarningPlafon = ypervasiPlafon > 6;
 
   const stepDefs: StepDef[] = [
     { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} /> },
     { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
-    { key: "aiMaterials", label: "ΑΙ επιλογές", show: shouldShowAiMaterials.length > 0, render: () => <AIMaterials /> },
     { key: "syntagi", label: "Συνταγη", render: () => <SyntagiArea /> },
+    { key: "aiMaterials", label: "ΑΙ επιλογές", show: shouldShowAiMaterials.length > 0, render: () => <AIMaterials /> },
     { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
+    { key: "ypervasiPlafon", label: "Υπέρβαση πλαφόν", show: shouldShowWarningPlafon, render: () => <YpervasiPlafonArea /> },
     { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea errors={errorsByField} clearError={clearError} /> },
-    { key: "synenaiseis", label: "Συνάινεση", render: () => <SynenaiseisArea /> },
+    { key: "synenaiseis", label: "Συνάινεση", show: showSYnainesiPanel, render: () => <SynenaiseisArea /> },
     {
       key: "touchdown",
       label: "Touchdown",
@@ -161,7 +171,11 @@ export default function OrderEoppyWizard() {
         add("customer", "customer_other_tk", true, "ΤΚ παραδοσης", isBlank(draftOrder.customer_other_tk));
       }
 
-      add("symmetoxi", "eopyyVerifyNoParticipation", true, "Μηδενική συμμετοχή", draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.symmPercentage > 0));
+      if (!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "" && !hasConsentFormFiles) {
+        add("synenaiseis", "", true, "Νέος πελάτης, δεν έχεις ανεβάσει συναίνεση", isBlank(draftOrder.customer_other_address));
+      }
+
+      add("symmetoxi", "eopyyVerifyNoParticipation", true, "Μηδενική συμμετοχή", draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.posoSymmetoxis > 0));
     }
 
     return issues;
@@ -277,6 +291,7 @@ export default function OrderEoppyWizard() {
         gnomatevsi.kodikos_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Code", value: gnomatevsi.kodikos_diagnosis2 }))
         gnomatevsi.perigrafi_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Name", value: gnomatevsi.perigrafi_diagnosis2 }))
         await dispatch(setDraftProperty({ key: "maxPosoKostousGiaSymmetoxi", value: gnomatevsi.max_poso_symmetoxis }))
+        gnomatevsi.max_poso_symmetoxis > 0 && await dispatch(setDraftProperty({ key: "plafonGiftAmount", value: 6 }))
         //AI MATERIALS
         const aiMaterials = data.jsonDoc.ylika
         const uniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter((x: AIMaterialsType) => x.erp_products?.length && x.erp_products?.length == 1)

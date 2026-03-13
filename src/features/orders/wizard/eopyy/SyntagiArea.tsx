@@ -23,6 +23,7 @@ const SyntagiArea = () => {
     const data = useAppSelector((s) => s.orders.draft.order);
     const dispatch = useAppDispatch()
     const eidiEgrisis = useAppSelector(s => s.staticData.list_Order_EidosEgkrisis)
+    const katigoriesParoxis = useAppSelector(s => s?.orders?.draft?.list_KatigoriesParoxis)
 
     const handleDateInput = (key: keyof Order, value: string) => {
         if (value.length == 1 && parseInt(value) > 3) return;
@@ -95,14 +96,29 @@ const SyntagiArea = () => {
                     </Field>
                 </div>
             </div>
+
             <Field label="Κατηγορία παροχής">
-                <input
-                    className="form-control"
-                    name="katigoriaParoxis"
-                    value={data.katigoriaParoxis ?? ""}
-                    onChange={(e) => dispatch(setDraftProperty({ key: "katigoriaParoxis", value: e.target.value }))}
-                />
+                <FormSelect name="katigoriaParoxis" value={data.katigoriaParoxis ?? undefined} onChange={(e) => {
+                    const selected = e.target.selectedOptions[0];
+
+                    const value = e.target.value;
+                    const plafonAmount = selected.dataset.attributePlafon;
+                    const plafonGiftAmount = selected.dataset.attributeGift;
+
+                    console.log("value:", value);
+                    console.log("plafonAmount:", plafonAmount);
+                    console.log("plafonGiftAmount:", plafonGiftAmount);
+                    dispatch(setDraftProperty({ key: "katigoriaParoxis", value }));
+                    dispatch(setDraftProperty({ key: "maxPosoKostousGiaSymmetoxi", value: plafonAmount ? Number(plafonAmount) : null }));
+                    dispatch(setDraftProperty({ key: "plafonGiftAmount", value: plafonGiftAmount ? Number(plafonGiftAmount) : null }));
+                }}>
+                    <option value={undefined}></option>
+                    {katigoriesParoxis.map((x) => {
+                        return <option key={x.value} value={x.value} data-attribute-plafon={x.plafonAmount} data-attribute-gift={x.plafonGiftAmount}>{x.text}</option>
+                    })}
+                </FormSelect>
             </Field>
+
             <Field label="Είδος">
                 <FormSelect name="eidos_Egkrisis" value={data.eidos_Egkrisis ?? undefined} onChange={(e) => dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: e.target.value }))}>
                     <option value={undefined}></option>
