@@ -157,6 +157,7 @@ export type OrderFile = {
   orderUID?: string;
   originalFileName?: string;
   name?: string;
+  friendlyName?: string;
   fileType?: string;
   fileSize?: string;
   documentCategory?: string;
@@ -168,7 +169,7 @@ export type OrderFile = {
   position?: number;
   hasValidData?: number;
   document_category?: string;
-  base64filename?: string
+  base64filename?: string;
 };
 
 export type AIMaterials = {
