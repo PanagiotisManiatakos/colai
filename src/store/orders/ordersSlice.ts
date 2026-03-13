@@ -459,6 +459,8 @@ const ordersSlice = createSlice({
         state.draft.list_LogosParalipti = action.payload.data.list_LogosParalipti
         state.draft.list_SygeniaParalipti = action.payload.data.list_SygeniaParalipti
         state.draft.list_TroposApostolis = action.payload.data.list_TroposApostolis
+        state.draft.synaineseisResults = null;
+        state.draft.submitState = { loading: false, error: null }
         persistStateToLocalStorage(state);
       } else {
         state.draft.editState.error = action.payload.message || "Failed to submit order";
