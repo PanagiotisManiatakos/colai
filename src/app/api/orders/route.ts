@@ -39,7 +39,6 @@ export async function GET(req: Request) {
     const path = mode === "erp" ? ERP_ORDERS_PATH : WEB_ORDERS_PATH;
     const backendUrl = `${baseUrl}${path}?pagesize=1000&page=1${qs ? `&${qs}` : ""}`;
 
-    console.log(backendUrl)
     const res = await fetch(backendUrl, {
         method: "GET",
         headers: {

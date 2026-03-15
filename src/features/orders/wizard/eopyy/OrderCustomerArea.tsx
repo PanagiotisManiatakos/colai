@@ -230,7 +230,31 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                     </label>
                 </div>
 
-                {!data.hasOtherRecipientBool && listAddressesPersons.length > 0 && (
+                <div className="form-check form-switch mb-2 switch-lg">
+                    <input
+                        className="form-check-input"
+                        name="has_other_recipient"
+                        type="checkbox"
+                        checked={data.has_other_recipient == 1}
+                        onChange={(e) => {
+                            const val = e.target.checked ? 1 : 0;
+                            dispatch(setDraftProperty({ key: "has_other_recipient", value: val }))
+                            if (val === 1) {
+                                dispatch(setDraftProperty({ key: "person_ErpGID", value: null }))
+                                dispatch(setDraftProperty({ key: "address_ErpGID", value: null }))
+                            } else {
+                                dispatch(setDraftProperty({ key: "person_ErpGID", value: preselected_person_GID }))
+                                dispatch(setDraftProperty({ key: "address_ErpGID", value: preselected_address_GID }))
+                            }
+                        }}
+                        id="has_other_recipient"
+                    />
+                    <label className="form-check-label" htmlFor="has_other_recipient">
+                        Θα παραλάβει άλλος
+                    </label>
+                </div>
+
+                {data.has_other_recipient != 1 && listAddressesPersons.length > 0 && (
                     <OrderField label="Θα παραδοθεί σε">
                         <FormSelect name="person_ErpGID" value={data.person_ErpGID ?? ""} onChange={(e) => {
                             dispatch(setDraftProperty({ key: "person_ErpGID", value: e.target.value }))
@@ -261,27 +285,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         </OrderField>
                     )}
 
-
-                <div className="form-check form-switch mb-2 switch-lg">
-                    <input
-                        className="form-check-input"
-                        name="hasOtherRecipientBool"
-                        type="checkbox"
-                        checked={data.hasOtherRecipientBool}
-                        onChange={(e) => {
-                            dispatch(setDraftProperty({ key: "hasOtherRecipientBool", value: e.target.checked }))
-                            dispatch(setDraftProperty({ key: "person_ErpGID", value: e.target.checked ? null : preselected_person_GID }))
-                            dispatch(setDraftProperty({ key: "address_ErpGID", value: e.target.checked ? null : preselected_address_GID }))
-                        }
-                        }
-                        id="hasOtherRecipientBool"
-                    />
-                    <label className="form-check-label" htmlFor="hasOtherRecipientBool">
-                        Θα παραλάβει άλλος
-                    </label>
-                </div>
-
-                {data.hasOtherRecipientBool &&
+                {data.has_other_recipient == 1 &&
                     <>
                         <div className="d-flex align-items-center justify-content-between pb-2 mb-2 border-bottom">
                             <div className="fw-semibold">Στοιχεία Παραλήπτη</div>
@@ -385,16 +389,16 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                                     />
                                 </OrderField>
                             </div>
-                            <OrderField label="Σχόλια">
-                                <textarea
-                                    className="form-control"
-                                    name="recipient_notes"
-                                    rows={6}
-                                    value={data.recipient_notes ?? ""}
-                                    onChange={(e) => dispatch(setDraftProperty({ key: "recipient_notes", value: e.target.value }))}
-                                />
-                            </OrderField>
                         </div>
+                        <OrderField label="Σχόλια">
+                            <textarea
+                                className="form-control"
+                                name="recipient_Notes"
+                                rows={6}
+                                value={data.recipient_Notes ?? ""}
+                                onChange={(e) => dispatch(setDraftProperty({ key: "recipient_Notes", value: e.target.value }))}
+                            />
+                        </OrderField>
                     </>
                 }
 

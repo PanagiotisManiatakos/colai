@@ -105,9 +105,6 @@ const SyntagiArea = () => {
                     const plafonAmount = selected.dataset.attributePlafon;
                     const plafonGiftAmount = selected.dataset.attributeGift;
 
-                    console.log("value:", value);
-                    console.log("plafonAmount:", plafonAmount);
-                    console.log("plafonGiftAmount:", plafonGiftAmount);
                     dispatch(setDraftProperty({ key: "katigoriaParoxis", value }));
                     dispatch(setDraftProperty({ key: "maxPosoKostousGiaSymmetoxi", value: plafonAmount ? Number(plafonAmount) : null }));
                     dispatch(setDraftProperty({ key: "plafonGiftAmount", value: plafonGiftAmount ? Number(plafonGiftAmount) : null }));

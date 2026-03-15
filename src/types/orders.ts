@@ -30,7 +30,7 @@ export type Order = {
   customer_other_city: string;
   customer_other_tk: string;
   customer_notes: string;
-  has_other_recipient: number; // 0/1
+  has_other_recipient: number;
   recipient_relation_id: number;
   recipient_relation: string;
   recipient_reason_id: number;
@@ -44,7 +44,7 @@ export type Order = {
   recipient_tk: string;
   recipient_tel: string;
   recipient_ErpGID: string;
-  recipient_notes: string;
+  recipient_Notes: string;
   doctor_amka: string;
   doctor_name: string;
   doctor_afm: string;
@@ -110,7 +110,6 @@ export type Order = {
   deliveryMorning: number;
   appliedPriceList: string;
   shipToOtherAddressBool: boolean;
-  hasOtherRecipientBool: boolean;
   hasOtherSystinonIatroBool: boolean;
   isTempSave: number;
   aiCalculated: boolean;
