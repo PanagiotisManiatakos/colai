@@ -57,7 +57,6 @@ const dashboardSlice = createSlice({
             state.loading = false;
             const payload = action.payload;
             if (payload.ok) {
-                console.log({ ...state, ...payload })
                 Object.assign(state, payload);
             } else {
                 state.error = payload.message

@@ -74,7 +74,7 @@ export default function OrderEoppyWizard() {
     { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} /> },
     { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
-    { key: "syntagi", label: "Συνταγη", render: () => <SyntagiArea /> },
+    { key: "syntagi", label: "Συνταγή", render: () => <SyntagiArea /> },
     { key: "aiMaterials", label: "ΑΙ επιλογές", show: shouldShowAiMaterials.length > 0, render: () => <AIMaterials /> },
     { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
     { key: "ypervasiPlafon", label: "Υπέρβαση πλαφόν", show: shouldShowWarningPlafon, render: () => <YpervasiPlafonArea /> },
@@ -139,7 +139,6 @@ export default function OrderEoppyWizard() {
   }
   const currentKey = effectiveSteps[step]?.key;
 
-
   const validateEoppyOrder = React.useCallback((): WizardIssue[] => {
     const issues: WizardIssue[] = [];
     const add = (step: StepKey, field: string, message: string | boolean, error: string | null = null, when: boolean) => {
@@ -150,7 +149,7 @@ export default function OrderEoppyWizard() {
       const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
       add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
 
-      if (draftOrder.hasOtherRecipientBool) {
+      if (draftOrder.has_other_recipient == 1) {
         add("customer", "recipient_reason_id", true, "Συμπληρώστε αιτία παραλαβής", isBlank(draftOrder.recipient_reason_id));
         add("customer", "recipient_relation_id", true, "Συμπληρώστε τη σχέση με τον παραλήπτη", isBlank(draftOrder.recipient_relation_id));
         add("customer", "recipient_name", true, "Συμπληρώστε το όνομα παραλήπτη", isBlank(draftOrder.recipient_name));

@@ -45,8 +45,6 @@ export default function OrderWizardEditPage() {
     };
   }, [dispatch, orderType, uid]);
 
-  console.log()
-
   const Wizard = WIZARDS[orderType];
   if (!Wizard) return <NotFoundView />;
 
