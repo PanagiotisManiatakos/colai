@@ -169,11 +169,6 @@ export default function OrderEoppyWizard() {
         add("customer", "customer_other_city", true, "Πόλη παραδοσης", isBlank(draftOrder.customer_other_city));
         add("customer", "customer_other_tk", true, "ΤΚ παραδοσης", isBlank(draftOrder.customer_other_tk));
       }
-
-      if ((!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "") && hasConsentFormFiles.length == 0) {
-        add("synenaiseis", "", true, "Νέος πελάτης, δεν έχεις ανεβάσει συναίνεση", isBlank(draftOrder.customer_other_address));
-      }
-
       add("symmetoxi", "eopyyVerifyNoParticipation", true, "Μηδενική συμμετοχή", draftOrder.eopyyVerifyNoParticipation != 1 && !(draftOrder.posoSymmetoxis > 0));
     }
 
