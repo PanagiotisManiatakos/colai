@@ -175,6 +175,7 @@ export default function OrderEoppyWizard() {
     }
 
     return issues;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftOrder, hasConsentFormFiles]);
 
   const touchdownIssues = React.useMemo(() => {
@@ -324,30 +325,30 @@ export default function OrderEoppyWizard() {
 
         dispatch(setAIMaterials(nonUniqueAiMaterials))
       }
-        // Overwrite with last_order_info when present (from previous order)
-        const lastOrderInfo = data.last_order_info;
-        const hasLastOrderInfo =
-          lastOrderInfo &&
-          typeof lastOrderInfo === "object" &&
-          !Array.isArray(lastOrderInfo) &&
-          Object.keys(lastOrderInfo).length > 0;
+      // Overwrite with last_order_info when present (from previous order)
+      const lastOrderInfo = data.last_order_info;
+      const hasLastOrderInfo =
+        lastOrderInfo &&
+        typeof lastOrderInfo === "object" &&
+        !Array.isArray(lastOrderInfo) &&
+        Object.keys(lastOrderInfo).length > 0;
 
-        if (hasLastOrderInfo) {
-          dispatch(setLastOrderInfoCustomerErpGID(lastOrderInfo.customer_ErpGID));
-          applyLastOrderData(lastOrderInfo as Record<string, unknown>, dispatch);
-        }
+      if (hasLastOrderInfo) {
+        dispatch(setLastOrderInfoCustomerErpGID(lastOrderInfo.customer_ErpGID));
+        applyLastOrderData(lastOrderInfo as Record<string, unknown>, dispatch);
+      }
 
-        const customerErpGID = hasLastOrderInfo ? lastOrderInfo?.customer_ErpGID : data.jsonDoc?.customer_erpid;
-        const customerAmka = hasLastOrderInfo ? (lastOrderInfo?.customer_AMKA ?? lastOrderInfo?.customer_amka) : data.jsonDoc?.amka_eksetazomenou;
-        const customerName = hasLastOrderInfo ? lastOrderInfo?.customer_name : data.jsonDoc?.onomateponymo_eksetazomenou;
-        const customerAddress = hasLastOrderInfo ? lastOrderInfo?.customer_address : data.jsonDoc?.diefthinsi_eksetazomenou;
-        if (customerErpGID) {
-          try {
-            await dispatch(loadCustomerAddressesAsync({ customer_ErpGID: customerErpGID, customer_amka: customerAmka ?? "", customer_name: customerName ?? "", customer_address: customerAddress ?? "" })).unwrap();
-          } catch {
-            // Addresses fetch failure does not fail the overall run-AI flow
-          }
+      const customerErpGID = hasLastOrderInfo ? lastOrderInfo?.customer_ErpGID : data.jsonDoc?.customer_erpid;
+      const customerAmka = hasLastOrderInfo ? (lastOrderInfo?.customer_AMKA ?? lastOrderInfo?.customer_amka) : data.jsonDoc?.amka_eksetazomenou;
+      const customerName = hasLastOrderInfo ? lastOrderInfo?.customer_name : data.jsonDoc?.onomateponymo_eksetazomenou;
+      const customerAddress = hasLastOrderInfo ? lastOrderInfo?.customer_address : data.jsonDoc?.diefthinsi_eksetazomenou;
+      if (customerErpGID) {
+        try {
+          await dispatch(loadCustomerAddressesAsync({ customer_ErpGID: customerErpGID, customer_amka: customerAmka ?? "", customer_name: customerName ?? "", customer_address: customerAddress ?? "" })).unwrap();
+        } catch {
+          // Addresses fetch failure does not fail the overall run-AI flow
         }
+      }
 
       setAiStatus("done");
       setStep(1)

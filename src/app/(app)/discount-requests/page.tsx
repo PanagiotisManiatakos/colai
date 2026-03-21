@@ -70,7 +70,7 @@ export default function DiscountRequestsPage() {
       <PullToRefresh useSelfScroll className="flex-grow-1" onRefresh={onRefresh} isRefreshing={refreshing}>
 
         {showInitialLoader ? (
-          <AppLoader label="Φόρτωση παραγγελιών…" />
+          <AppLoader label="Φόρτωση αιτημάτων..." />
         ) : discountRequests.requests.length ? (
           <div className="d-flex flex-column gap-2">
             {discountRequests.requests.map((r) => (
