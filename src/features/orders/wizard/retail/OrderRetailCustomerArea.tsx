@@ -24,11 +24,7 @@ export default function OrderRetailCustomerArea() {
     const dispatch = useAppDispatch()
     const [showLookup, setShowLookup] = React.useState(false);
     const listTropoiApostolis = useAppSelector(s => s.orders.draft.list_TroposApostolis)
-    const listReceiptientReasons = useAppSelector(s => s.orders.draft.list_LogosParalipti)
-    const listRelationIDs = useAppSelector(s => s.orders.draft.list_SygeniaParalipti)
     const listAddressesPersons = useAppSelector(s => s.orders.draft.list_AddressesPersons)
-    const preselected_person_GID = useAppSelector(s => s.orders.draft.preselected_person_GID)
-    const preselected_address_GID = useAppSelector(s => s.orders.draft.preselected_address_GID)
 
     const handleDateInput = (value: string) => {
         if (value.length == 1 && parseInt(value) > 3) return;

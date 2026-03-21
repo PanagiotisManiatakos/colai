@@ -24,7 +24,8 @@ export interface DraftState {
   synaineseisResults: {
     infos_list: String[],
     score: number
-  } | null
+  } | null;
+  lastOrderInfoCustomerErpGID?: string;
 }
 
 export interface SelectedOrderState {
@@ -227,6 +228,7 @@ function loadStateFromLocalStorage(): OrdersState | null {
         list_SygeniaParalipti: (parsed?.list_SygeniaParalipti ?? initialStateBase.draft.list_SygeniaParalipti) as OrdeListOfSelections[],
         list_TroposApostolis: (parsed?.list_TroposApostolis ?? initialStateBase.draft.list_TroposApostolis) as OrdeListOfSelections[],
         ai_ylika: (parsed?.ai_ylika ?? initialStateBase.draft.ai_ylika) as AIMaterials[],
+        lastOrderInfoCustomerErpGID: parsed?.lastOrderInfoCustomerErpGID ?? initialStateBase.draft.lastOrderInfoCustomerErpGID,
       },
       // optionally persist selected too, but usually not needed:
       // selected: (parsed.selected ?? initialState.selected) as any,
@@ -248,7 +250,8 @@ function persistStateToLocalStorage(state: OrdersState) {
     list_LogosParalipti: state.draft.list_LogosParalipti,
     list_SygeniaParalipti: state.draft.list_SygeniaParalipti,
     list_TroposApostolis: state.draft.list_TroposApostolis,
-    ai_ylika: state.draft.ai_ylika
+    ai_ylika: state.draft.ai_ylika,
+    lastOrderInfoCustomerErpGID: state.draft.lastOrderInfoCustomerErpGID,
   };
 
   try {
@@ -300,6 +303,10 @@ const ordersSlice = createSlice({
     },
     setSynaineseisResults(state, action) {
       state.draft.synaineseisResults = action.payload
+    },
+    setLastOrderInfoCustomerErpGID(state, action: PayloadAction<string | undefined>) {
+      state.draft.lastOrderInfoCustomerErpGID = action.payload;
+      persistStateToLocalStorage(state);
     },
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
       state.draft.ylika.push(action.payload);
@@ -448,10 +455,11 @@ const ordersSlice = createSlice({
     b.addCase(editDraftAsync.fulfilled, (state, action) => {
       state.draft.editState.loading = false;
       if (action.payload.ok) {
-        state.draft.order = action.payload.data.order
-        state.draft.order.dateOfSyntagi = formatUIDate(action.payload.data.order.dateOfSyntagi)
-        state.draft.order.dateIsxyeiApo = formatUIDate(action.payload.data.order.dateIsxyeiApo)
-        state.draft.order.dateIsxyeiEos = formatUIDate(action.payload.data.order.dateIsxyeiEos)
+        const order = action.payload.data?.order;
+        state.draft.order = order
+        state.draft.order.dateOfSyntagi = formatUIDate(order.dateOfSyntagi)
+        state.draft.order.dateIsxyeiApo = formatUIDate(order.dateIsxyeiApo)
+        state.draft.order.dateIsxyeiEos = formatUIDate(order.dateIsxyeiEos)
         state.draft.ylika = action.payload.data.items;
         state.draft.files = action.payload.data.files;
         state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons
@@ -461,6 +469,11 @@ const ordersSlice = createSlice({
         state.draft.list_TroposApostolis = action.payload.data.list_TroposApostolis
         state.draft.synaineseisResults = null;
         state.draft.submitState = { loading: false, error: null }
+        const customerErpGID = order?.customer_ErpGID;
+        state.draft.lastOrderInfoCustomerErpGID = customerErpGID && String(customerErpGID).trim() ? customerErpGID : undefined;
+        if (Array.isArray(action.payload.data?.ai_ylika)) {
+          state.draft.ai_ylika = action.payload.data.ai_ylika;
+        }
         persistStateToLocalStorage(state);
       } else {
         state.draft.editState.error = action.payload.message || "Failed to submit order";
@@ -509,6 +522,7 @@ const ordersSlice = createSlice({
 export const {
   startDraft,
   setSynaineseisResults,
+  setLastOrderInfoCustomerErpGID,
   deletedDraftTemplate,
   setDraftSyntagiUploaded,
   patchDraftPatient,

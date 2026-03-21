@@ -3,7 +3,8 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addDraftYliko, fetchOrders, loadCustomerAddressesAsync, setAIMaterials, setDraftProperty, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { addDraftYliko, fetchOrders, loadCustomerAddressesAsync, setAIMaterials, setDraftProperty, setLastOrderInfoCustomerErpGID, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { applyLastOrderData } from "@/lib/applyLastOrderData";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
@@ -62,24 +63,26 @@ export default function OrderEoppyWizard() {
   const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector((s: any) => s.orders?.draft?.order?.group_EOPPY_id);
   const submitState = useAppSelector((s) => s.orders.draft.submitState)
-  const showSYnainesiPanel = !draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == ""
+  const lastOrderInfoCustomerErpGID = useAppSelector(s => s.orders.draft.lastOrderInfoCustomerErpGID);
+  const showSynainesiPanel = !draftOrder.customer_ErpGID || !(lastOrderInfoCustomerErpGID)
   const shouldShowAiMaterials = useAppSelector(s => s.orders.draft.ai_ylika);
   const maxPosoKostousGiaSymmetoxi = useAppSelector(s => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi);
   const kostos = useAppSelector(s => s.orders?.draft?.order?.kostos);
   const ypervasiPlafon = (kostos ?? 0) - (maxPosoKostousGiaSymmetoxi ?? 0)
+  const eidosEgkrisis = draftOrder.eidos_Egkrisis;
 
-  const shouldShowWarningPlafon = ypervasiPlafon > 6;
+  const shouldShowWarningPlafon = ypervasiPlafon > 6 && Number(eidosEgkrisis) === 1;
 
   const stepDefs: StepDef[] = [
     { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} /> },
     { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
-    { key: "syntagi", label: "Συνταγή", render: () => <SyntagiArea /> },
+    { key: "syntagi", label: "\u03A3\u03C5\u03BD\u03C4\u03B1\u03B3\u03AE", render: () => <SyntagiArea /> },
     { key: "aiMaterials", label: "ΑΙ επιλογές", show: shouldShowAiMaterials.length > 0, render: () => <AIMaterials /> },
     { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
     { key: "ypervasiPlafon", label: "Υπέρβαση πλαφόν", show: shouldShowWarningPlafon, render: () => <YpervasiPlafonArea /> },
     { key: "symmetoxi", label: "Συμμετοχή", render: () => <SymmetoxiArea errors={errorsByField} clearError={clearError} /> },
-    { key: "synenaiseis", label: "Συνάινεση", show: showSYnainesiPanel, render: () => <SynenaiseisArea /> },
+    { key: "synenaiseis", label: "Συναίνεση", show: showSynainesiPanel, render: () => <SynenaiseisArea /> },
     {
       key: "touchdown",
       label: "Touchdown",
@@ -95,7 +98,6 @@ export default function OrderEoppyWizard() {
       ),
     },
   ];
-
 
   const effectiveSteps = stepDefs.filter((s) => s.show !== false);
 
@@ -234,7 +236,6 @@ export default function OrderEoppyWizard() {
       if (data.isSuccess) {
         dispatch(setDraftProperty({ key: "aiCalculated", value: true }))
         dispatch(setDraftProperty({ key: "hasAnoia", value: data.jsonDoc.hasAnoia }));
-        data.jsonDoc.customer_erpid && dispatch(loadCustomerAddressesAsync({ customer_ErpGID: data.jsonDoc.customer_erpid, customer_name: data.jsonDoc.onomateponymo_eksetazomenou, customer_amka: data.jsonDoc.amka_eksetazomenou, customer_address: data.jsonDoc.diefthinsi_eksetazomenou }));
 
         // CUSTOMER
         data.jsonDoc.amka_eksetazomenou && dispatch(setDraftProperty({ key: "customer_amka", value: data.jsonDoc.amka_eksetazomenou }))
@@ -284,7 +285,7 @@ export default function OrderEoppyWizard() {
         gnomatevsi.diagnosi2_gid && dispatch(setDraftProperty({ key: "diagnosi2_GID", value: gnomatevsi.diagnosi2_gid }))
         gnomatevsi.kodikos_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Code", value: gnomatevsi.kodikos_diagnosis2 }))
         gnomatevsi.perigrafi_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Name", value: gnomatevsi.perigrafi_diagnosis2 }))
-        await dispatch(setDraftProperty({ key: "maxPosoKostousGiaSymmetoxi", value: gnomatevsi.max_poso_symmetoxis }))
+        dispatch(setDraftProperty({ key: "maxPosoKostousGiaSymmetoxi", value: gnomatevsi.max_poso_symmetoxis }))
         gnomatevsi.max_poso_symmetoxis > 0 && await dispatch(setDraftProperty({ key: "plafonGiftAmount", value: 6 }))
         //AI MATERIALS
         const aiMaterials = data.jsonDoc.ylika
@@ -323,6 +324,30 @@ export default function OrderEoppyWizard() {
 
         dispatch(setAIMaterials(nonUniqueAiMaterials))
       }
+        // Overwrite with last_order_info when present (from previous order)
+        const lastOrderInfo = data.last_order_info;
+        const hasLastOrderInfo =
+          lastOrderInfo &&
+          typeof lastOrderInfo === "object" &&
+          !Array.isArray(lastOrderInfo) &&
+          Object.keys(lastOrderInfo).length > 0;
+
+        if (hasLastOrderInfo) {
+          dispatch(setLastOrderInfoCustomerErpGID(lastOrderInfo.customer_ErpGID));
+          applyLastOrderData(lastOrderInfo as Record<string, unknown>, dispatch);
+        }
+
+        const customerErpGID = hasLastOrderInfo ? lastOrderInfo?.customer_ErpGID : data.jsonDoc?.customer_erpid;
+        const customerAmka = hasLastOrderInfo ? (lastOrderInfo?.customer_AMKA ?? lastOrderInfo?.customer_amka) : data.jsonDoc?.amka_eksetazomenou;
+        const customerName = hasLastOrderInfo ? lastOrderInfo?.customer_name : data.jsonDoc?.onomateponymo_eksetazomenou;
+        const customerAddress = hasLastOrderInfo ? lastOrderInfo?.customer_address : data.jsonDoc?.diefthinsi_eksetazomenou;
+        if (customerErpGID) {
+          try {
+            await dispatch(loadCustomerAddressesAsync({ customer_ErpGID: customerErpGID, customer_amka: customerAmka ?? "", customer_name: customerName ?? "", customer_address: customerAddress ?? "" })).unwrap();
+          } catch {
+            // Addresses fetch failure does not fail the overall run-AI flow
+          }
+        }
 
       setAiStatus("done");
       setStep(1)

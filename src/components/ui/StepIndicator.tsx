@@ -113,7 +113,7 @@ export function StepIndicator({
                     (active ? " fw-semibold" : " text-secondary")
                   }
                 >
-                  {label}
+                  {label.normalize("NFC")}
                 </div>
               </div>
             </button>
