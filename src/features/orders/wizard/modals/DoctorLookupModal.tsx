@@ -54,8 +54,9 @@ export default function DoctorLookupModal({
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/doctors?q=${encodeURIComponent(query)}`, {
+            const res = await fetch(`/api/doctors?q=${encodeURIComponent(query)}&_ts=${Date.now()}`, {
                 cache: "no-store",
+                headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
             });
             const data = await res.json().catch(() => ({}));
 

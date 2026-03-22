@@ -68,8 +68,9 @@ export default function CustomerLookupModal({
         setError(null);
         setHasSearched(true);
         try {
-            const res = await fetch(`/api/customers?q=${encodeURIComponent(query)}`, {
+            const res = await fetch(`/api/customers?q=${encodeURIComponent(query)}&_ts=${Date.now()}`, {
                 cache: "no-store",
+                headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
             });
             const data = await res.json().catch(() => ({}));
 
@@ -96,7 +97,7 @@ export default function CustomerLookupModal({
 
     function applyCustomer(c: CustomerSearchResult) {
         if (lastCustomerWebOrder) {
-            applyLastOrderData(lastCustomerWebOrder, dispatch);
+            applyLastOrderData(lastCustomerWebOrder, dispatch, true); // only Ασθενής + Ιατρός
         }
         dispatch(setDraftProperty({ key: "customer_ErpGID", value: c.tR_GID }))
         dispatch(setDraftProperty({ key: "customer_name", value: c.pE_NAME }));

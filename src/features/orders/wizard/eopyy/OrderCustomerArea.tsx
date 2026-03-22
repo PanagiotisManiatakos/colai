@@ -54,7 +54,6 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
         if (!data.shipMethodId) dispatch(setDraftProperty({ key: "shipMethodId", value: 5 }))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-console.log(data)
     return (
         <div className="app-card p-4">
             <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>

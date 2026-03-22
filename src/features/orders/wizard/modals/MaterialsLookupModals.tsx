@@ -48,8 +48,9 @@ export default function MaterialsLookupModal({
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/products?q=${encodeURIComponent(query)}`, {
+            const res = await fetch(`/api/products?q=${encodeURIComponent(query)}&_ts=${Date.now()}`, {
                 cache: "no-store",
+                headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
             });
             const data = await res.json().catch(() => ({}));
 

@@ -2,6 +2,8 @@ import { cookieName } from "@/lib/auth";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
     const token = (await cookies()).get(cookieName)?.value;
     if (!token) {
@@ -32,9 +34,10 @@ export async function GET(req: NextRequest) {
     });
 
     const text = await res.text();
+    const noCache = { headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache" } };
     try {
-        return NextResponse.json(JSON.parse(text), { status: res.status });
+        return NextResponse.json(JSON.parse(text), { status: res.status, ...noCache });
     } catch {
-        return NextResponse.json({ ok: false, message: text || "Search failed" }, { status: res.status });
+        return NextResponse.json({ ok: false, message: text || "Search failed" }, { status: res.status, ...noCache });
     }
 }

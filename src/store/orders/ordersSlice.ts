@@ -163,9 +163,10 @@ export const editDraftAsync = createAsyncThunk<any, { typeid: string; catid: num
 export const loadCustomerAddressesAsync = createAsyncThunk<any, { customer_ErpGID: string | undefined; customer_name: string | undefined; customer_address: string | undefined; customer_amka: string | undefined; }>(
   "orders/loadCustomerAddressesAsync",
   async ({ customer_ErpGID, customer_name, customer_address, customer_amka }) => {
-    const res = await fetch(`/api/customers/${customer_ErpGID}/addresses?customerAMKA=${customer_amka ?? ""}&customerName=${customer_name ?? ""}&customerAddress=${customer_address ?? ""}`, {
+    const res = await fetch(`/api/customers/${customer_ErpGID}/addresses?customerAMKA=${customer_amka ?? ""}&customerName=${customer_name ?? ""}&customerAddress=${customer_address ?? ""}&_ts=${Date.now()}`, {
       method: "GET",
       cache: "no-store",
+      headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
     });
 
     const data = await res.json().catch(() => ({}));
@@ -299,6 +300,29 @@ const ordersSlice = createSlice({
     },
     setAIMaterials(state, action: PayloadAction<AIMaterials[]>) {
       state.draft.ai_ylika = action.payload;
+      persistStateToLocalStorage(state);
+    },
+    setDraftYlika(state, action: PayloadAction<OrderYlika[]>) {
+      state.draft.ylika = action.payload;
+      state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
+      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_EoppyPrice || 0)), 0);
+      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
+      const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const type = state.draft.order.type;
+      const kostos = Number(state.draft.order.kostos ?? 0);
+      const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
+      const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      const plafonGiftAmount = Number(state.draft.order.plafonGiftAmount ?? 0);
+      if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
+        const diafora = kostos - maxPosoKostousGiaSymmetoxi;
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > plafonGiftAmount ? diafora : 0);
+      } else {
+        state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
+      }
+      persistStateToLocalStorage(state);
+    },
+    setDraftFiles(state, action: PayloadAction<OrderFile[]>) {
+      state.draft.files = action.payload;
       persistStateToLocalStorage(state);
     },
     setSynaineseisResults(state, action) {
@@ -534,7 +558,9 @@ export const {
   updateDraftYlikoQuantity,
   removeDraftYliko,
   removeAIMaterial,
-  setAIMaterials
+  setAIMaterials,
+  setDraftYlika,
+  setDraftFiles
 } = ordersSlice.actions;
 
 export default ordersSlice.reducer;

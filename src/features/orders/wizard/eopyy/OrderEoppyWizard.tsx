@@ -3,8 +3,8 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addDraftYliko, fetchOrders, loadCustomerAddressesAsync, setAIMaterials, setDraftProperty, setLastOrderInfoCustomerErpGID, submitDraftAsync } from "@/store/orders/ordersSlice";
-import { applyLastOrderData } from "@/lib/applyLastOrderData";
+import { addDraftYliko, fetchOrders, setAIMaterials, setDraftFiles, setDraftProperty, setDraftYlika, setLastOrderInfoCustomerErpGID, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { applyLastOrderData, normalizeZeroOne } from "@/lib/applyLastOrderData";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
@@ -238,7 +238,45 @@ export default function OrderEoppyWizard() {
         dispatch(setDraftProperty({ key: "aiCalculated", value: true }))
         dispatch(setDraftProperty({ key: "hasAnoia", value: data.jsonDoc.hasAnoia }));
 
-        // CUSTOMER
+        const lastOrderInfo = data.jsonDoc?.last_order_info;
+        const hasLastOrderInfo =
+          lastOrderInfo &&
+          typeof lastOrderInfo === "object" &&
+          !Array.isArray(lastOrderInfo) &&
+          Object.keys(lastOrderInfo).length > 0;
+
+        if (hasLastOrderInfo) {
+          const raw = lastOrderInfo as Record<string, unknown>;
+          const orderObj =
+            raw?.order && typeof raw.order === "object" && !Array.isArray(raw.order)
+              ? (raw.order as Record<string, unknown>)
+              : raw?.data && typeof raw.data === "object" && !Array.isArray(raw.data)
+                ? (raw.data as Record<string, unknown>)
+                : raw;
+
+          dispatch(setLastOrderInfoCustomerErpGID((orderObj.customer_ErpGID ?? raw.customer_ErpGID) as string));
+          applyLastOrderData(orderObj, dispatch);
+          if (Array.isArray(orderObj?.items ?? orderObj?.ylika)) {
+            dispatch(setDraftYlika((orderObj.items ?? orderObj.ylika) as any));
+          }
+          if (Array.isArray(orderObj?.ai_ylika)) {
+            dispatch(setAIMaterials(orderObj.ai_ylika as any));
+          }
+          if (Array.isArray(raw?.files ?? orderObj?.files)) {
+            dispatch(setDraftFiles((raw.files ?? orderObj.files) as any));
+          }
+          const pick = (...keys: string[]) => keys.reduce((v: unknown, k) => v ?? raw[k] ?? orderObj[k], undefined as unknown);
+          const hasOther = pick("has_other_recipient", "hasOtherRecipient", "Has_Other_Recipient");
+          if (hasOther !== undefined && hasOther !== null) dispatch(setDraftProperty({ key: "has_other_recipient", value: normalizeZeroOne(hasOther) }));
+          const shipOther = pick("shipTo_other_address", "shipToOtherAddress", "ShipTo_Other_Address");
+          if (shipOther !== undefined && shipOther !== null) dispatch(setDraftProperty({ key: "shipTo_other_address", value: normalizeZeroOne(shipOther) }));
+          const delSun = pick("deliverySunday", "delivery_sunday");
+          if (delSun !== undefined && delSun !== null) dispatch(setDraftProperty({ key: "deliverySunday", value: normalizeZeroOne(delSun) }));
+          const delMorn = pick("deliveryMorning", "delivery_morning");
+          if (delMorn !== undefined && delMorn !== null) dispatch(setDraftProperty({ key: "deliveryMorning", value: normalizeZeroOne(delMorn) }));
+        }
+
+        // Overlay with jsonDoc (document extraction)
         data.jsonDoc.amka_eksetazomenou && dispatch(setDraftProperty({ key: "customer_amka", value: data.jsonDoc.amka_eksetazomenou }))
         data.jsonDoc.onomateponymo_eksetazomenou && dispatch(setDraftProperty({ key: "customer_name", value: data.jsonDoc.onomateponymo_eksetazomenou }))
         data.jsonDoc.diefthinsi_eksetazomenou && dispatch(setDraftProperty({ key: "customer_address", value: data.jsonDoc.diefthinsi_eksetazomenou }))
@@ -251,12 +289,14 @@ export default function OrderEoppyWizard() {
         data.jsonDoc.customer_erpid && dispatch(setDraftProperty({ key: "customer_ErpGID", value: data.jsonDoc.customer_erpid }))
         //DOCTOR
         const doctor = data.jsonDoc.iatros
+        if (doctor) {
         doctor.amka_iatrou && dispatch(setDraftProperty({ key: "doctor_amka", value: doctor.amka_iatrou }))
         doctor.onomateponymo_iatrou && dispatch(setDraftProperty({ key: "doctor_name", value: doctor.onomateponymo_iatrou }))
         doctor.afm_iatrou && dispatch(setDraftProperty({ key: "doctor_afm", value: doctor.afm_iatrou }))
         doctor.doctor_erpid && dispatch(setDraftProperty({ key: "doctor_ErpGID", value: doctor.doctor_erpid }))
         doctor.typos_domis && dispatch(setDraftProperty({ key: "doctor_DomiTypos", value: doctor.typos_domis }))
         doctor.ygeionomiki_domi && dispatch(setDraftProperty({ key: "doctor_Domi", value: doctor.ygeionomiki_domi }))
+        }
         //SUGGESTED DOCTOR
         const suggestedDoctor = data.jsonDoc.systinon_iatros
         const hasSuggestedDoctor = suggestedDoctor ? hasAnyValue(suggestedDoctor) : null;
@@ -270,6 +310,7 @@ export default function OrderEoppyWizard() {
         }
         //GNOMATEVSI
         const gnomatevsi = data.jsonDoc.gnomateusi
+        if (gnomatevsi) {
         data.jsonDoc.barcode && dispatch(setDraftProperty({ key: "barcode", value: data.jsonDoc.barcode }))
         gnomatevsi.imerominia_gnomateusis && dispatch(setDraftProperty({ key: "dateOfSyntagi", value: gnomatevsi.imerominia_gnomateusis }))
         gnomatevsi.diarkeia_isxyos_apo && dispatch(setDraftProperty({ key: "dateIsxyeiApo", value: gnomatevsi.diarkeia_isxyos_apo }))
@@ -288,8 +329,10 @@ export default function OrderEoppyWizard() {
         gnomatevsi.perigrafi_diagnosis2 && dispatch(setDraftProperty({ key: "eoppy_Diagnosi2_Name", value: gnomatevsi.perigrafi_diagnosis2 }))
         dispatch(setDraftProperty({ key: "maxPosoKostousGiaSymmetoxi", value: gnomatevsi.max_poso_symmetoxis }))
         gnomatevsi.max_poso_symmetoxis > 0 && await dispatch(setDraftProperty({ key: "plafonGiftAmount", value: 6 }))
+        }
         //AI MATERIALS
         const aiMaterials = data.jsonDoc.ylika
+        if (Array.isArray(aiMaterials) && aiMaterials.length > 0) {
         const uniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter((x: AIMaterialsType) => x.erp_products?.length && x.erp_products?.length == 1)
         const nonUniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter((x: AIMaterialsType) => x.erp_products?.length != 1 || !x.erp_products)
 
@@ -324,29 +367,6 @@ export default function OrderEoppyWizard() {
         }
 
         dispatch(setAIMaterials(nonUniqueAiMaterials))
-      }
-      // Overwrite with last_order_info when present (from previous order)
-      const lastOrderInfo = data.last_order_info;
-      const hasLastOrderInfo =
-        lastOrderInfo &&
-        typeof lastOrderInfo === "object" &&
-        !Array.isArray(lastOrderInfo) &&
-        Object.keys(lastOrderInfo).length > 0;
-
-      if (hasLastOrderInfo) {
-        dispatch(setLastOrderInfoCustomerErpGID(lastOrderInfo.customer_ErpGID));
-        applyLastOrderData(lastOrderInfo as Record<string, unknown>, dispatch);
-      }
-
-      const customerErpGID = hasLastOrderInfo ? lastOrderInfo?.customer_ErpGID : data.jsonDoc?.customer_erpid;
-      const customerAmka = hasLastOrderInfo ? (lastOrderInfo?.customer_AMKA ?? lastOrderInfo?.customer_amka) : data.jsonDoc?.amka_eksetazomenou;
-      const customerName = hasLastOrderInfo ? lastOrderInfo?.customer_name : data.jsonDoc?.onomateponymo_eksetazomenou;
-      const customerAddress = hasLastOrderInfo ? lastOrderInfo?.customer_address : data.jsonDoc?.diefthinsi_eksetazomenou;
-      if (customerErpGID) {
-        try {
-          await dispatch(loadCustomerAddressesAsync({ customer_ErpGID: customerErpGID, customer_amka: customerAmka ?? "", customer_name: customerName ?? "", customer_address: customerAddress ?? "" })).unwrap();
-        } catch {
-          // Addresses fetch failure does not fail the overall run-AI flow
         }
       }
 

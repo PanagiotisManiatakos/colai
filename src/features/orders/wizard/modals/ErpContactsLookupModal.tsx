@@ -68,8 +68,9 @@ export default function ErpContactsLookupModal({
             if (person_GID) params.set("person_GID", person_GID);
             if (address_GID) params.set("address_GID", address_GID);
 
-            const res = await fetch(`/api/search-erp-contacts?${params.toString()}`, {
+            const res = await fetch(`/api/search-erp-contacts?${params.toString()}&_ts=${Date.now()}`, {
                 cache: "no-store",
+                headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
             });
             const data = await res.json().catch(() => ({}));
 
