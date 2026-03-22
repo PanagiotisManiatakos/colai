@@ -3,7 +3,8 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
-import { loadCustomerAddressesAsync, setDraftProperty } from "@/store/orders/ordersSlice";
+import { loadCustomerAddressesAsync, setDraftProperty, setLastOrderInfoCustomerErpGID } from "@/store/orders/ordersSlice";
+import { applyLastOrderData } from "@/lib/applyLastOrderData";
 import AppLoader from "@/components/ui/AppLoader";
 
 export type CustomerSearchResult = {
@@ -45,6 +46,8 @@ export default function CustomerLookupModal({
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [results, setResults] = React.useState<CustomerSearchResult[]>([]);
+    const [hasSearched, setHasSearched] = React.useState(false);
+    const [lastCustomerWebOrder, setLastCustomerWebOrder] = React.useState<Record<string, unknown> | null>(null);
     const inputRef = React.useRef<HTMLInputElement | null>(null);
 
     React.useEffect(() => {
@@ -52,6 +55,8 @@ export default function CustomerLookupModal({
             setQ(initialQuery);
             setResults([]);
             setError(null);
+            setHasSearched(false);
+            setLastCustomerWebOrder(null);
         }
     }, [show, initialQuery]);
 
@@ -61,9 +66,11 @@ export default function CustomerLookupModal({
 
         setLoading(true);
         setError(null);
+        setHasSearched(true);
         try {
-            const res = await fetch(`/api/customers?q=${encodeURIComponent(query)}`, {
+            const res = await fetch(`/api/customers?q=${encodeURIComponent(query)}&_ts=${Date.now()}`, {
                 cache: "no-store",
+                headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
             });
             const data = await res.json().catch(() => ({}));
 
@@ -72,6 +79,15 @@ export default function CustomerLookupModal({
             }
 
             setResults((data.listCustomers ?? []) as CustomerSearchResult[]);
+
+            const lcwo = data.lastCustomerWebOrder;
+            const hasLastCustomerWebOrder =
+                lcwo &&
+                typeof lcwo === "object" &&
+                !Array.isArray(lcwo) &&
+                Object.keys(lcwo).length > 0;
+
+            setLastCustomerWebOrder(hasLastCustomerWebOrder ? (lcwo as Record<string, unknown>) : null);
         } catch (e: any) {
             setError(e?.message || "Search failed");
         } finally {
@@ -80,6 +96,9 @@ export default function CustomerLookupModal({
     }
 
     function applyCustomer(c: CustomerSearchResult) {
+        if (lastCustomerWebOrder) {
+            applyLastOrderData(lastCustomerWebOrder, dispatch, true); // only Ασθενής + Ιατρός
+        }
         dispatch(setDraftProperty({ key: "customer_ErpGID", value: c.tR_GID }))
         dispatch(setDraftProperty({ key: "customer_name", value: c.pE_NAME }));
         dispatch(setDraftProperty({ key: "customer_amka", value: c.tR_StringField5 }));
@@ -90,6 +109,7 @@ export default function CustomerLookupModal({
         dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
         dispatch(setDraftProperty({ key: "customer_email", value: "" }));
         dispatch(loadCustomerAddressesAsync({ customer_ErpGID: c.tR_GID, customer_name: c.pE_NAME, customer_amka: c.tR_StringField5, customer_address: c.peS_Address1 }));
+        dispatch(setLastOrderInfoCustomerErpGID(c.tR_GID));
         onClose();
     }
 
@@ -125,33 +145,24 @@ export default function CustomerLookupModal({
                         <AppLoader label="Αναζήτηση…" card={false} />
                     ) : results.length ? (
                         <div className="list-group">
-
-                            {loading ? (
-                                <AppLoader label="Αναζήτηση…" card={false} />
-                            ) : results.length ? (
-                                <div className="list-group">
-                                    {results.map((r, idx) => (
-                                        <button
-                                            key={idx}
-                                            type="button"
-                                            className="list-group-item list-group-item-action"
-                                            onClick={() => applyCustomer(r)}
-                                        >
-                                            <div className="fw-semibold">{r.pE_NAME || "—"}</div>
-                                            <div className="small text-secondary">AMKA: {r.tR_StringField5 || "—"}</div>
-                                            <div className="small text-secondary">
-                                                Διέυθυνση: {`${r.peS_CityCode ?? ""} ${r.peS_Address1 ?? ""}`}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-secondary small text-center py-3">Δεν υπάρχουν αποτελέσματα.</div>
-                            )}
+                            {results.map((r, idx) => (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    className="list-group-item list-group-item-action"
+                                    onClick={() => applyCustomer(r)}
+                                >
+                                    <div className="fw-semibold">{r.pE_NAME || "—"}</div>
+                                    <div className="small text-secondary">AMKA: {r.tR_StringField5 || "—"}</div>
+                                    <div className="small text-secondary">
+                                        Διέυθυνση: {`${r.peS_CityCode ?? ""} ${r.peS_Address1 ?? ""}`}
+                                    </div>
+                                </button>
+                            ))}
                         </div>
-                    ) : (
+                    ) : hasSearched ? (
                         <div className="text-secondary small text-center py-3">Δεν υπάρχουν αποτελέσματα.</div>
-                    )}
+                    ) : null}
                 </div>
             </Modal.Body>
         </Modal>

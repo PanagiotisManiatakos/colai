@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { cookieName } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
     const url = new URL(req.url);
@@ -37,5 +38,7 @@ export async function GET(req: Request) {
 
     const payload = await res.json().catch(() => ({}));
 
-    return NextResponse.json({ ok: true, ...payload });
+    return NextResponse.json({ ok: true, ...payload }, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache" },
+    });
 }

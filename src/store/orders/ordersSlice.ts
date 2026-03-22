@@ -24,7 +24,8 @@ export interface DraftState {
   synaineseisResults: {
     infos_list: String[],
     score: number
-  } | null
+  } | null;
+  lastOrderInfoCustomerErpGID?: string;
 }
 
 export interface SelectedOrderState {
@@ -162,9 +163,10 @@ export const editDraftAsync = createAsyncThunk<any, { typeid: string; catid: num
 export const loadCustomerAddressesAsync = createAsyncThunk<any, { customer_ErpGID: string | undefined; customer_name: string | undefined; customer_address: string | undefined; customer_amka: string | undefined; }>(
   "orders/loadCustomerAddressesAsync",
   async ({ customer_ErpGID, customer_name, customer_address, customer_amka }) => {
-    const res = await fetch(`/api/customers/${customer_ErpGID}/addresses?customerAMKA=${customer_amka ?? ""}&customerName=${customer_name ?? ""}&customerAddress=${customer_address ?? ""}`, {
+    const res = await fetch(`/api/customers/${customer_ErpGID}/addresses?customerAMKA=${customer_amka ?? ""}&customerName=${customer_name ?? ""}&customerAddress=${customer_address ?? ""}&_ts=${Date.now()}`, {
       method: "GET",
       cache: "no-store",
+      headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
     });
 
     const data = await res.json().catch(() => ({}));
@@ -227,6 +229,7 @@ function loadStateFromLocalStorage(): OrdersState | null {
         list_SygeniaParalipti: (parsed?.list_SygeniaParalipti ?? initialStateBase.draft.list_SygeniaParalipti) as OrdeListOfSelections[],
         list_TroposApostolis: (parsed?.list_TroposApostolis ?? initialStateBase.draft.list_TroposApostolis) as OrdeListOfSelections[],
         ai_ylika: (parsed?.ai_ylika ?? initialStateBase.draft.ai_ylika) as AIMaterials[],
+        lastOrderInfoCustomerErpGID: parsed?.lastOrderInfoCustomerErpGID ?? initialStateBase.draft.lastOrderInfoCustomerErpGID,
       },
       // optionally persist selected too, but usually not needed:
       // selected: (parsed.selected ?? initialState.selected) as any,
@@ -248,7 +251,8 @@ function persistStateToLocalStorage(state: OrdersState) {
     list_LogosParalipti: state.draft.list_LogosParalipti,
     list_SygeniaParalipti: state.draft.list_SygeniaParalipti,
     list_TroposApostolis: state.draft.list_TroposApostolis,
-    ai_ylika: state.draft.ai_ylika
+    ai_ylika: state.draft.ai_ylika,
+    lastOrderInfoCustomerErpGID: state.draft.lastOrderInfoCustomerErpGID,
   };
 
   try {
@@ -298,8 +302,35 @@ const ordersSlice = createSlice({
       state.draft.ai_ylika = action.payload;
       persistStateToLocalStorage(state);
     },
+    setDraftYlika(state, action: PayloadAction<OrderYlika[]>) {
+      state.draft.ylika = action.payload;
+      state.draft.order.kostos = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x[state.draft.order.type == 'eopyy' ? "erp_EoppyPrice" : "erp_Price"]) || 0), 0);
+      state.draft.order.kostos_EOPPY = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_EoppyPrice || 0)), 0);
+      state.draft.order.kostos_RETAIL = state.draft.ylika.reduce((acc, x) => acc + (Number(x.qty) * Number(x.erp_Price || 0)), 0);
+      const eidosEgkrisis = state.draft.order.eidos_Egkrisis;
+      const type = state.draft.order.type;
+      const kostos = Number(state.draft.order.kostos ?? 0);
+      const symmPercentage = Number(state.draft.order.symmPercentage ?? 0);
+      const maxPosoKostousGiaSymmetoxi = Number(state.draft.order.maxPosoKostousGiaSymmetoxi ?? 0);
+      const plafonGiftAmount = Number(state.draft.order.plafonGiftAmount ?? 0);
+      if (maxPosoKostousGiaSymmetoxi > 0 && kostos > maxPosoKostousGiaSymmetoxi && eidosEgkrisis == 1 && type == 'eopyy') {
+        const diafora = kostos - maxPosoKostousGiaSymmetoxi;
+        state.draft.order.posoSymmetoxis = ((maxPosoKostousGiaSymmetoxi * symmPercentage) / 100) + (diafora > plafonGiftAmount ? diafora : 0);
+      } else {
+        state.draft.order.posoSymmetoxis = kostos * (symmPercentage / 100);
+      }
+      persistStateToLocalStorage(state);
+    },
+    setDraftFiles(state, action: PayloadAction<OrderFile[]>) {
+      state.draft.files = action.payload;
+      persistStateToLocalStorage(state);
+    },
     setSynaineseisResults(state, action) {
       state.draft.synaineseisResults = action.payload
+    },
+    setLastOrderInfoCustomerErpGID(state, action: PayloadAction<string | undefined>) {
+      state.draft.lastOrderInfoCustomerErpGID = action.payload;
+      persistStateToLocalStorage(state);
     },
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
       state.draft.ylika.push(action.payload);
@@ -448,10 +479,11 @@ const ordersSlice = createSlice({
     b.addCase(editDraftAsync.fulfilled, (state, action) => {
       state.draft.editState.loading = false;
       if (action.payload.ok) {
-        state.draft.order = action.payload.data.order
-        state.draft.order.dateOfSyntagi = formatUIDate(action.payload.data.order.dateOfSyntagi)
-        state.draft.order.dateIsxyeiApo = formatUIDate(action.payload.data.order.dateIsxyeiApo)
-        state.draft.order.dateIsxyeiEos = formatUIDate(action.payload.data.order.dateIsxyeiEos)
+        const order = action.payload.data?.order;
+        state.draft.order = order
+        state.draft.order.dateOfSyntagi = formatUIDate(order.dateOfSyntagi)
+        state.draft.order.dateIsxyeiApo = formatUIDate(order.dateIsxyeiApo)
+        state.draft.order.dateIsxyeiEos = formatUIDate(order.dateIsxyeiEos)
         state.draft.ylika = action.payload.data.items;
         state.draft.files = action.payload.data.files;
         state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons
@@ -461,6 +493,11 @@ const ordersSlice = createSlice({
         state.draft.list_TroposApostolis = action.payload.data.list_TroposApostolis
         state.draft.synaineseisResults = null;
         state.draft.submitState = { loading: false, error: null }
+        const customerErpGID = order?.customer_ErpGID;
+        state.draft.lastOrderInfoCustomerErpGID = customerErpGID && String(customerErpGID).trim() ? customerErpGID : undefined;
+        if (Array.isArray(action.payload.data?.ai_ylika)) {
+          state.draft.ai_ylika = action.payload.data.ai_ylika;
+        }
         persistStateToLocalStorage(state);
       } else {
         state.draft.editState.error = action.payload.message || "Failed to submit order";
@@ -509,6 +546,7 @@ const ordersSlice = createSlice({
 export const {
   startDraft,
   setSynaineseisResults,
+  setLastOrderInfoCustomerErpGID,
   deletedDraftTemplate,
   setDraftSyntagiUploaded,
   patchDraftPatient,
@@ -520,7 +558,9 @@ export const {
   updateDraftYlikoQuantity,
   removeDraftYliko,
   removeAIMaterial,
-  setAIMaterials
+  setAIMaterials,
+  setDraftYlika,
+  setDraftFiles
 } = ordersSlice.actions;
 
 export default ordersSlice.reducer;

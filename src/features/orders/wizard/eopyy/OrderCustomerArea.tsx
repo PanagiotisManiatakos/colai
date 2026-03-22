@@ -1,6 +1,7 @@
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import CustomerLookupModal from "../modals/CustomerLookupModal";
+import ErpContactsLookupModal from "../modals/ErpContactsLookupModal";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
@@ -16,6 +17,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
     const data = useAppSelector((s) => s.orders.draft.order);
     const dispatch = useAppDispatch()
     const [showLookup, setShowLookup] = React.useState(false);
+    const [showErpContactsLookup, setShowErpContactsLookup] = React.useState(false);
     const listTropoiApostolis = useAppSelector(s => s.orders.draft.list_TroposApostolis)
     const listReceiptientReasons = useAppSelector(s => s.orders.draft.list_LogosParalipti)
     const listRelationIDs = useAppSelector(s => s.orders.draft.list_SygeniaParalipti)
@@ -52,7 +54,6 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
         if (!data.shipMethodId) dispatch(setDraftProperty({ key: "shipMethodId", value: 5 }))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
-
     return (
         <div className="app-card p-4">
             <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
@@ -253,6 +254,30 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         Θα παραλάβει άλλος
                     </label>
                 </div>
+
+                {data.has_other_recipient == 1 && (
+                    <>
+                        <div className="d-flex align-items-center justify-content-between pb-2">
+                            <div className="fw-semibold">Αναζήτηση σε πελατολόγιο</div>
+                            <button
+                                type="button"
+                                className="btn-icon-pill"
+                                aria-label="Αναζήτηση σε πελατολόγιο"
+                                onClick={() => setShowErpContactsLookup(true)}
+                            >
+                                <i className="bi bi-search" />
+                            </button>
+                        </div>
+
+                        <ErpContactsLookupModal
+                            show={showErpContactsLookup}
+                            onClose={() => setShowErpContactsLookup(false)}
+                            initialQuery={data.recipient_name ?? data.recipient_amka ?? ""}
+                            person_GID={preselected_person_GID ?? data.customer_ErpGID ?? listAddressesPersons?.[0]?.person_ErpGID ?? ""}
+                            address_GID={preselected_address_GID ?? data.address_ErpGID ??  listAddressesPersons?.[0]?.addresses?.[0]?.address_ErpGID ?? ""}
+                        />
+                    </>
+                )}
 
                 {data.has_other_recipient != 1 && listAddressesPersons.length > 0 && (
                     <OrderField label="Θα παραδοθεί σε">

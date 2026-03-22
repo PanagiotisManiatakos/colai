@@ -25,6 +25,7 @@ export default function BottomNav() {
   const items: Item[] = [
     { href: "/", icon: "bi-house", label: "Αρχική" },
     { href: "/orders", icon: "bi-list-check", label: "Παραγγελίες" },
+    // { href: "/diadikasia-wc", icon: "bi bi-calendar-check", label: "WC" },
     {
       href: "/discount-requests",
       icon: "bi-tag",

@@ -148,7 +148,7 @@ export default function OrderDoctorArea() {
                     }}
                 />
                 <label className="form-check-label" htmlFor="has_suggested_doctor_3">
-                    Άλλος συστήνων ιατρό
+                    Άλλος συστήνων ιατρός
                 </label>
             </div>
 

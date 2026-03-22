@@ -6,7 +6,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import AppLoader from "@/components/ui/AppLoader";
 import NotFoundView from "@/components/system/NotFoundView";
 
-import { editDraftAsync } from "@/store/orders/ordersSlice";
+import { editDraftAsync, loadCustomerAddressesAsync } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 
 import OrderEoppyWizard from "@/features/orders/wizard/eopyy/OrderEoppyWizard";
@@ -33,7 +33,20 @@ export default function OrderWizardEditPage() {
 
     const bootstrap = async () => {
       try {
-        await dispatch(editDraftAsync({ catid: 4, typeid: orderType, uid })).unwrap();
+        const result = await dispatch(editDraftAsync({ catid: 4, typeid: orderType, uid })).unwrap();
+        if (isMounted && result?.ok && result?.data?.order?.customer_ErpGID) {
+          const order = result.data.order;
+          try {
+            await dispatch(loadCustomerAddressesAsync({
+              customer_ErpGID: order.customer_ErpGID,
+              customer_amka: order.customer_amka ?? "",
+              customer_name: order.customer_name ?? "",
+              customer_address: order.customer_address ?? "",
+            })).unwrap();
+          } catch {
+            // Addresses fetch failure does not fail the edit flow
+          }
+        }
       } finally {
         if (isMounted) setIsBootstrapping(false);
       }

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { cookieName } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(_req: Request, ctx: { params: Promise<{ customerGID: string }> }) {
     const token = (await cookies()).get(cookieName)?.value;
     if (!token) return NextResponse.json({ ok: false, message: "Not authenticated" }, { status: 401 });
@@ -30,5 +32,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ customerGID: s
 
     const payload = await res.json().catch((e: any) => ({ isSucess: false, errorMessage: e.message }));
 
-    return NextResponse.json({ ok: true, ...payload });
+    return NextResponse.json({ ok: true, ...payload }, {
+        headers: { "Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache" },
+    });
 }
