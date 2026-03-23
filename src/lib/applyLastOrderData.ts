@@ -24,6 +24,12 @@ const EXCLUDE_KEYS = new Set<string>([
   "dateIn",
   "dateUpdated",
   "dateErpLinked",
+  "seller_GID",
+  "sellerPerson_GID",
+  "sellerName",
+  "sellerCode",
+  "sellerComments",
+  "erpId",
 ]);
 
 /** Fields that must be 0 or 1 for checkbox/switch UI */
