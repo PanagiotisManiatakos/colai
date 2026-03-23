@@ -127,6 +127,30 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                 </div>
 
                 <div className="row g-2">
+                    <div className="col-6">
+                        <OrderField label="Κινητό">
+                            <input
+                                className="form-control"
+                                name="customer_mobile"
+                                inputMode="tel"
+                                value={data.customer_mobile ?? ""}
+                                onChange={(e) => dispatch(setDraftProperty({ key: "customer_mobile", value: e.target.value }))}
+                            />
+                        </OrderField>
+                    </div>
+                    <div className="col-6">
+                        <OrderField label="Κινητό 2">
+                            <input
+                                className="form-control"
+                                name="customer_mobile2"
+                                inputMode="tel"
+                                value={data.customer_mobile2 ?? ""}
+                                onChange={(e) => dispatch(setDraftProperty({ key: "customer_mobile2", value: e.target.value }))}
+                            />
+                        </OrderField>
+                    </div>
+                </div>
+                <div className="row g-2">
                     <div className="col-7">
                         <OrderField label="Τηλέφωνο">
                             <input
@@ -231,6 +255,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                     </label>
                 </div>
 
+                {data.shipTo_other_address != 1 && (
                 <div className="form-check form-switch mb-2 switch-lg">
                     <input
                         className="form-check-input"
@@ -243,6 +268,8 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             if (val === 1) {
                                 dispatch(setDraftProperty({ key: "person_ErpGID", value: null }))
                                 dispatch(setDraftProperty({ key: "address_ErpGID", value: null }))
+                                dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }))
+                                dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: false }))
                             } else {
                                 dispatch(setDraftProperty({ key: "person_ErpGID", value: preselected_person_GID }))
                                 dispatch(setDraftProperty({ key: "address_ErpGID", value: preselected_address_GID }))
@@ -254,6 +281,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         Θα παραλάβει άλλος
                     </label>
                 </div>
+                )}
 
                 {data.has_other_recipient == 1 && (
                     <>
@@ -361,6 +389,30 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             </div>
                         </div>
                         <div className="row g-2">
+                            <div className="col-6">
+                                <OrderField label="Κινητό">
+                                    <input
+                                        className="form-control"
+                                        name="recipient_mobile"
+                                        inputMode="tel"
+                                        value={data.recipient_mobile ?? ""}
+                                        onChange={(e) => dispatch(setDraftProperty({ key: "recipient_mobile", value: e.target.value }))}
+                                    />
+                                </OrderField>
+                            </div>
+                            <div className="col-6">
+                                <OrderField label="Κινητό 2">
+                                    <input
+                                        className="form-control"
+                                        name="recipient_mobile2"
+                                        inputMode="tel"
+                                        value={data.recipient_mobile2 ?? ""}
+                                        onChange={(e) => dispatch(setDraftProperty({ key: "recipient_mobile2", value: e.target.value }))}
+                                    />
+                                </OrderField>
+                            </div>
+                        </div>
+                        <div className="row g-2">
                             <div className="col-7">
                                 <OrderField label="Τηλέφωνο">
                                     <input
@@ -427,6 +479,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                     </>
                 }
 
+                {data.has_other_recipient != 1 && (
                 <div className="form-check form-switch mb-2 switch-lg">
                     <input
                         className="form-check-input"
@@ -434,10 +487,13 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         type="checkbox"
                         checked={data.shipTo_other_address == 1}
                         onChange={(e) => {
-                            dispatch(setDraftProperty({ key: "shipTo_other_address", value: e.target.checked ? 1 : 0 }))
-                            dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: e.target.checked }))
-                            if (e.target.checked) {
+                            const checked = e.target.checked;
+                            dispatch(setDraftProperty({ key: "shipTo_other_address", value: checked ? 1 : 0 }))
+                            dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: checked }))
+                            if (checked) {
                                 dispatch(setDraftProperty({ key: "address_ErpGID", value: null }))
+                                dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }))
+                                dispatch(setDraftProperty({ key: "person_ErpGID", value: preselected_person_GID }))
                             } else if (data.person_ErpGID && data.person_ErpGID != "") {
                                 dispatch(setDraftProperty({ key: "address_ErpGID", value: listAddressesPersons.find(x => x.person_ErpGID == data.person_ErpGID)?.addresses?.[0]?.address_ErpGID ?? null }))
                             }
@@ -449,6 +505,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         Παράδοση σε άλλη διεύθυνση
                     </label>
                 </div>
+                )}
 
                 {data.shipTo_other_address == 1 &&
                     <>
