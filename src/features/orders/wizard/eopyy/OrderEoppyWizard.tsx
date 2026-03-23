@@ -384,7 +384,7 @@ export default function OrderEoppyWizard() {
       window.clearTimeout(t);
     }
   }
-console.log(draftOrder)
+  console.log(draftOrder)
   return (
     <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
       {/* fixed top */}
