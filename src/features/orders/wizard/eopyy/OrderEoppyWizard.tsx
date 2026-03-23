@@ -391,8 +391,16 @@ export default function OrderEoppyWizard() {
         {current?.render()}
       </div>
 
-      {/* fixed bottom */}
-      <div className="pb-0 pt-1" style={{ flex: "0 0 auto" }}>
+      {/* fixed bottom - sticky so always visible when content overflows (e.g. large font sizes) */}
+      <div
+        className="pb-0 pt-1 flex-shrink-0"
+        style={{
+          position: "sticky",
+          bottom: 0,
+          zIndex: 10,
+          background: "var(--app-bg)",
+        }}
+      >
         <div className="d-flex gap-2">
           {step > 0 &&
             <button
