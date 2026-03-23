@@ -46,10 +46,10 @@ export function normalizeZeroOne(value: unknown): 0 | 1 {
 /** Keys allowed when applying lastCustomerWebOrder only (Ασθενής + Ιατρός steps) */
 export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
   "customer_amka", "customer_passport", "customer_name", "customer_address", "customer_city",
-  "customer_tk", "customer_tel", "customer_email", "customer_dob", "customer_notes", "customer_ErpGID",
+  "customer_tk", "customer_tel", "customer_mobile", "customer_mobile2", "customer_email", "customer_dob", "customer_notes", "customer_ErpGID",
   "customer_other_address", "customer_other_city", "customer_other_tk", "shipTo_other_address",
   "has_other_recipient", "recipient_relation_id", "recipient_reason_id", "recipient_name",
-  "recipient_amka", "recipient_afm", "recipient_tel", "recipient_passport", "recipient_address",
+  "recipient_amka", "recipient_afm", "recipient_tel", "recipient_mobile", "recipient_mobile2", "recipient_passport", "recipient_address",
   "recipient_city", "recipient_tk", "recipient_ErpGID", "recipient_Notes",
   "person_ErpGID", "address_ErpGID", "preselected_person_GID", "preselected_address_GID",
   "doctor_amka", "doctor_name", "doctor_afm", "doctor_Domi", "doctor_DomiTypos", "doctor_ErpGID",

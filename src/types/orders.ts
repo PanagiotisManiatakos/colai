@@ -18,6 +18,8 @@ export type Order = {
   customer_city: string;
   customer_tk: string;
   customer_tel: string;
+  customer_mobile?: string;
+  customer_mobile2?: string;
   customer_email: string;
   customer_dob: string;
   customer_tel_otp: string;
@@ -43,6 +45,8 @@ export type Order = {
   recipient_city: string;
   recipient_tk: string;
   recipient_tel: string;
+  recipient_mobile?: string;
+  recipient_mobile2?: string;
   recipient_ErpGID: string;
   recipient_Notes: string;
   doctor_amka: string;

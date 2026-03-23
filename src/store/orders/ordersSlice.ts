@@ -112,14 +112,22 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
   const state = thunkApi.getState();
   const { draft } = state.orders;
 
+  const order = { ...draft.order };
+  if (!order.customer_tel?.trim() && order.customer_mobile?.trim()) {
+    order.customer_tel = order.customer_mobile.trim();
+  }
+  if (!order.recipient_tel?.trim() && order.recipient_mobile?.trim()) {
+    order.recipient_tel = order.recipient_mobile.trim();
+  }
+
   const payload = {
     order: {
-      ...draft.order,
-      dateOfSyntagi: formatStringToISODDateTime(draft.order.dateOfSyntagi),
-      dateIsxyeiApo: formatStringToISODDateTime(draft.order.dateIsxyeiApo),
-      dateIsxyeiEos: formatStringToISODDateTime(draft.order.dateIsxyeiEos),
-      posoDiscounted: parseFloat(String(draft.order.posoDiscounted)),
-      posoSymmetoxis: parseFloat(String(draft.order.posoSymmetoxis)),
+      ...order,
+      dateOfSyntagi: formatStringToISODDateTime(order.dateOfSyntagi),
+      dateIsxyeiApo: formatStringToISODDateTime(order.dateIsxyeiApo),
+      dateIsxyeiEos: formatStringToISODDateTime(order.dateIsxyeiEos),
+      posoDiscounted: parseFloat(String(order.posoDiscounted)),
+      posoSymmetoxis: parseFloat(String(order.posoSymmetoxis)),
       appVersion: process.env.NEXT_PUBLIC_APP_VERSION
     },
     ylika: draft.ylika,
