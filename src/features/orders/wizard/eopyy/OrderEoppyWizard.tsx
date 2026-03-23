@@ -398,7 +398,6 @@ export default function OrderEoppyWizard() {
           position: "sticky",
           bottom: 0,
           zIndex: 10,
-          background: "var(--app-bg)",
         }}
       >
         <div className="d-flex gap-2">
