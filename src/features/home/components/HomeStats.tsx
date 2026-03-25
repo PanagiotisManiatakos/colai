@@ -1,216 +1,235 @@
-'use client'
+"use client";
+
 import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
+import AppLoader from "@/components/ui/AppLoader";
 import { fetchDashboardData } from "@/store/dashboard/slice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import React, { useEffect } from "react";
+import type { WcStoixoiMina } from "@/types/dashboard";
+import {
+    RecentOrdersByDayChart,
+    WcDistributionCharts,
+} from "@/features/home/components/DashboardCharts";
+import Link from "next/link";
+import React from "react";
+import { Alert } from "react-bootstrap";
+
+const intFmt = new Intl.NumberFormat("el-GR", { maximumFractionDigits: 0 });
+const pctFmt = new Intl.NumberFormat("el-GR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+});
+
+function formatInt(n: number): string {
+    return intFmt.format(Number.isFinite(n) ? n : 0);
+}
 
 type MetricCardProps = {
-  title: string;
-  value: string;
-  delta: string;
-  deltaDirection: "up" | "down";
-  icon: string; // bootstrap icon class suffix, e.g. "bi-box-seam"
+    title: string;
+    value: string;
+    delta?: string | null;
+    deltaDirection?: "up" | "down" | "neutral";
+    icon: string;
+    href?: string;
 };
 
-function MetricCard({ title, value, delta, deltaDirection, icon }: MetricCardProps) {
-  const badgeClass = deltaDirection === "up" ? "text-bg-success" : "text-bg-danger";
-  const arrowIcon = deltaDirection === "up" ? "bi-arrow-up" : "bi-arrow-down";
+function MetricCard({ title, value, delta, deltaDirection = "neutral", icon, href }: MetricCardProps) {
+    const showDelta = delta != null && delta !== "";
 
-  return (
-    <div className="col-6">
-      <div className="app-card p-3 h-100">
-        <div className="d-flex align-items-start justify-content-between">
-          <div
-            className="d-inline-flex align-items-center justify-content-center rounded-3 bg-body-tertiary"
-            style={{ width: 40, height: 40 }}
-          >
-            <i className={`bi ${icon}`} style={{ fontSize: "1.15rem" }} />
-          </div>
-          <span className={`badge ${badgeClass} app-pill`}>
-            <i className={`bi ${arrowIcon} me-1`} />
-            {delta}
-          </span>
-        </div>
+    let badgeClass = "text-bg-secondary";
+    let arrowIcon = "bi-dash-lg";
+    if (deltaDirection === "up") {
+        badgeClass = "text-bg-success";
+        arrowIcon = "bi-arrow-up";
+    } else if (deltaDirection === "down") {
+        badgeClass = "text-bg-danger";
+        arrowIcon = "bi-arrow-down";
+    }
 
-        <div className="mt-3">
-          <div className="small text-secondary" style={{ lineHeight: 1.1 }}>
-            {title}
-          </div>
-          <div className="h5 fw-bold mb-0 mt-1" style={{ letterSpacing: "-0.02em" }}>
-            {value}
-          </div>
+    const body = (
+        <div
+            className={`app-card p-3 h-100${href ? " app-card-pressable" : ""}`}
+            style={href ? { WebkitTapHighlightColor: "transparent" } : undefined}
+        >
+            <div className="d-flex align-items-start justify-content-between">
+                <div
+                    className="d-inline-flex align-items-center justify-content-center rounded-3 bg-body-tertiary"
+                    style={{ width: 40, height: 40 }}
+                >
+                    <i className={`bi ${icon}`} style={{ fontSize: "1.15rem" }} />
+                </div>
+                {showDelta ? (
+                    <span className={`badge ${badgeClass} app-pill`}>
+                        {deltaDirection !== "neutral" ? <i className={`bi ${arrowIcon} me-1`} /> : null}
+                        {delta}
+                    </span>
+                ) : href ? (
+                    <i className="bi bi-chevron-right text-secondary" style={{ fontSize: "1.1rem" }} aria-hidden />
+                ) : null}
+            </div>
+
+            <div className="mt-3">
+                <div className="small text-secondary" style={{ lineHeight: 1.1 }}>
+                    {title}
+                </div>
+                <div className="h5 fw-bold mb-0 mt-1" style={{ letterSpacing: "-0.02em" }}>
+                    {value}
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
+
+    return (
+        <div className="col-6">
+            {href ? (
+                <Link
+                    href={href}
+                    className="text-decoration-none text-reset d-block h-100"
+                    aria-label={`${title} — μετάβαση στο WC διαδικασία`}
+                >
+                    {body}
+                </Link>
+            ) : (
+                body
+            )}
+        </div>
+    );
 }
 
-function buildSparkPath(values: number[], w = 100, h = 42, pad = 6): string {
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const span = Math.max(1, max - min);
-
-  const xStep = (w - pad * 2) / Math.max(1, values.length - 1);
-  const points = values.map((v, i) => {
-    const x = pad + i * xStep;
-    const y = pad + (1 - (v - min) / span) * (h - pad * 2);
-    return { x, y };
-  });
-
-  return points
-    .map((p, i) => `${i === 0 ? "M" : "L"}${p.x.toFixed(2)} ${p.y.toFixed(2)}`)
-    .join(" ");
+function WcMonthCard({ wc }: { wc: WcStoixoiMina }) {
+    return (
+        <div className="app-card p-3">
+            <div className="d-flex align-items-start justify-content-between">
+                <div>
+                    <div className="fw-semibold">WC — μήνας</div>
+                    <div className="small text-secondary">Νέες και επαναλαμβανόμενες παραγγελίες</div>
+                </div>
+            </div>
+            <WcDistributionCharts wc={wc} />
+        </div>
+    );
 }
 
-function SalesAnalysisCard() {
-  // From the original dashboard (static sample data)
-  const sales = [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235];
-  const revenue = [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140];
+function MonthComparisonCard({
+    current,
+    previous,
+    pendingReviews,
+}: {
+    current: number;
+    previous: number;
+    pendingReviews: number;
+}) {
+    const max = Math.max(current, previous, 1);
+    const currPct = (current / max) * 100;
+    const prevPct = (previous / max) * 100;
 
-  const salesPath = buildSparkPath(sales);
-  const revenuePath = buildSparkPath(revenue);
+    return (
+        <div className="app-card p-3">
+            <div className="d-flex align-items-start justify-content-between">
+                <div>
+                    <div className="fw-semibold">Παραγγελίες & εκκρεμότητες</div>
+                    <div className="small text-secondary">Τρέχων vs προηγούμενος μήνας</div>
+                </div>
+                <span
+                    className={`badge app-pill ${pendingReviews > 0 ? "bg-warning-subtle text-warning-emphasis" : "bg-success-subtle text-success-emphasis"}`}
+                >
+                    {formatInt(pendingReviews)} εκκρεμείς
+                </span>
+            </div>
 
-  return (
-    <div className="app-card p-3">
-      <div className="d-flex align-items-start justify-content-between">
-        <div>
-          <div className="fw-semibold">Ανάλυση Πωλήσεων</div>
-          <div className="small text-secondary">Στόχος κάθε μήνα και έσοδα</div>
+            <div className="mt-3">
+                <div className="d-flex justify-content-between small text-secondary mb-1">
+                    <span>Προηγούμενος μήνας</span>
+                    <span className="fw-medium text-body">{formatInt(previous)}</span>
+                </div>
+                <div
+                    className="rounded-pill bg-body-tertiary mb-3"
+                    style={{ height: 8, overflow: "hidden" }}
+                    role="presentation"
+                >
+                    <div
+                        className="h-100 bg-secondary rounded-pill"
+                        style={{ width: `${prevPct}%`, opacity: 0.45 }}
+                    />
+                </div>
+
+                <div className="d-flex justify-content-between small text-secondary mb-1">
+                    <span>Τρέχων μήνας</span>
+                    <span className="fw-medium text-body">{formatInt(current)}</span>
+                </div>
+                <div className="rounded-pill bg-body-tertiary" style={{ height: 8, overflow: "hidden" }} role="presentation">
+                    <div className="h-100 bg-primary rounded-pill" style={{ width: `${currPct}%` }} />
+                </div>
+            </div>
         </div>
-        <div className="d-flex gap-2">
-          <span className="badge bg-primary-subtle text-primary-emphasis app-pill">Sales</span>
-          <span className="badge bg-info-subtle text-info-emphasis app-pill">Revenue</span>
-        </div>
-      </div>
-
-      <div className="mt-3">
-        <svg viewBox="0 0 100 42" width="100%" height="70" role="img" aria-label="Sales analysis">
-          <path d={salesPath} fill="none" stroke="currentColor" strokeWidth="2.5" className="text-primary" />
-          <path d={revenuePath} fill="none" stroke="currentColor" strokeWidth="2.5" className="text-info" opacity={0.9} />
-        </svg>
-      </div>
-    </div>
-  );
-}
-
-function RadialProgress({ value }: { value: number }) {
-  const size = 130;
-  const stroke = 12;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const pct = Math.min(100, Math.max(0, value));
-  const dash = (pct / 100) * c;
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Progress ${pct}%`}>
-      <circle cx={size / 2} cy={size / 2} r={r} stroke="currentColor" strokeWidth={stroke} fill="none" className="text-body-tertiary" />
-      <circle
-        cx={size / 2}
-        cy={size / 2}
-        r={r}
-        stroke="currentColor"
-        strokeWidth={stroke}
-        fill="none"
-        className="text-primary"
-        strokeLinecap="round"
-        strokeDasharray={`${dash} ${c - dash}`}
-        transform={`rotate(-90 ${size / 2} ${size / 2})`}
-      />
-      <text className="text-body-tertiary fw-bold" x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" style={{ fontSize: 20 }}>
-        {pct.toFixed(2)}%
-      </text>
-    </svg>
-  );
-}
-
-function MonthlyTargetCard() {
-  const progress = 75.55;
-  return (
-    <div className="app-card p-3">
-      <div className="d-flex align-items-start justify-content-between">
-        <div>
-          <div className="fw-semibold">Στόχος του μήνα</div>
-          <div className="small text-secondary">Επίτευξη του στόχου</div>
-        </div>
-        <span className="badge bg-success-subtle text-success-emphasis app-pill">+10%</span>
-      </div>
-
-      <div className="mt-3 d-flex align-items-center justify-content-center">
-        <RadialProgress value={progress} />
-      </div>
-
-      <p className="text-secondary small text-center mb-3" style={{ lineHeight: 1.35 }}>
-        Έχετε ολοκληρώσει το {progress.toFixed(2)}% του μηνιαίου στόχου σας.
-        <br />
-        Απομένουν 4 παραγγελίες για την επίτευξη του.
-      </p>
-
-      <div className="d-flex align-items-center justify-content-around text-center">
-        <div>
-          <div className="text-secondary small">Στόχος</div>
-          <div className="fw-semibold">$20K</div>
-        </div>
-        <div className="app-divider" style={{ width: 1, height: 26 }} />
-        <div>
-          <div className="text-secondary small">Κέρδος</div>
-          <div className="fw-semibold">$20K</div>
-        </div>
-        <div className="app-divider" style={{ width: 1, height: 26 }} />
-        <div>
-          <div className="text-secondary small">Σήμερα</div>
-          <div className="fw-semibold">$20K</div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 }
 
 export default function HomeStats() {
-  const dispatch = useAppDispatch();
-  const userInfo = useAppSelector((s) => s.auth.userInfos)
-  const dashBoard = useAppSelector((s) => s.dashboard)
+    const dispatch = useAppDispatch();
+    const dash = useAppSelector((s) => s.dashboard);
 
-  React.useEffect(() => {
-    if (!dashBoard.loading && !dashBoard.error) {
-      // Only fetch if we haven't already loaded data or encountered an error
-      dispatch(fetchDashboardData());
-    }
-  }, []);
+    React.useEffect(() => {
+        void dispatch(fetchDashboardData());
+    }, [dispatch]);
 
+    const mom = dash.totalOrders_month_perc;
+    const momDir: "up" | "down" | "neutral" = mom > 0 ? "up" : mom < 0 ? "down" : "neutral";
+    const momLabel = `${pctFmt.format(Math.abs(mom))}%`;
 
-  return (
-    <div
-      className="h-100 d-flex flex-column"
-      style={{
-        minHeight: 0,
-        overflowX: "hidden",
-        overflowY: "auto",
-        WebkitOverflowScrolling: "touch",
-      }}
-    >
-      <div className="row g-3 mb-3">
-        <MetricCard
-          title="Παραγγελίες Μήνα"
-          value="3,782"
-          delta="11.01%"
-          deltaDirection="up"
-          icon="bi-box-seam"
-        />
-        <MetricCard
-          title="Συνταγές επόμενων 10 ημερών"
-          value="5,359"
-          delta="9.05%"
-          deltaDirection="down"
-          icon="bi-paperclip"
-        />
-      </div>
+    return (
+        <div
+            className="h-100 d-flex flex-column"
+            style={{
+                minHeight: 0,
+                overflowX: "hidden",
+                overflowY: "auto",
+                WebkitOverflowScrolling: "touch",
+            }}
+        >
+            {dash.error ? (
+                <Alert variant="danger" className="mb-3 py-2">
+                    {dash.error}
+                </Alert>
+            ) : null}
 
-      <div className="d-grid gap-3">
-        <SalesAnalysisCard />
-        <MonthlyTargetCard />
-      </div>
-      {userInfo?.isSeller && <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />}
+            {dash.loading && dash.lastFetchedAt === 0 ? (
+                <AppLoader label="Φόρτωση αρχικής…" />
+            ) : (
+                <>
+                    <div className="row g-3 mb-3">
+                        <MetricCard
+                            title="Παραγγελίες μήνα"
+                            value={formatInt(dash.totalOrders_month)}
+                            delta={momLabel}
+                            deltaDirection={momDir}
+                            icon="bi-box-seam"
+                        />
+                        <MetricCard
+                            title="Συνταγές επόμενων 10 ημερών"
+                            value={formatInt(dash.next10DaysSyntages)}
+                            delta={null}
+                            icon="bi-paperclip"
+                            href="/diadikasia-wc"
+                        />
+                    </div>
 
-    </div>
-  );
+                    <div className="d-grid gap-3">
+                        {dash.wC_stoixoi_mina ? <WcMonthCard wc={dash.wC_stoixoi_mina} /> : null}
+                        <MonthComparisonCard
+                            current={dash.totalOrders_month}
+                            previous={dash.totalOrders_prev_month}
+                            pendingReviews={dash.pendingReviews}
+                        />
+                        <div className="app-card p-3">
+                            <div className="fw-semibold">Πρόσφατες παραγγελίες (ανά ημέρα)</div>
+                            <div className="small text-secondary">Τελευταίες 14 ημέρες</div>
+                            <RecentOrdersByDayChart orders={dash.lastOrders} />
+                        </div>
+                    </div>
+                </>
+            )}
+
+            <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
+        </div>
+    );
 }
