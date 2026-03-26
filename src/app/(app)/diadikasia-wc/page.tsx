@@ -12,7 +12,7 @@ import { fetchWCCalendar } from "@/store/wcDiadikasia/wcDiadikasiaSlice";
 import { Alert, Button, FormSelect, Modal } from "react-bootstrap";
 import { parseOrderDate } from "@/features/orders/diadikasia/groupWcCalendarByLastOrderDate";
 
-const SEARCH_DEBOUNCE_MS = 600;
+const SEARCH_DEBOUNCE_MS = 400;
 
 export default function DiadikasiaWC() {
     const dispatch = useAppDispatch();
