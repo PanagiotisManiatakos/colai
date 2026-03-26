@@ -280,6 +280,24 @@ html[data-bs-theme="dark"] .app-bottom-nav {
   box-shadow: var(--app-shadow-tight);
 }
 
+.app-card-pressable {
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+a:active .app-card-pressable,
+a:focus-visible .app-card-pressable {
+  transform: scale(0.985);
+}
+
+a:hover .app-card-pressable {
+  border-color: rgba(var(--bs-primary-rgb), 0.35);
+  box-shadow: var(--app-shadow-tight), 0 0 0 1px rgba(var(--bs-primary-rgb), 0.12);
+}
+
+html[data-bs-theme="dark"] a:hover .app-card-pressable {
+  border-color: rgba(var(--bs-primary-rgb), 0.45);
+}
+
 .app-card-soft {
   background: rgba(255, 255, 255, 0.70);
   border: 1px solid rgba(16, 24, 40, 0.06);

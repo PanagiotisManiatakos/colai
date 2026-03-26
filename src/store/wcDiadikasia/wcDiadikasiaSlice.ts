@@ -128,24 +128,44 @@ const discountRequestsSlice = createSlice({
             const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
             if (force) state.refreshingList = false;
             else state.loadingList = false;
-            if (!payload.ok || payload.statusCode != 200) {
-                state.error = payload.message
-            } else {
-                state.calendar = payload.listData
-                state.showActions = payload.showActions
 
-                const q =
-                    typeof action.meta.arg === "object" && action.meta.arg?.q
-                        ? action.meta.arg.q.trim()
-                        : "";
-                state.query = q;
-                state.requestsFetchedAt = Date.now();
-                persistStateToLocalStorage(state);
+            if (!payload.ok) {
+                state.error = payload.message ?? "Σφάλμα φόρτωσης";
+                return;
             }
+
+            // Backend uses `statusCode: 0` for success; some environments may use `200`.
+            const sc = payload.statusCode as number | undefined;
+            const statusOk = sc === undefined || sc === 0 || sc === 200;
+            const list = payload.listData;
+
+            if (!statusOk && !Array.isArray(list)) {
+                state.error = payload.message ?? payload.detailedMessage ?? "Σφάλμα φόρτωσης";
+                return;
+            }
+
+            state.error = null;
+            state.calendar = Array.isArray(list) ? list : [];
+            state.showActions = !!payload.showActions;
+            if (Array.isArray(payload.listStatuses)) {
+                state.listStatuses = payload.listStatuses;
+            }
+
+            const q =
+                typeof action.meta.arg === "object" && action.meta.arg?.q
+                    ? action.meta.arg.q.trim()
+                    : "";
+            state.query = q;
+            state.requestsFetchedAt = Date.now();
+            persistStateToLocalStorage(state);
         });
         b.addCase(fetchWCCalendar.rejected, (state, action) => {
+            const force = typeof action.meta?.arg === "object" && !!(action.meta.arg as any)?.force;
+            if (force) state.refreshingList = false;
+            else state.loadingList = false;
             state.review.loading = false;
             state.review.error = action.error.message ?? "";
+            state.error = action.error.message ?? "Σφάλμα φόρτωσης";
         })
     }
 });

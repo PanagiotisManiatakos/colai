@@ -8,7 +8,15 @@ export async function GET(req: Request) {
 
     if (!token) return NextResponse.json({ ok: false, message: "Not authenticated" }, { status: 401 });
 
-    const res = await fetch(`${process.env.AMSA_API_BASE_URL}/api/wc-diadikasia-calendar`, {
+    const incoming = new URL(req.url);
+    const searchfield = incoming.searchParams.get("searchfield")?.trim() ?? "";
+
+    const upstream = new URL(`${process.env.AMSA_API_BASE_URL}/api/wc-diadikasia-calendar`);
+    if (searchfield) {
+        upstream.searchParams.set("searchfield", searchfield);
+    }
+
+    const res = await fetch(upstream.toString(), {
         method: "GET",
         headers: {
             Accept: "application/json",
