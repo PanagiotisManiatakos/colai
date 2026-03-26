@@ -18,7 +18,7 @@ function WcCalendarRow({
     showTurnover: boolean;
 }) {
     const last = formatUIDate(row.lastPAEO);
-    const next = formatUIDate(row.expectedNextOrderDate);
+    const next = formatUIDate(row.lastOrderDate);
     const nextPart = next ? ` (${next})` : "";
 
     const body = (
@@ -54,13 +54,52 @@ function WcCalendarRow({
     );
 }
 
-export default function WCDiadikasiaGroupedList({ items }: { items: wcCalendar[] }) {
+export default function WCDiadikasiaGroupedList({
+    items,
+    setAllOpenTo,
+    onAllExpandedChange,
+}: {
+    items: wcCalendar[];
+    setAllOpenTo?: boolean;
+    onAllExpandedChange?: (expanded: boolean) => void;
+}) {
     const months = React.useMemo(() => groupWcCalendarByLastOrderDate(items), [items]);
+    const monthKeys = React.useMemo(() => months.map((m) => String(m.sortKey)), [months]);
+    const dayKeys = React.useMemo(
+        () => months.flatMap((m) => m.days.map((d) => `${m.sortKey}-${d.dayOfMonth}`)),
+        [months]
+    );
+    const [openMonths, setOpenMonths] = React.useState<Record<string, boolean>>({});
+    const [openDays, setOpenDays] = React.useState<Record<string, boolean>>({});
+
+    const allExpanded =
+        monthKeys.length > 0 &&
+        dayKeys.length > 0 &&
+        monthKeys.every((k) => !!openMonths[k]) &&
+        dayKeys.every((k) => !!openDays[k]);
+
+    const setAllTilesOpen = React.useCallback((nextOpen: boolean) => {
+        const nextMonths: Record<string, boolean> = {};
+        const nextDays: Record<string, boolean> = {};
+        for (const key of monthKeys) nextMonths[key] = nextOpen;
+        for (const key of dayKeys) nextDays[key] = nextOpen;
+        setOpenMonths(nextMonths);
+        setOpenDays(nextDays);
+    }, [monthKeys, dayKeys]);
+
+    React.useEffect(() => {
+        if (typeof setAllOpenTo !== "boolean") return;
+        setAllTilesOpen(setAllOpenTo);
+    }, [setAllOpenTo, setAllTilesOpen]);
+
+    React.useEffect(() => {
+        onAllExpandedChange?.(allExpanded);
+    }, [allExpanded, onAllExpandedChange]);
 
     if (!months.length) {
         return (
             <div className="app-card p-4 text-center text-secondary">
-                Δεν υπάρχουν εγγραφές με ημερομηνία τελευταίας παραγγελίας.
+                Δεν υπάρχουν εγγραφές με αναμενόμενη ημερομηνία επόμενης παραγγελίας.
             </div>
         );
     }
@@ -70,6 +109,13 @@ export default function WCDiadikasiaGroupedList({ items }: { items: wcCalendar[]
             {months.map((m) => (
                 <CollapsibleAppTile
                     key={m.sortKey}
+                    open={!!openMonths[String(m.sortKey)]}
+                    onOpenChange={(open) =>
+                        setOpenMonths((prev) => ({
+                            ...prev,
+                            [String(m.sortKey)]: open,
+                        }))
+                    }
                     summary={(expanded) => (
                         <>
                             <div style={{ minWidth: 0 }}>
@@ -101,6 +147,13 @@ export default function WCDiadikasiaGroupedList({ items }: { items: wcCalendar[]
                         {m.days.map((d) => (
                             <CollapsibleAppTile
                                 key={`${m.sortKey}-${d.dayOfMonth}`}
+                                open={!!openDays[`${m.sortKey}-${d.dayOfMonth}`]}
+                                onOpenChange={(open) =>
+                                    setOpenDays((prev) => ({
+                                        ...prev,
+                                        [`${m.sortKey}-${d.dayOfMonth}`]: open,
+                                    }))
+                                }
                                 inset="compact"
                                 className="app-card-soft"
                                 summary={(expanded) => (
@@ -132,7 +185,7 @@ export default function WCDiadikasiaGroupedList({ items }: { items: wcCalendar[]
                             >
                                 {d.items.map((r, idx) => (
                                     <WcCalendarRow
-                                        key={`${wcCalendarTaskCode(r)}-${r.customerCode}-${r.lastOrderDate}-${idx}`}
+                                        key={`${wcCalendarTaskCode(r)}-${r.customerCode}-${r.expectedNextOrderDate}-${idx}`}
                                         row={r}
                                         showDivider={idx < d.items.length - 1}
                                         showTurnover={d.items.length > 1}

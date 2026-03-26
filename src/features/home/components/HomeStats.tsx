@@ -209,7 +209,7 @@ export default function HomeStats() {
                             value={formatInt(dash.next10DaysSyntages)}
                             delta={null}
                             icon="bi-paperclip"
-                            href="/diadikasia-wc"
+                            href="/diadikasia-wc?next10=1"
                         />
                     </div>
 
@@ -221,7 +221,7 @@ export default function HomeStats() {
                             pendingReviews={dash.pendingReviews}
                         />
                         <div className="app-card p-3">
-                            <div className="fw-semibold">Πρόσφατες παραγγελίες (ανά ημέρα)</div>
+                            <div className="fw-semibold">Πρόσφατες παραγγελίες</div>
                             <div className="small text-secondary">Τελευταίες 14 ημέρες</div>
                             <RecentOrdersByDayChart orders={dash.lastOrders} />
                         </div>

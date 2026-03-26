@@ -22,6 +22,8 @@ type CollapsibleAppTileProps = {
     className?: string;
     contentClassName?: string;
     inset?: Inset;
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
 };
 
 /**
@@ -33,15 +35,24 @@ export function CollapsibleAppTile({
     className = "",
     contentClassName = "",
     inset = "default",
+    open: openProp,
+    onOpenChange,
 }: CollapsibleAppTileProps) {
-    const [open, setOpen] = React.useState(false);
+    const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false);
+    const isControlled = typeof openProp === "boolean";
+    const open = isControlled ? (openProp as boolean) : uncontrolledOpen;
     const summaryNode = typeof summary === "function" ? summary(open) : summary;
 
     return (
         <details
             className={`app-card ${className}`.trim()}
             style={{ overflow: "hidden" }}
-            onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
+            open={open}
+            onToggle={(e) => {
+                const nextOpen = (e.currentTarget as HTMLDetailsElement).open;
+                if (!isControlled) setUncontrolledOpen(nextOpen);
+                onOpenChange?.(nextOpen);
+            }}
         >
             <summary
                 className="d-flex align-items-center justify-content-between gap-2 w-100"

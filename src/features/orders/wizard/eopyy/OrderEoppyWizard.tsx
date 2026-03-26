@@ -74,7 +74,7 @@ export default function OrderEoppyWizard() {
   const shouldShowWarningPlafon = ypervasiPlafon > 6 && Number(eidosEgkrisis) === 1;
 
   const stepDefs: StepDef[] = [
-    { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} /> },
+    { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} onRunAi={runAi} /> },
     { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
     { key: "syntagi", label: "\u03A3\u03C5\u03BD\u03C4\u03B1\u03B3\u03AE", render: () => <SyntagiArea /> },
@@ -417,13 +417,6 @@ export default function OrderEoppyWizard() {
               Πίσω
             </button>
           }
-
-          {step == 0 && <RunAiButton
-            running={aiStatus === "running"}
-            disabled={!hasFiles}
-            onClick={runAi}
-            label="Run AI"
-          />}
 
           {step < maxStep && step > 0 &&
             <button type="button" className="btn btn-primary flex-fill" onClick={goNext}>

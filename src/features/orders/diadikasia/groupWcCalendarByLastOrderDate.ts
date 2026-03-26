@@ -28,10 +28,10 @@ const EL_MONTH = new Intl.DateTimeFormat("el-GR", {
 });
 
 /**
- * Parses `lastOrderDate` as a local calendar date when possible (avoids UTC day-shift on date-only strings).
+ * Parses a date string as a local calendar date when possible (avoids UTC day-shift on date-only strings).
  * ISO datetimes (`2026-03-25T19:51:53.074Z`) use the calendar portion in local time.
  */
-export function parseLastOrderDate(value: string | null | undefined): Date | null {
+export function parseOrderDate(value: string | null | undefined): Date | null {
     if (value == null || String(value).trim() === "") return null;
     const s = String(value).trim();
     const isoDay = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
@@ -57,7 +57,7 @@ export function groupWcCalendarByLastOrderDate(items: wcCalendar[]): WcMonthGrou
     const dated: Entry[] = [];
 
     for (const r of items) {
-        const d = parseLastOrderDate(r.lastOrderDate);
+        const d = parseOrderDate(r.expectedNextOrderDate);
         if (d) dated.push({ r, d });
     }
 

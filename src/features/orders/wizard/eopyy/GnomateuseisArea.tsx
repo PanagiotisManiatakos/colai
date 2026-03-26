@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDraftProperty, setDraftSyntagiUploaded } from "@/store/orders/ordersSlice";
 import FileUploadButton from "./FileUploadButton";
 import { OrderFile } from "@/types/orders";
+import RunAiButton from "./RunAIButton";
 
 type UploadStatus = "idle" | "uploading" | "error";
 type AiStatus = "idle" | "running" | "done" | "error";
@@ -20,7 +21,15 @@ function isPdf(name: string, mimeType?: string) {
     return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
-export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: string | null; aiStatus: AiStatus }) {
+export default function GnomateuseisArea({
+    aiMessage,
+    aiStatus,
+    onRunAi,
+}: {
+    aiMessage: string | null;
+    aiStatus: AiStatus;
+    onRunAi: () => void;
+}) {
     const dispatch = useAppDispatch();
 
     const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
@@ -269,6 +278,15 @@ export default function GnomateuseisArea({ aiMessage, aiStatus }: { aiMessage: s
                 ) : (
                     <div className="small text-secondary">Πάτα + για να ανεβάσεις extra αρχεία.</div>
                 )}
+
+            </div>
+            <div className="mt-3">
+                <RunAiButton
+                    running={aiStatus === "running"}
+                    disabled={!hasFiles}
+                    onClick={onRunAi}
+                    label="Run AI"
+                />
             </div>
         </>
     );
