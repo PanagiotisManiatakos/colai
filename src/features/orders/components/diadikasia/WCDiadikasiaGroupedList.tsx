@@ -1,28 +1,130 @@
 "use client";
 
 import React from "react";
-import type { wcCalendar } from "@/types/wc";
-import { wcCalendarTaskCode } from "@/types/wc";
+import type { SearchCustomerTelsData, wcCalendar } from "@/types/wc";
+import { wcCalendarTaskCode, wcCustomerGid } from "@/types/wc";
+import { fetchCustomerTelsCached } from "@/features/orders/diadikasia/fetchCustomerTels";
 import { CollapsibleAppTile } from "@/components/ui/CollapsibleAppTile";
 import { formatUIDate } from "@/lib/utils/date";
 import { formatCurrencyGR } from "@/lib/utils/number";
 import { groupWcCalendarByLastOrderDate } from "@/features/orders/diadikasia/groupWcCalendarByLastOrderDate";
 
+function telHref(phone: string): string {
+    const digits = phone.trim().replace(/[^\d+]/g, "");
+    return digits ? `tel:${digits}` : "";
+}
+
+function WcCustomerContactSection({ row, fetchEnabled }: { row: wcCalendar; fetchEnabled: boolean }) {
+    const amka = (row.amka ?? "").trim();
+    const gid = wcCustomerGid(row);
+    const [loading, setLoading] = React.useState(() => !!(amka && fetchEnabled));
+    const [data, setData] = React.useState<SearchCustomerTelsData | null>(null);
+
+    React.useEffect(() => {
+        if (!amka || !fetchEnabled) {
+            setLoading(false);
+            return;
+        }
+        let cancelled = false;
+        setLoading(true);
+        setData(null);
+        void fetchCustomerTelsCached(gid, amka)
+            .then((d) => {
+                if (!cancelled) setData(d);
+            })
+            .finally(() => {
+                if (!cancelled) setLoading(false);
+            });
+        return () => {
+            cancelled = true;
+        };
+    }, [amka, gid, fetchEnabled]);
+
+    if (!amka) return null;
+
+    if (!fetchEnabled) return null;
+
+    if (loading) {
+        return (
+            <div className="text-secondary small mt-2 d-flex align-items-center gap-1">
+                <span className="spinner-border spinner-border-sm" role="status" aria-hidden style={{ width: "0.85rem", height: "0.85rem" }} />
+                Φόρτωση επαφών…
+            </div>
+        );
+    }
+
+    const phones = data?.telephones ?? [];
+    const emails = data?.emails ?? [];
+    if (!phones.length && !emails.length) {
+        return null;
+    }
+
+    return (
+        <div className="mt-2">
+            {phones.length ? (
+                <div className="d-flex flex-column gap-1">
+                    {phones.map((t, i) => {
+                        const href = telHref(t.phone);
+                        // const label = (t.name ?? "").trim();
+                        const numberBlock = (
+                            <>
+                                <i className="bi bi-telephone-fill me-1 flex-shrink-0" aria-hidden />
+                                <span className="text-break">{t.phone}</span>
+                            </>
+                        );
+                        return (
+                            <div key={`${t.phone}-${i}`} className="small d-flex align-items-start flex-wrap">
+                                {href ? (
+                                    <a href={href} className="d-inline-flex align-items-start text-decoration-none" style={{ color: "var(--bs-primary)" }}>
+                                        {numberBlock}
+                                    </a>
+                                ) : (
+                                    <span className="d-inline-flex align-items-start" style={{ color: "var(--bs-body-color)" }}>
+                                        {numberBlock}
+                                    </span>
+                                )}
+                                {/* {label ? <span className="text-secondary ms-1">({label})</span> : null} */}
+                            </div>
+                        );
+                    })}
+                </div>
+            ) : null}
+            {emails.length ? (
+                <div className={`d-flex flex-column gap-1 ${phones.length ? "mt-2" : ""}`}>
+                    {emails.map((email) => (
+                        <a
+                            key={email}
+                            href={email.trim() ? `mailto:${email.trim()}` : undefined}
+                            className="small d-inline-flex align-items-center gap-1 text-decoration-none text-break"
+                            style={{ color: "var(--bs-primary)" }}
+                        >
+                            <i className="bi bi-envelope flex-shrink-0" aria-hidden />
+                            {email}
+                        </a>
+                    ))}
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
 function WcCalendarRow({
     row,
     showDivider,
     showTurnover,
+    contactFetchEnabled,
 }: {
     row: wcCalendar;
     showDivider: boolean;
     showTurnover: boolean;
+    contactFetchEnabled: boolean;
 }) {
     const last = formatUIDate(row.lastPAEO);
     const next = formatUIDate(row.lastOrderDate);
     const nextPart = next ? ` (${next})` : "";
 
     const body = (
-        <div style={{ minWidth: 0 }}>
+        <div>
             <div className="fw-semibold" style={{ color: "var(--bs-body-color)", fontSize: 15 }}>
                 {(row.customerName ?? "").trim() || "—"}
             </div>
@@ -32,6 +134,7 @@ function WcCalendarRow({
                 <span className="text-secondary">{nextPart}</span>
             </div>
             <div className="text-secondary small mt-1">AMKA: {(row.amka ?? "").trim() || "—"}</div>
+            <WcCustomerContactSection row={row} fetchEnabled={contactFetchEnabled} />
         </div>
     );
 
@@ -183,14 +286,21 @@ export default function WCDiadikasiaGroupedList({
                                     </>
                                 )}
                             >
-                                {d.items.map((r, idx) => (
-                                    <WcCalendarRow
-                                        key={`${wcCalendarTaskCode(r)}-${r.customerCode}-${r.expectedNextOrderDate}-${idx}`}
-                                        row={r}
-                                        showDivider={idx < d.items.length - 1}
-                                        showTurnover={d.items.length > 1}
-                                    />
-                                ))}
+                                {d.items.map((r, idx) => {
+                                    const monthOpen = !!openMonths[String(m.sortKey)];
+                                    const dayKey = `${m.sortKey}-${d.dayOfMonth}`;
+                                    const dayOpen = !!openDays[dayKey];
+                                    const contactFetchEnabled = monthOpen && dayOpen;
+                                    return (
+                                        <WcCalendarRow
+                                            key={`${wcCalendarTaskCode(r)}-${r.customerCode}-${r.expectedNextOrderDate}-${idx}`}
+                                            row={r}
+                                            showDivider={idx < d.items.length - 1}
+                                            showTurnover={d.items.length > 1}
+                                            contactFetchEnabled={contactFetchEnabled}
+                                        />
+                                    );
+                                })}
                             </CollapsibleAppTile>
                         ))}
                     </div>
