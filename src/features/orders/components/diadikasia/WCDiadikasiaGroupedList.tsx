@@ -65,7 +65,7 @@ function WcCustomerContactSection({ row, fetchEnabled }: { row: wcCalendar; fetc
                 <div className="d-flex flex-column gap-1">
                     {phones.map((t, i) => {
                         const href = telHref(t.phone);
-                        // const label = (t.name ?? "").trim();
+                        const label = (t.name ?? "").trim();
                         const numberBlock = (
                             <>
                                 <i className="bi bi-telephone-fill me-1 flex-shrink-0" aria-hidden />
@@ -73,7 +73,7 @@ function WcCustomerContactSection({ row, fetchEnabled }: { row: wcCalendar; fetc
                             </>
                         );
                         return (
-                            <div key={`${t.phone}-${i}`} className="small d-flex align-items-start flex-wrap">
+                            <div key={`${t.phone}-${i}`} className="small d-flex align-items-center flex-wrap">
                                 {href ? (
                                     <a href={href} className="d-inline-flex align-items-start text-decoration-none" style={{ color: "var(--bs-primary)" }}>
                                         {numberBlock}
@@ -83,7 +83,7 @@ function WcCustomerContactSection({ row, fetchEnabled }: { row: wcCalendar; fetc
                                         {numberBlock}
                                     </span>
                                 )}
-                                {/* {label ? <span className="text-secondary ms-1">({label})</span> : null} */}
+                                {label ? <span className="text-secondary small ms-1">({label})</span> : null}
                             </div>
                         );
                     })}
