@@ -1,12 +1,14 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 import BottomNav from "@/components/shell/BottomNav";
+import OrderDraftResetOnRouteLeave from "@/features/orders/components/OrderDraftResetOnRouteLeave";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { logoutAsync } from "@/features/auth/authSlice";
+import { resetEntireDraft } from "@/store/orders/ordersSlice";
 
 import Dropdown from "react-bootstrap/Dropdown";
 
@@ -36,12 +38,16 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const onLogout = async () => {
     try {
       await dispatch(logoutAsync());
+      dispatch(resetEntireDraft());
       router.replace("/login");
     } catch (e) { }
   };
 
   return (
     <div className="app-viewport d-flex flex-column">
+      <Suspense fallback={null}>
+        <OrderDraftResetOnRouteLeave />
+      </Suspense>
       <header className="app-header">
         <div className="px-3 d-flex align-items-center justify-content-between">
           <div className="d-flex justify-content-start flex-grow-1">

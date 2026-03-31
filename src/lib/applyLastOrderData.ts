@@ -4,6 +4,7 @@ import type { Order } from "@/types/orders";
 
 const KEY_MAP: Record<string, keyof Order> = {
   customer_Notes: "customer_notes",
+  customerNotes: "customer_notes",
   recipient_Notes: "recipient_Notes",
   recipientNotes: "recipient_Notes",
   preselected_address_GID: "address_ErpGID",
@@ -49,11 +50,12 @@ export function normalizeZeroOne(value: unknown): 0 | 1 {
   return !!value ? 1 : 0;
 }
 
-/** Keys allowed when applying lastCustomerWebOrder only (Ασθενής + Ιατρός steps) */
+/** Keys allowed when applying last_web_order from load-last-customer-order-info (Ασθενής + Ιατρός steps) */
 export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
   "customer_amka", "customer_passport", "customer_name", "customer_address", "customer_city",
   "customer_tk", "customer_tel", "customer_mobile", "customer_mobile2", "customer_email", "customer_dob", "customer_notes", "customer_ErpGID",
   "customer_other_address", "customer_other_city", "customer_other_tk", "shipTo_other_address",
+  "shipMethodId",
   "has_other_recipient", "recipient_relation_id", "recipient_reason_id", "recipient_name",
   "recipient_amka", "recipient_afm", "recipient_tel", "recipient_mobile", "recipient_mobile2", "recipient_passport", "recipient_address",
   "recipient_city", "recipient_tk", "recipient_ErpGID", "recipient_Notes",
@@ -64,9 +66,34 @@ export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
 ]);
 
 /**
- * Overwrites draft order with values from lastOrderData (from last_order_info or lastCustomerWebOrder).
+ * Maps `last_erp_order` from load-last-customer-order-info into draft (customer + suggested doctor).
+ * `person_ErpGID` / `address_ErpGID` are not set here — use `loadCustomerAddressesAsync` with
+ * `preferredPersonErpGID` = `deliveryPersonGID` so selection is applied only when that ID exists in `addresses`.
+ */
+export function applyLastErpOrderData(erp: Record<string, unknown>, dispatch: AppDispatch): void {
+  const map: Record<string, keyof Order> = {
+    customerGID: "customer_ErpGID",
+    customerAMKA: "customer_amka",
+    suggestedDoctorGID: "doctorSuggested_ErpGID",
+    suggestedDoctor_amka: "doctorSuggested_amka",
+    suggestedDoctor_name: "doctorSuggested_name",
+    suggestedDoctor_afm: "doctorSuggested_afm",
+  };
+  for (const [erpKey, orderKey] of Object.entries(map)) {
+    const v = erp[erpKey];
+    if (v === null || v === undefined || v === "") continue;
+    const normalized = ZERO_ONE_FIELDS.has(orderKey) ? normalizeZeroOne(v) : v;
+    dispatch(setDraftProperty({ key: orderKey, value: normalized }));
+  }
+  if (erp.suggestedDoctorGID != null && String(erp.suggestedDoctorGID).trim() !== "") {
+    dispatch(setDraftProperty({ key: "has_suggested_doctor", value: 2 }));
+  }
+}
+
+/**
+ * Overwrites draft order with values from lastOrderData (e.g. last_order_info or last_web_order from load-last-customer-order-info).
  * Skips null/undefined and excluded keys.
- * When restrictToCustomerAndDoctor is true, only Ασθενής and Ιατρός fields are applied (e.g. for lastCustomerWebOrder).
+ * When restrictToCustomerAndDoctor is true, only Ασθενής and Ιατρός fields are applied (e.g. last_web_order from patient search).
  */
 export function applyLastOrderData(
   lastOrderData: Record<string, unknown>,

@@ -3,7 +3,8 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { addDraftYliko, fetchOrders, setAIMaterials, setDraftFiles, setDraftProperty, setDraftYlika, setLastOrderInfoCustomerErpGID, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { addDraftYliko, fetchOrders, loadCustomerAddressesAsync, setAIMaterials, setDraftFiles, setDraftProperty, setDraftYlika, setLastOrderInfoCustomerErpGID, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { store } from "@/store/store";
 import { applyLastOrderData, normalizeZeroOne } from "@/lib/applyLastOrderData";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
@@ -279,6 +280,30 @@ export default function OrderEoppyWizard() {
           if (delSun !== undefined && delSun !== null) dispatch(setDraftProperty({ key: "deliverySunday", value: normalizeZeroOne(delSun) }));
           const delMorn = pick("deliveryMorning", "delivery_morning");
           if (delMorn !== undefined && delMorn !== null) dispatch(setDraftProperty({ key: "deliveryMorning", value: normalizeZeroOne(delMorn) }));
+
+          const lastOrderAmka = String(orderObj.customer_amka ?? raw.customer_amka ?? "").trim();
+          const lastGid = String(orderObj.customer_ErpGID ?? raw.customer_ErpGID ?? "").trim();
+          if (lastOrderAmka && lastGid) {
+            try {
+              await dispatch(
+                loadCustomerAddressesAsync({
+                  customer_ErpGID: lastGid,
+                  customer_name: orderObj.customer_name != null ? String(orderObj.customer_name) : undefined,
+                  customer_address: orderObj.customer_address != null ? String(orderObj.customer_address) : undefined,
+                  customer_amka: lastOrderAmka,
+                  preferredPersonErpGID:
+                    orderObj.person_ErpGID != null ? String(orderObj.person_ErpGID) : undefined,
+                  preferredAddressErpGID:
+                    orderObj.address_ErpGID != null ? String(orderObj.address_ErpGID) : undefined,
+                })
+              ).unwrap();
+              dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
+              dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: false }));
+              dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
+            } catch {
+              // Address list is optional if search-address fails
+            }
+          }
         }
 
         // Overlay with jsonDoc (document extraction)
@@ -288,6 +313,12 @@ export default function OrderEoppyWizard() {
         data.jsonDoc.poli_eksetazomenou && dispatch(setDraftProperty({ key: "customer_city", value: data.jsonDoc.poli_eksetazomenou }))
         data.jsonDoc.tk_eksetazomenou && dispatch(setDraftProperty({ key: "customer_tk", value: data.jsonDoc.tk_eksetazomenou }))
         data.jsonDoc.tilefono_eksetazomenou && dispatch(setDraftProperty({ key: "customer_tel", value: data.jsonDoc.tilefono_eksetazomenou }))
+        if (data.jsonDoc.customer_tel != null && String(data.jsonDoc.customer_tel).trim() !== "") {
+          const mobile = store.getState().orders.draft.order.customer_mobile;
+          if (!String(mobile ?? "").trim()) {
+            dispatch(setDraftProperty({ key: "customer_mobile", value: String(data.jsonDoc.customer_tel).trim() }));
+          }
+        }
         data.jsonDoc.email_eksetazomenou && dispatch(setDraftProperty({ key: "customer_email", value: data.jsonDoc.email_eksetazomenou }))
         data.jsonDoc.imerominia_gennisis && dispatch(setDraftProperty({ key: "customer_dob", value: data.jsonDoc.imerominia_gennisis }))
         data.jsonDoc.otp && dispatch(setDraftProperty({ key: "customer_tel_otp", value: data.jsonDoc.otp }))

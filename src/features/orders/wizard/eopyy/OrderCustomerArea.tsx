@@ -1,4 +1,4 @@
-import { setDraftProperty } from "@/store/orders/ordersSlice";
+import { loadCustomerAddressesAsync, setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import CustomerLookupModal from "../modals/CustomerLookupModal";
 import ErpContactsLookupModal from "../modals/ErpContactsLookupModal";
@@ -24,6 +24,11 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
     const listAddressesPersons = useAppSelector(s => s.orders.draft.list_AddressesPersons)
     const preselected_person_GID = useAppSelector(s => s.orders.draft.preselected_person_GID)
     const preselected_address_GID = useAppSelector(s => s.orders.draft.preselected_address_GID)
+
+    const selectedPersonAddresses = React.useMemo(() => {
+        const row = listAddressesPersons.find((p) => p.person_ErpGID == data.person_ErpGID);
+        return row?.addresses ?? [];
+    }, [listAddressesPersons, data.person_ErpGID]);
 
     const handleDateInput = (value: string) => {
         if (value.length == 1 && parseInt(value) > 3) return;
@@ -54,6 +59,28 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
         if (!data.shipMethodId) dispatch(setDraftProperty({ key: "shipMethodId", value: 5 }))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    /** After refresh: if address list is empty but draft has customer from localStorage, load addresses for «Θα παραδοθεί σε». */
+    React.useEffect(() => {
+        const gid = data.customer_ErpGID?.toString().trim();
+        const amka = data.customer_amka?.trim();
+        if (!gid || !amka || listAddressesPersons.length > 0) return;
+        void dispatch(
+            loadCustomerAddressesAsync({
+                customer_ErpGID: data.customer_ErpGID,
+                customer_amka: data.customer_amka ?? "",
+                customer_name: data.customer_name ?? "",
+                customer_address: data.customer_address ?? "",
+            }),
+        );
+    }, [
+        dispatch,
+        data.customer_ErpGID,
+        data.customer_amka,
+        data.customer_name,
+        data.customer_address,
+        listAddressesPersons.length,
+    ]);
     return (
         <div className="app-card p-4">
             <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
@@ -102,7 +129,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                 </OrderField>
 
                 <div className="row g-2">
-                    <div className="col-7">
+                    <div className="col-6">
                         <OrderField label="ΑΜΚΑ">
                             <input
                                 className="form-control"
@@ -113,7 +140,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             />
                         </OrderField>
                     </div>
-                    <div className="col-5">
+                    <div className="col-6">
                         <OrderField label="Ημ/νία Γέννησης" hint="π.χ. 31/12/1990">
                             <input
                                 className="form-control"
@@ -151,7 +178,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                     </div>
                 </div>
                 <div className="row g-2">
-                    <div className="col-7">
+                    <div className="col-6">
                         <OrderField label="Τηλέφωνο">
                             <input
                                 className="form-control"
@@ -162,7 +189,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             />
                         </OrderField>
                     </div>
-                    <div className="col-5">
+                    <div className="col-6">
                         <OrderField label="Email">
                             <input
                                 className="form-control"
@@ -185,7 +212,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                 </OrderField>
 
                 <div className="row g-2">
-                    <div className="col-8">
+                    <div className="col-6">
                         <OrderField label="Πόλη">
                             <input
                                 className="form-control"
@@ -195,7 +222,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             />
                         </OrderField>
                     </div>
-                    <div className="col-4">
+                    <div className="col-6">
                         <OrderField label="ΤΚ">
                             <input
                                 className="form-control"
@@ -251,7 +278,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         id="deliveryMorning"
                     />
                     <label className="form-check-label" htmlFor="deliveryMorning">
-                        Πρωινή Παράδοση
+                        Πρωινή παράδοση
                     </label>
                 </div>
 
@@ -278,7 +305,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         id="has_other_recipient"
                     />
                     <label className="form-check-label" htmlFor="has_other_recipient">
-                        Θα παραλάβει άλλος
+                        Παραλαβή από νέο πρόσωπο
                     </label>
                 </div>
                 )}
@@ -325,15 +352,13 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                     listAddressesPersons.length > 0 &&
                     data.person_ErpGID &&
                     data.person_ErpGID != "" &&
-                    listAddressesPersons.some((x) => x.person_ErpGID == data.person_ErpGID && (x.addresses.length > 0)) &&
+                    selectedPersonAddresses.length > 0 &&
                     (
                         <OrderField label="Αποθηκευμένη διέυθυνση">
                             <FormSelect name="address_ErpGID" value={data.address_ErpGID ?? ""} onChange={(e) => dispatch(setDraftProperty({ key: "address_ErpGID", value: e.target.value }))}>
-                                {listAddressesPersons.map((x) => {
-                                    if (x.person_ErpGID == data.person_ErpGID) {
-                                        return x.addresses.map((a) => <option key={a.address_ErpGID} value={a.address_ErpGID}>{`${a.address}, ${a.city}, ${a.tk}`}</option>)
-                                    }
-                                })}
+                                {selectedPersonAddresses.map((a) => (
+                                    <option key={a.address_ErpGID} value={a.address_ErpGID}>{`${a.address}, ${a.city}, ${a.tk}`}</option>
+                                ))}
                             </FormSelect>
                         </OrderField>
                     )}
@@ -365,7 +390,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             />
                         </OrderField>
                         <div className="row g-2">
-                            <div className="col-7">
+                            <div className="col-6">
                                 <OrderField label="ΑΜΚΑ ">
                                     <input
                                         className="form-control"
@@ -376,7 +401,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                                     />
                                 </OrderField>
                             </div>
-                            <div className="col-5">
+                            <div className="col-6">
                                 <OrderField label="ΑΦΜ ">
                                     <input
                                         className="form-control"
@@ -413,7 +438,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             </div>
                         </div>
                         <div className="row g-2">
-                            <div className="col-7">
+                            <div className="col-6">
                                 <OrderField label="Τηλέφωνο">
                                     <input
                                         className="form-control"
@@ -424,7 +449,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                                     />
                                 </OrderField>
                             </div>
-                            <div className="col-5">
+                            <div className="col-6">
                                 <OrderField label="ΑΤ/Διαβατήριο">
                                     <input
                                         className="form-control"
@@ -445,7 +470,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             />
                         </OrderField>
                         <div className="row g-2">
-                            <div className="col-8">
+                            <div className="col-6">
                                 <OrderField label="Πόλη ">
                                     <input
                                         className="form-control"
@@ -455,7 +480,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                                     />
                                 </OrderField>
                             </div>
-                            <div className="col-4">
+                            <div className="col-6">
                                 <OrderField label="ΤΚ">
                                     <input
                                         className="form-control"
@@ -502,7 +527,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                         id="shipTo_other_address"
                     />
                     <label className="form-check-label" htmlFor="shipTo_other_address">
-                        Παράδοση σε άλλη διεύθυνση
+                        Παράδοση σε νέα διεύθυνση
                     </label>
                 </div>
                 )}
@@ -520,7 +545,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                             </OrderField>
                         </div>
                         <div className="row g-2">
-                            <div className="col-8">
+                            <div className="col-6">
                                 <OrderField label="Πόλη ">
                                     <input
                                         className="form-control"
@@ -530,7 +555,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                                     />
                                 </OrderField>
                             </div>
-                            <div className="col-4">
+                            <div className="col-6">
                                 <OrderField label="ΤΚ">
                                     <input
                                         className="form-control"

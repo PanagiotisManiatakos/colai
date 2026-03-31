@@ -168,7 +168,17 @@ export const editDraftAsync = createAsyncThunk<any, { typeid: string; catid: num
     return data;
   });
 
-export const loadCustomerAddressesAsync = createAsyncThunk<any, { customer_ErpGID: string | undefined; customer_name: string | undefined; customer_address: string | undefined; customer_amka: string | undefined; }>(
+export type LoadCustomerAddressesArgs = {
+  customer_ErpGID: string | undefined;
+  customer_name: string | undefined;
+  customer_address: string | undefined;
+  customer_amka: string | undefined;
+  /** If set and present in the API addresses list, selects this person (e.g. last_order_info.person_ErpGID). */
+  preferredPersonErpGID?: string | null;
+  preferredAddressErpGID?: string | null;
+};
+
+export const loadCustomerAddressesAsync = createAsyncThunk<any, LoadCustomerAddressesArgs>(
   "orders/loadCustomerAddressesAsync",
   async ({ customer_ErpGID, customer_name, customer_address, customer_amka }) => {
     const res = await fetch(`/api/customers/${customer_ErpGID}/addresses?customerAMKA=${customer_amka ?? ""}&customerName=${customer_name ?? ""}&customerAddress=${customer_address ?? ""}&_ts=${Date.now()}`, {
@@ -281,6 +291,26 @@ const ordersSlice = createSlice({
     deletedDraftTemplate(state) {
       state.draft.order = {} as Order;
       state.draft.ylika = [] as OrderYlika[];
+      persistStateToLocalStorage(state);
+    },
+    /** Full draft reset (order, ylika, files, lists, addresses, AI materials, etc.) — e.g. when leaving the order wizard. */
+    resetEntireDraft(state) {
+      state.draft.editState = { loading: false, error: null };
+      state.draft.submitState = { loading: false, error: null };
+      state.draft.order = {} as Order;
+      state.draft.ylika = [] as OrderYlika[];
+      state.draft.files = [] as OrderFile[];
+      state.draft.list_DiscountReasons = [] as OrdeListOfSelections[];
+      state.draft.list_KatigoriesParoxis = [] as OrdeListOfSelections[];
+      state.draft.list_LogosParalipti = [] as OrdeListOfSelections[];
+      state.draft.list_SygeniaParalipti = [] as OrdeListOfSelections[];
+      state.draft.list_TroposApostolis = [] as OrdeListOfSelections[];
+      state.draft.list_AddressesPersons = [] as OrderListOfAddressPersons[];
+      state.draft.preselected_address_GID = undefined;
+      state.draft.preselected_person_GID = undefined;
+      state.draft.ai_ylika = [] as AIMaterials[];
+      state.draft.synaineseisResults = null;
+      state.draft.lastOrderInfoCustomerErpGID = undefined;
       persistStateToLocalStorage(state);
     },
     setDraftProperty(state, action: PayloadAction<{ key: keyof Order; value: any }>) {
@@ -487,11 +517,32 @@ const ordersSlice = createSlice({
     b.addCase(editDraftAsync.fulfilled, (state, action) => {
       state.draft.editState.loading = false;
       if (action.payload.ok) {
+        const prevOrder = state.draft.order;
         const order = action.payload.data?.order;
         state.draft.order = order
         state.draft.order.dateOfSyntagi = formatUIDate(order.dateOfSyntagi)
         state.draft.order.dateIsxyeiApo = formatUIDate(order.dateIsxyeiApo)
         state.draft.order.dateIsxyeiEos = formatUIDate(order.dateIsxyeiEos)
+        /** After refresh: restore customer + delivery fields from persisted draft when API omits them (same order session). */
+        const prevC = prevOrder?.customer_ErpGID != null ? String(prevOrder.customer_ErpGID).trim() : "";
+        const nextC = order?.customer_ErpGID != null ? String(order.customer_ErpGID).trim() : "";
+        if (!nextC && prevC) {
+          state.draft.order.customer_ErpGID = prevOrder.customer_ErpGID;
+          if (!order?.customer_amka?.trim() && prevOrder.customer_amka?.trim()) {
+            state.draft.order.customer_amka = prevOrder.customer_amka;
+          }
+        }
+        if (prevC && nextC && prevC === nextC) {
+          const prevP = prevOrder.person_ErpGID?.trim();
+          const prevA = prevOrder.address_ErpGID?.trim();
+          const nextP = order?.person_ErpGID?.trim();
+          const nextA = order?.address_ErpGID?.trim();
+          if (!nextP && prevP) state.draft.order.person_ErpGID = prevP;
+          if (!nextA && prevA) state.draft.order.address_ErpGID = prevA;
+          if (!order?.customer_amka?.trim() && prevOrder.customer_amka?.trim()) {
+            state.draft.order.customer_amka = prevOrder.customer_amka;
+          }
+        }
         state.draft.ylika = action.payload.data.items;
         state.draft.files = action.payload.data.files;
         state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons
@@ -539,13 +590,52 @@ const ordersSlice = createSlice({
       if (idx !== -1) state.orders.splice(idx, 1);
     });
     b.addCase(loadCustomerAddressesAsync.fulfilled, (state, action) => {
-      if (action.payload.ok) {
-        state.draft.list_AddressesPersons = action.payload.addresses;
-        state.draft.order.person_ErpGID = action.payload.preselected_person_GID
-        state.draft.order.address_ErpGID = action.payload.preselected_address_GID
-        state.draft.preselected_person_GID = action.payload.preselected_person_GID;
-        state.draft.preselected_address_GID = action.payload.preselected_address_GID;
+      if (!action.payload.ok) return;
+      const savedPerson = state.draft.order.person_ErpGID?.trim();
+      const savedAddr = state.draft.order.address_ErpGID?.trim();
+
+      const addresses = (action.payload.addresses ?? []) as OrderListOfAddressPersons[];
+      state.draft.list_AddressesPersons = addresses;
+      const prePerson = action.payload.preselected_person_GID;
+      const preAddr = action.payload.preselected_address_GID;
+      state.draft.preselected_person_GID = prePerson;
+      state.draft.preselected_address_GID = preAddr;
+
+      const metaP = action.meta.arg.preferredPersonErpGID?.trim();
+      const metaA = action.meta.arg.preferredAddressErpGID?.trim();
+
+      const personInList = (pid: string | undefined) =>
+        !!pid && addresses.some((p) => p.person_ErpGID === pid);
+
+      const addressInListForPerson = (pid: string | undefined, aid: string | undefined) =>
+        !!pid &&
+        !!aid &&
+        addresses.some(
+          (p) => p.person_ErpGID === pid && p.addresses?.some((a) => a.address_ErpGID === aid)
+        );
+
+      if (metaP && personInList(metaP)) {
+        state.draft.order.person_ErpGID = metaP;
+        if (metaA && addressInListForPerson(metaP, metaA)) {
+          state.draft.order.address_ErpGID = metaA;
+        } else {
+          const firstAddr = addresses.find((p) => p.person_ErpGID === metaP)?.addresses?.[0]?.address_ErpGID;
+          state.draft.order.address_ErpGID = firstAddr ?? preAddr ?? null;
+        }
+      } else if (savedPerson && personInList(savedPerson)) {
+        /** Restore persisted / merged draft selection (e.g. after page refresh). */
+        state.draft.order.person_ErpGID = savedPerson;
+        if (savedAddr && addressInListForPerson(savedPerson, savedAddr)) {
+          state.draft.order.address_ErpGID = savedAddr;
+        } else {
+          const firstAddr = addresses.find((p) => p.person_ErpGID === savedPerson)?.addresses?.[0]?.address_ErpGID;
+          state.draft.order.address_ErpGID = firstAddr ?? preAddr ?? null;
+        }
+      } else {
+        state.draft.order.person_ErpGID = prePerson;
+        state.draft.order.address_ErpGID = preAddr;
       }
+      persistStateToLocalStorage(state);
     });
 
   },
@@ -555,6 +645,7 @@ export const {
   startDraft,
   setSynaineseisResults,
   setLastOrderInfoCustomerErpGID,
+  resetEntireDraft,
   deletedDraftTemplate,
   setDraftSyntagiUploaded,
   patchDraftPatient,

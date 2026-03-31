@@ -4,7 +4,7 @@ import React from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
 import { loadCustomerAddressesAsync, setDraftProperty, setLastOrderInfoCustomerErpGID } from "@/store/orders/ordersSlice";
-import { applyLastOrderData } from "@/lib/applyLastOrderData";
+import { applyLastErpOrderData, applyLastOrderData } from "@/lib/applyLastOrderData";
 import AppLoader from "@/components/ui/AppLoader";
 
 export type CustomerSearchResult = {
@@ -32,6 +32,10 @@ export type CustomerSearchResult = {
     tR_fPersonCodeGID?: string;
 };
 
+function isNonEmptyRecord(v: unknown): v is Record<string, unknown> {
+    return v !== null && typeof v === "object" && !Array.isArray(v) && Object.keys(v as object).length > 0;
+}
+
 export default function CustomerLookupModal({
     show,
     onClose,
@@ -44,10 +48,10 @@ export default function CustomerLookupModal({
     const dispatch = useAppDispatch();
     const [q, setQ] = React.useState(initialQuery);
     const [loading, setLoading] = React.useState(false);
+    const [applying, setApplying] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [results, setResults] = React.useState<CustomerSearchResult[]>([]);
     const [hasSearched, setHasSearched] = React.useState(false);
-    const [lastCustomerWebOrder, setLastCustomerWebOrder] = React.useState<Record<string, unknown> | null>(null);
     const inputRef = React.useRef<HTMLInputElement | null>(null);
 
     React.useEffect(() => {
@@ -56,7 +60,6 @@ export default function CustomerLookupModal({
             setResults([]);
             setError(null);
             setHasSearched(false);
-            setLastCustomerWebOrder(null);
         }
     }, [show, initialQuery]);
 
@@ -70,7 +73,7 @@ export default function CustomerLookupModal({
         try {
             const res = await fetch(`/api/customers?q=${encodeURIComponent(query)}&_ts=${Date.now()}`, {
                 cache: "no-store",
-                headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
+                headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
             });
             const data = await res.json().catch(() => ({}));
 
@@ -79,15 +82,6 @@ export default function CustomerLookupModal({
             }
 
             setResults((data.listCustomers ?? []) as CustomerSearchResult[]);
-
-            const lcwo = data.lastCustomerWebOrder;
-            const hasLastCustomerWebOrder =
-                lcwo &&
-                typeof lcwo === "object" &&
-                !Array.isArray(lcwo) &&
-                Object.keys(lcwo).length > 0;
-
-            setLastCustomerWebOrder(hasLastCustomerWebOrder ? (lcwo as Record<string, unknown>) : null);
         } catch (e: any) {
             setError(e?.message || "Search failed");
         } finally {
@@ -95,11 +89,51 @@ export default function CustomerLookupModal({
         }
     }
 
-    function applyCustomer(c: CustomerSearchResult) {
-        if (lastCustomerWebOrder) {
-            applyLastOrderData(lastCustomerWebOrder, dispatch, true); // only Ασθενής + Ιατρός
+    async function applyCustomer(c: CustomerSearchResult) {
+        setApplying(true);
+        let preferredPerson: string | undefined;
+        let preferredAddr: string | undefined;
+        try {
+            const res = await fetch("/api/load-last-customer-order-info", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    customer_gid: c.tR_GID,
+                    customer_amka: c.tR_StringField5 ?? "",
+                }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data?.ok) {
+                const sc = data.statusCode as number | undefined;
+                const statusOk = sc === undefined || sc === 0 || sc === 200;
+                if (statusOk) {
+                    const lwo = data.last_web_order;
+                    const leo = data.last_erp_order;
+                    if (isNonEmptyRecord(lwo)) {
+                        const lwoCopy = { ...(lwo as Record<string, unknown>) };
+                        const lwoPerson = lwoCopy.person_ErpGID;
+                        const lwoAddr = lwoCopy.address_ErpGID;
+                        delete lwoCopy.person_ErpGID;
+                        delete lwoCopy.address_ErpGID;
+                        delete lwoCopy.preselected_person_GID;
+                        delete lwoCopy.preselected_address_GID;
+                        applyLastOrderData(lwoCopy, dispatch, true);
+                        preferredPerson = String(lwoPerson ?? "").trim() || undefined;
+                        preferredAddr = String(lwoAddr ?? "").trim() || undefined;
+                    } else if (isNonEmptyRecord(leo)) {
+                        applyLastErpOrderData(leo, dispatch);
+                        preferredPerson = String(leo.deliveryPersonGID ?? "").trim() || undefined;
+                        preferredAddr = String(leo.deliveryAddressGID ?? "").trim() || undefined;
+                    }
+                }
+            }
+        } catch {
+            // Continue with selected row only
+        } finally {
+            setApplying(false);
         }
-        dispatch(setDraftProperty({ key: "customer_ErpGID", value: c.tR_GID }))
+
+        dispatch(setDraftProperty({ key: "customer_ErpGID", value: c.tR_GID }));
         dispatch(setDraftProperty({ key: "customer_name", value: c.pE_NAME }));
         dispatch(setDraftProperty({ key: "customer_amka", value: c.tR_StringField5 }));
         dispatch(setDraftProperty({ key: "customer_address", value: c.peS_Address1 }));
@@ -108,7 +142,23 @@ export default function CustomerLookupModal({
         dispatch(setDraftProperty({ key: "customer_tel", value: "" }));
         dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
         dispatch(setDraftProperty({ key: "customer_email", value: "" }));
-        dispatch(loadCustomerAddressesAsync({ customer_ErpGID: c.tR_GID, customer_name: c.pE_NAME, customer_amka: c.tR_StringField5, customer_address: c.peS_Address1 }));
+        try {
+            await dispatch(
+                loadCustomerAddressesAsync({
+                    customer_ErpGID: c.tR_GID,
+                    customer_name: c.pE_NAME,
+                    customer_amka: c.tR_StringField5,
+                    customer_address: c.peS_Address1,
+                    preferredPersonErpGID: preferredPerson,
+                    preferredAddressErpGID: preferredAddr,
+                })
+            ).unwrap();
+            dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
+            dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: false }));
+            dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
+        } catch {
+            // Continue without address list
+        }
         dispatch(setLastOrderInfoCustomerErpGID(c.tR_GID));
         onClose();
     }
@@ -150,7 +200,8 @@ export default function CustomerLookupModal({
                                     key={idx}
                                     type="button"
                                     className="list-group-item list-group-item-action"
-                                    onClick={() => applyCustomer(r)}
+                                    onClick={() => void applyCustomer(r)}
+                                    disabled={applying}
                                 >
                                     <div className="fw-semibold">{r.pE_NAME || "—"}</div>
                                     <div className="small text-secondary">AMKA: {r.tR_StringField5 || "—"}</div>
@@ -164,6 +215,12 @@ export default function CustomerLookupModal({
                         <div className="text-secondary small text-center py-3">Δεν υπάρχουν αποτελέσματα.</div>
                     ) : null}
                 </div>
+                {applying ? (
+                    <div className="mt-2 small text-secondary d-flex align-items-center gap-2">
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden />
+                        Φόρτωση τελευταίας παραγγελίας…
+                    </div>
+                ) : null}
             </Modal.Body>
         </Modal>
     );
