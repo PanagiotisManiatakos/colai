@@ -8,6 +8,7 @@ import NotFoundView from "@/components/system/NotFoundView";
 
 import { editDraftAsync, loadCustomerAddressesAsync } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { store } from "@/store/store";
 
 import OrderEoppyWizard from "@/features/orders/wizard/eopyy/OrderEoppyWizard";
 import OrderRetailWizard from "@/features/orders/wizard/retail/OrderRetailWizard";
@@ -34,8 +35,11 @@ export default function OrderWizardEditPage() {
     const bootstrap = async () => {
       try {
         const result = await dispatch(editDraftAsync({ catid: 4, typeid: orderType, uid })).unwrap();
-        if (isMounted && result?.ok && result?.data?.order?.customer_ErpGID) {
-          const order = result.data.order;
+        if (!isMounted || !result?.ok) return;
+        /** Use merged draft (localStorage + API) so addresses load when API omits customer GID. */
+        const order = store.getState().orders.draft.order;
+        const gid = order.customer_ErpGID?.toString().trim();
+        if (gid) {
           try {
             await dispatch(loadCustomerAddressesAsync({
               customer_ErpGID: order.customer_ErpGID,

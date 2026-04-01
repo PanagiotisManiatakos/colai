@@ -1,4 +1,4 @@
-import { setDraftProperty } from "@/store/orders/ordersSlice";
+import { loadCustomerAddressesAsync, setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import CustomerLookupModal from "../modals/CustomerLookupModal";
 import React from "react";
@@ -25,6 +25,11 @@ export default function OrderRetailCustomerArea() {
     const [showLookup, setShowLookup] = React.useState(false);
     const listTropoiApostolis = useAppSelector(s => s.orders.draft.list_TroposApostolis)
     const listAddressesPersons = useAppSelector(s => s.orders.draft.list_AddressesPersons)
+
+    const selectedPersonAddresses = React.useMemo(() => {
+        const row = listAddressesPersons.find((p) => p.person_ErpGID == data.person_ErpGID);
+        return row?.addresses ?? [];
+    }, [listAddressesPersons, data.person_ErpGID]);
 
     const handleDateInput = (value: string) => {
         if (value.length == 1 && parseInt(value) > 3) return;
@@ -55,6 +60,27 @@ export default function OrderRetailCustomerArea() {
         if (!data.shipMethodId) dispatch(setDraftProperty({ key: "shipMethodId", value: 5 }))
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
+
+    React.useEffect(() => {
+        const gid = data.customer_ErpGID?.toString().trim();
+        const amka = data.customer_amka?.trim();
+        if (!gid || !amka || listAddressesPersons.length > 0) return;
+        void dispatch(
+            loadCustomerAddressesAsync({
+                customer_ErpGID: data.customer_ErpGID,
+                customer_amka: data.customer_amka ?? "",
+                customer_name: data.customer_name ?? "",
+                customer_address: data.customer_address ?? "",
+            }),
+        );
+    }, [
+        dispatch,
+        data.customer_ErpGID,
+        data.customer_amka,
+        data.customer_name,
+        data.customer_address,
+        listAddressesPersons.length,
+    ]);
 
     return (
         <div className="app-card p-4">
@@ -87,7 +113,7 @@ export default function OrderRetailCustomerArea() {
             </Field>
 
             <div className="row g-2">
-                <div className="col-7">
+                <div className="col-6">
                     <Field label="ΑΜΚΑ">
                         <input
                             className="form-control"
@@ -98,7 +124,7 @@ export default function OrderRetailCustomerArea() {
                         />
                     </Field>
                 </div>
-                <div className="col-5">
+                <div className="col-6">
                     <Field label="Ημ/νία Γέννησης" hint="π.χ. 31/12/1990">
                         <input
                             className="form-control"
@@ -112,7 +138,7 @@ export default function OrderRetailCustomerArea() {
             </div>
 
             <div className="row g-2">
-                <div className="col-7">
+                <div className="col-6">
                     <Field label="Τηλέφωνο">
                         <input
                             className="form-control"
@@ -123,7 +149,7 @@ export default function OrderRetailCustomerArea() {
                         />
                     </Field>
                 </div>
-                <div className="col-5">
+                <div className="col-6">
                     <Field label="Email">
                         <input
                             className="form-control"
@@ -146,7 +172,7 @@ export default function OrderRetailCustomerArea() {
             </Field>
 
             <div className="row g-2">
-                <div className="col-8">
+                <div className="col-6">
                     <Field label="Πόλη">
                         <input
                             className="form-control"
@@ -156,7 +182,7 @@ export default function OrderRetailCustomerArea() {
                         />
                     </Field>
                 </div>
-                <div className="col-4">
+                <div className="col-6">
                     <Field label="ΤΚ">
                         <input
                             className="form-control"
@@ -211,7 +237,7 @@ export default function OrderRetailCustomerArea() {
                     id="deliveryMorning"
                 />
                 <label className="form-check-label" htmlFor="deliveryMorning">
-                    Πρωινή Παράδοση
+                    Πρωινή παράδοση
                 </label>
             </div>
 
@@ -233,15 +259,13 @@ export default function OrderRetailCustomerArea() {
                 listAddressesPersons.length > 0 &&
                 data.person_ErpGID &&
                 data.person_ErpGID != "" &&
-                listAddressesPersons.some((x) => x.person_ErpGID == data.person_ErpGID && (x.addresses.length > 0)) &&
+                selectedPersonAddresses.length > 0 &&
                 (
                     <Field label="Αποθηκευμένη διέυθυνση">
                         <FormSelect name="address_ErpGID" value={data.address_ErpGID ?? ""} onChange={(e) => dispatch(setDraftProperty({ key: "address_ErpGID", value: e.target.value }))}>
-                            {listAddressesPersons.map((x) => {
-                                if (x.person_ErpGID == data.person_ErpGID) {
-                                    return x.addresses.map((a) => <option key={a.address_ErpGID} value={a.address_ErpGID}>{`${a.address}, ${a.city}, ${a.tk}`}</option>)
-                                }
-                            })}
+                            {selectedPersonAddresses.map((a) => (
+                                <option key={a.address_ErpGID} value={a.address_ErpGID}>{`${a.address}, ${a.city}, ${a.tk}`}</option>
+                            ))}
                         </FormSelect>
                     </Field>
                 )}
@@ -265,7 +289,7 @@ export default function OrderRetailCustomerArea() {
                     id="shipTo_other_address"
                 />
                 <label className="form-check-label" htmlFor="shipTo_other_address">
-                    Παράδοση σε άλλη διεύθυνση
+                    Παράδοση σε νέα διεύθυνση
                 </label>
             </div>
 
@@ -282,7 +306,7 @@ export default function OrderRetailCustomerArea() {
                         </Field>
                     </div>
                     <div className="row g-2">
-                        <div className="col-8">
+                        <div className="col-6">
                             <Field label="Πόλη ">
                                 <input
                                     className="form-control"
@@ -292,7 +316,7 @@ export default function OrderRetailCustomerArea() {
                                 />
                             </Field>
                         </div>
-                        <div className="col-4">
+                        <div className="col-6">
                             <Field label="ΤΚ">
                                 <input
                                     className="form-control"
