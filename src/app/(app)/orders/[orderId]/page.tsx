@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { PlatformCard } from "@/components/ui/PlatformCard";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { editDraftAsync, setDraftProperty } from "@/store/orders/ordersSlice";
+import { editDraftAsync, resetEntireDraft, setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
 
 export default function OrderStartPage() {
@@ -36,6 +36,7 @@ export default function OrderStartPage() {
     setError(null);
 
     try {
+      dispatch(resetEntireDraft());
       const response = await dispatch(editDraftAsync({ catid: 4, typeid: ty })).unwrap();
       router.push(`/orders/0/${encodeURIComponent(ty)}/new?uid=${response.data.order.uid}`);
     } catch (e: any) {

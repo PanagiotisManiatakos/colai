@@ -52,7 +52,19 @@ function turnoverEuros(r: wcCalendar): number {
     return 0;
 }
 
-export function groupWcCalendarByLastOrderDate(items: wcCalendar[]): WcMonthGroup[] {
+export type WcCalendarGroupOrder = {
+    /** Order of month buckets (default: newest month first). */
+    monthOrder?: "asc" | "desc";
+    /** Order of days within each month (default: higher day number first). */
+    dayOrder?: "asc" | "desc";
+};
+
+export function groupWcCalendarByLastOrderDate(
+    items: wcCalendar[],
+    order: WcCalendarGroupOrder = {},
+): WcMonthGroup[] {
+    const monthOrder = order.monthOrder ?? "desc";
+    const dayOrder = order.dayOrder ?? "desc";
     type Entry = { r: wcCalendar; d: Date };
     const dated: Entry[] = [];
 
@@ -71,7 +83,7 @@ export function groupWcCalendarByLastOrderDate(items: wcCalendar[]): WcMonthGrou
         else byMonth.set(key, [e]);
     }
 
-    const monthKeys = [...byMonth.keys()].sort((a, b) => b - a);
+    const monthKeys = [...byMonth.keys()].sort((a, b) => (monthOrder === "desc" ? b - a : a - b));
 
     return monthKeys.map((monthKey) => {
         const year = Math.floor(monthKey / 100);
@@ -89,7 +101,7 @@ export function groupWcCalendarByLastOrderDate(items: wcCalendar[]): WcMonthGrou
             else byDay.set(dom, [r]);
         }
 
-        const dayNumbers = [...byDay.keys()].sort((a, b) => b - a);
+        const dayNumbers = [...byDay.keys()].sort((a, b) => (dayOrder === "desc" ? b - a : a - b));
         const days: WcDayGroup[] = dayNumbers.map((dayOfMonth) => {
             const sample = entries.find((e) => e.d.getDate() === dayOfMonth)!.d;
             const dayItems = byDay.get(dayOfMonth)!;

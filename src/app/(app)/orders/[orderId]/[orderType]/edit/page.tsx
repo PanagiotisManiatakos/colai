@@ -36,7 +36,6 @@ export default function OrderWizardEditPage() {
       try {
         const result = await dispatch(editDraftAsync({ catid: 4, typeid: orderType, uid })).unwrap();
         if (!isMounted || !result?.ok) return;
-        /** Use merged draft (localStorage + API) so addresses load when API omits customer GID. */
         const order = store.getState().orders.draft.order;
         const gid = order.customer_ErpGID?.toString().trim();
         if (gid) {
