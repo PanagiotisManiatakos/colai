@@ -31,6 +31,7 @@ export default function DiadikasiaWC() {
 
     const urlSearch = (searchParams.get("searchfield") ?? searchParams.get("search") ?? "").trim();
     const onlyNext10Days = searchParams.get("next10") === "1";
+    const monthOrder = searchParams.get("monthOrder") === "asc" ? "asc" : "desc";
     const [q, setQ] = React.useState(urlSearch);
     const debounceTimerRef = React.useRef<number | null>(null);
 
@@ -64,6 +65,23 @@ export default function DiadikasiaWC() {
             router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
         },
         [pathname, router, searchParams]
+    );
+
+    const toggleMonthSort = React.useCallback(() => {
+        const params = new URLSearchParams(searchParams.toString());
+        if (monthOrder === "desc") params.set("monthOrder", "asc");
+        else params.delete("monthOrder");
+        const qs = params.toString();
+        router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    }, [pathname, router, searchParams, monthOrder]);
+
+    const wcGroupOrder = React.useMemo(
+        () =>
+            ({
+                monthOrder: monthOrder === "asc" ? "asc" : "desc",
+                dayOrder: "desc",
+            }) as const,
+        [monthOrder]
     );
 
     React.useEffect(() => {
@@ -127,7 +145,7 @@ export default function DiadikasiaWC() {
 
     return (
         <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
-            <div className="d-flex align-items-center gap-2 mb-2">
+            <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
                 <div className="app-card flex-grow-1">
                     <SearchBar
                         placeholder="Αναζήτηση"
@@ -152,6 +170,21 @@ export default function DiadikasiaWC() {
                 >
                     {onlyNext10Days ? "Προβολή όλων" : "Επόμενες 10 ημέρες"}
                 </button>
+                <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary flex-shrink-0 d-inline-flex align-items-center gap-1"
+                    onClick={toggleMonthSort}
+                    title="Πατήστε για εναλλαγή σειράς μηνών"
+                    aria-pressed={monthOrder === "asc"}
+                    aria-label={
+                        monthOrder === "desc"
+                            ? "Ταξινόμηση μήνα φθίνουσα. Εναλλαγή σε αύξουσα."
+                            : "Ταξινόμηση μήνα αύξουσα. Εναλλαγή σε φθίνουσα."
+                    }
+                >
+                    <i className={`bi ${monthOrder === "desc" ? "bi-sort-down" : "bi-sort-up"}`} aria-hidden />
+                    <span className="text-nowrap">Μήνας</span>
+                </button>
             </div>
             <PullToRefresh useSelfScroll className="flex-grow-1" onRefresh={onRefresh} isRefreshing={refreshing}>
                 {error ? (
@@ -163,6 +196,7 @@ export default function DiadikasiaWC() {
                         items={visibleItems}
                         setAllOpenTo={setAllTilesOpenTo}
                         onAllExpandedChange={setAllTilesExpanded}
+                        groupOrder={wcGroupOrder}
                     />
                 ) : (
                     <div className="app-card p-4 text-center text-secondary">

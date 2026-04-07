@@ -523,26 +523,33 @@ const ordersSlice = createSlice({
         state.draft.order.dateOfSyntagi = formatUIDate(order.dateOfSyntagi)
         state.draft.order.dateIsxyeiApo = formatUIDate(order.dateIsxyeiApo)
         state.draft.order.dateIsxyeiEos = formatUIDate(order.dateIsxyeiEos)
-        /** After refresh: restore customer + delivery fields from persisted draft when API omits them (same order session). */
-        const prevC = prevOrder?.customer_ErpGID != null ? String(prevOrder.customer_ErpGID).trim() : "";
-        const nextC = order?.customer_ErpGID != null ? String(order.customer_ErpGID).trim() : "";
-        if (!nextC && prevC) {
-          state.draft.order.customer_ErpGID = prevOrder.customer_ErpGID;
-          if (!order?.customer_amka?.trim() && prevOrder.customer_amka?.trim()) {
-            state.draft.order.customer_amka = prevOrder.customer_amka;
+        const prevUid = prevOrder?.uid != null ? String(prevOrder.uid).trim() : "";
+        const nextUid = order?.uid != null ? String(order.uid).trim() : "";
+        const sameOrderUid = prevUid !== "" && nextUid !== "" && prevUid === nextUid;
+        if (sameOrderUid) {
+          const prevC = prevOrder?.customer_ErpGID != null ? String(prevOrder.customer_ErpGID).trim() : "";
+          const nextC = order?.customer_ErpGID != null ? String(order.customer_ErpGID).trim() : "";
+          if (!nextC && prevC) {
+            state.draft.order.customer_ErpGID = prevOrder.customer_ErpGID;
+            if (!order?.customer_amka?.trim() && prevOrder.customer_amka?.trim()) {
+              state.draft.order.customer_amka = prevOrder.customer_amka;
+            }
+          }
+          if (prevC && nextC && prevC === nextC) {
+            const prevP = prevOrder.person_ErpGID?.trim();
+            const prevA = prevOrder.address_ErpGID?.trim();
+            const nextP = order?.person_ErpGID?.trim();
+            const nextA = order?.address_ErpGID?.trim();
+            if (!nextP && prevP) state.draft.order.person_ErpGID = prevP;
+            if (!nextA && prevA) state.draft.order.address_ErpGID = prevA;
+            if (!order?.customer_amka?.trim() && prevOrder.customer_amka?.trim()) {
+              state.draft.order.customer_amka = prevOrder.customer_amka;
+            }
           }
         }
-        if (prevC && nextC && prevC === nextC) {
-          const prevP = prevOrder.person_ErpGID?.trim();
-          const prevA = prevOrder.address_ErpGID?.trim();
-          const nextP = order?.person_ErpGID?.trim();
-          const nextA = order?.address_ErpGID?.trim();
-          if (!nextP && prevP) state.draft.order.person_ErpGID = prevP;
-          if (!nextA && prevA) state.draft.order.address_ErpGID = prevA;
-          if (!order?.customer_amka?.trim() && prevOrder.customer_amka?.trim()) {
-            state.draft.order.customer_amka = prevOrder.customer_amka;
-          }
-        }
+        state.draft.list_AddressesPersons = [] as OrderListOfAddressPersons[];
+        state.draft.preselected_address_GID = undefined;
+        state.draft.preselected_person_GID = undefined;
         state.draft.ylika = action.payload.data.items;
         state.draft.files = action.payload.data.files;
         state.draft.list_DiscountReasons = action.payload.data.list_DiscountReasons

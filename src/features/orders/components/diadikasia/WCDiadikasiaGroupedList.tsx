@@ -7,7 +7,10 @@ import { fetchCustomerTelsCached } from "@/features/orders/diadikasia/fetchCusto
 import { CollapsibleAppTile } from "@/components/ui/CollapsibleAppTile";
 import { formatUIDate } from "@/lib/utils/date";
 import { formatCurrencyGR } from "@/lib/utils/number";
-import { groupWcCalendarByLastOrderDate } from "@/features/orders/diadikasia/groupWcCalendarByLastOrderDate";
+import {
+    groupWcCalendarByLastOrderDate,
+    type WcCalendarGroupOrder,
+} from "@/features/orders/diadikasia/groupWcCalendarByLastOrderDate";
 
 function telHref(phone: string): string {
     const digits = phone.trim().replace(/[^\d+]/g, "");
@@ -161,12 +164,17 @@ export default function WCDiadikasiaGroupedList({
     items,
     setAllOpenTo,
     onAllExpandedChange,
+    groupOrder,
 }: {
     items: wcCalendar[];
     setAllOpenTo?: boolean;
     onAllExpandedChange?: (expanded: boolean) => void;
+    groupOrder?: WcCalendarGroupOrder;
 }) {
-    const months = React.useMemo(() => groupWcCalendarByLastOrderDate(items), [items]);
+    const months = React.useMemo(
+        () => groupWcCalendarByLastOrderDate(items, groupOrder ?? {}),
+        [items, groupOrder],
+    );
     const monthKeys = React.useMemo(() => months.map((m) => String(m.sortKey)), [months]);
     const dayKeys = React.useMemo(
         () => months.flatMap((m) => m.days.map((d) => `${m.sortKey}-${d.dayOfMonth}`)),
