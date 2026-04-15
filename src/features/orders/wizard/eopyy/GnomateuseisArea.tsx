@@ -283,7 +283,7 @@ export default function GnomateuseisArea({
             <div className="mt-3">
                 <RunAiButton
                     running={aiStatus === "running"}
-                    disabled={!hasFiles}
+                    disabled={!hasFiles || aiStatus === "error"}
                     onClick={onRunAi}
                     label="Run AI"
                 />

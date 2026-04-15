@@ -15,7 +15,6 @@ import SyntagiArea from "./SyntagiArea";
 import SymmetoxiArea from "./SymmetoxiArea";
 import SynenaiseisArea from "./SynenaiseisArea";
 import { useRouter } from "next/navigation";
-import RunAiButton from "./RunAIButton";
 import AIMaterials from "./AIMaterials";
 import { AIMaterials as AIMaterialsType } from "@/types/orders";
 import YpervasiPlafonArea from "./YpervasiPlafonArea";
@@ -237,7 +236,7 @@ export default function OrderEoppyWizard() {
 
       const response = await res.json().catch(() => ({}));
       if (!res.ok || response?.ok === false || response?.result === false) {
-        throw new Error(response?.message || "AI request failed");
+        throw new Error(response?.message || "Το αίτημα ΑΙ δεν ήταν επιτυχές. Εισάγετε τα στοιχεία χειροκίνητα ή προσπαθήστε αργότερα.");
       }
       const data = response.data
       if (data.isSuccess) {
@@ -410,7 +409,7 @@ export default function OrderEoppyWizard() {
       setStep(1)
     } catch (e: any) {
       setAiStatus("error");
-      setAiMessage(e?.name === "AbortError" ? "AI request timed out." : (e?.message || "AI request failed"));
+      setAiMessage(e?.name === "AbortError" ? "Το χρονικό όριο του αιτήματος ΑΙ έληξε. Εισάγετε τα στοιχεία χειροκίνητα ή προσπαθήστε αργότερα." : (e?.message || "Το αίτημα ΑΙ δεν ήταν επιτυχές. Εισάγετε τα στοιχεία χειροκίνητα ή προσπαθήστε αργότερα."));
     } finally {
       window.clearTimeout(t);
     }
