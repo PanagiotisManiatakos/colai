@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { loginOk, loginFail } from "@/features/auth/authSlice";
 
-export default function LoginPage() {
+export default function LoginPage({ appVersion }: { appVersion: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const dispatch = useAppDispatch();
@@ -114,6 +114,7 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
+              <div className="text-center small text-secondary mt-3">Version {appVersion}</div>
             </div>
           </div>
         </div>
