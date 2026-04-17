@@ -14,8 +14,6 @@ export async function POST(req: NextRequest) {
     const aiclient = String(body?.aiclient ?? "");
     if (!order_uid) return NextResponse.json({ ok: false, message: "Missing order_uid" }, { status: 400 });
     if (!catid) return NextResponse.json({ ok: false, message: "Missing catid" }, { status: 400 });
-    if (!aiclient) return NextResponse.json({ ok: false, message: "Missing aiclient" }, { status: 400 });
-
     // NOTE: adjust payload keys to match Swagger if needed
     const payload = {
         order_uid,

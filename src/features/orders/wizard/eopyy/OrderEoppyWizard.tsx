@@ -20,6 +20,7 @@ import { AIMaterials as AIMaterialsType } from "@/types/orders";
 import YpervasiPlafonArea from "./YpervasiPlafonArea";
 
 type AiStatus = "idle" | "running" | "done" | "error";
+type AiClient = "" | "Claude" | "Gemini";
 type WizardIssue = { step: StepKey; field: string; message: string | boolean; error: string | null };
 
 const isBlank = (v: any) => v == null || String(v).trim() === "";
@@ -54,6 +55,7 @@ export default function OrderEoppyWizard() {
   const router = useRouter()
   const [aiStatus, setAiStatus] = React.useState<AiStatus>("idle");
   const [aiMessage, setAiMessage] = React.useState<string | null>(null);
+  const [showAiClientRetry, setShowAiClientRetry] = React.useState(false);
   const [issues, setIssues] = React.useState<WizardIssue[]>([]);
 
   const draftOrder = useAppSelector((s) => s.orders.draft.order)
@@ -74,7 +76,19 @@ export default function OrderEoppyWizard() {
   const shouldShowWarningPlafon = ypervasiPlafon > 6 && Number(eidosEgkrisis) === 1;
 
   const stepDefs: StepDef[] = [
-    { key: "gnomateuseis", label: "Γνωματεύσεις", render: () => <GnomateuseisArea aiMessage={aiMessage} aiStatus={aiStatus} onRunAi={runAi} /> },
+    {
+      key: "gnomateuseis",
+      label: "Γνωματεύσεις",
+      render: () => (
+        <GnomateuseisArea
+          aiMessage={aiMessage}
+          aiStatus={aiStatus}
+          showAiClientRetry={showAiClientRetry}
+          onRunAi={runAi}
+          onRunAiWithClient={runAi}
+        />
+      )
+    },
     { key: "customer", label: "Ασθενής", render: () => <OrderCustomerArea errors={errorsByField} clearError={clearError} /> },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
     { key: "syntagi", label: "\u03A3\u03C5\u03BD\u03C4\u03B1\u03B3\u03AE", render: () => <SyntagiArea /> },
@@ -180,7 +194,6 @@ export default function OrderEoppyWizard() {
     }
 
     return issues;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftOrder, hasConsentFormFiles]);
 
   const touchdownIssues = React.useMemo(() => {
@@ -215,9 +228,10 @@ export default function OrderEoppyWizard() {
     }
   }
 
-  async function runAi() {
+  async function runAi(aiclient: AiClient = "") {
     setAiStatus("running");
     setAiMessage(null);
+    setShowAiClientRetry(false);
 
     const controller = new AbortController();
     const t = window.setTimeout(() => controller.abort(), 240000); // 4 min
@@ -229,7 +243,7 @@ export default function OrderEoppyWizard() {
         body: JSON.stringify({
           order_uid: orderUid,
           catid: group_EOPPY_id,
-          aiclient: "auto"
+          aiclient
         }),
         signal: controller.signal,
       });
@@ -409,7 +423,16 @@ export default function OrderEoppyWizard() {
       setStep(1)
     } catch (e: any) {
       setAiStatus("error");
-      setAiMessage(e?.name === "AbortError" ? "Το χρονικό όριο του αιτήματος ΑΙ έληξε. Εισάγετε τα στοιχεία χειροκίνητα ή προσπαθήστε αργότερα." : (e?.message || "Το αίτημα ΑΙ δεν ήταν επιτυχές. Εισάγετε τα στοιχεία χειροκίνητα ή προσπαθήστε αργότερα."));
+      if (aiclient === "") {
+        setShowAiClientRetry(true);
+      }
+      setAiMessage(
+        e?.name === "AbortError"
+          ? "Το αίτημα AI άργησε να ολοκληρωθεί. Επιλέξτε Claude/Gemini ή εισάγετε τα στοιχεία χειροκίνητα"
+          : aiclient === ""
+            ? "Το αίτημα AI δεν ολοκληρώθηκε. Επιλέξτε Claude ή Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
+            : (e?.message || `Η εκτέλεση AI με ${aiclient} δεν ήταν επιτυχής. Δοκιμάστε αργότερα.`)
+      );
     } finally {
       window.clearTimeout(t);
     }

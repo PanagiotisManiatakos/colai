@@ -24,11 +24,15 @@ function isPdf(name: string, mimeType?: string) {
 export default function GnomateuseisArea({
     aiMessage,
     aiStatus,
+    showAiClientRetry,
     onRunAi,
+    onRunAiWithClient,
 }: {
     aiMessage: string | null;
     aiStatus: AiStatus;
     onRunAi: () => void;
+    showAiClientRetry: boolean;
+    onRunAiWithClient: (aiclient: "" | "Claude" | "Gemini") => void;
 }) {
     const dispatch = useAppDispatch();
 
@@ -283,10 +287,30 @@ export default function GnomateuseisArea({
             <div className="mt-3">
                 <RunAiButton
                     running={aiStatus === "running"}
-                    disabled={!hasFiles || aiStatus === "error"}
+                    disabled={!hasFiles}
                     onClick={onRunAi}
                     label="Run AI"
                 />
+                {showAiClientRetry ? (
+                    <div className="d-flex gap-2 mt-2">
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary w-100"
+                            disabled={!hasFiles || aiStatus === "running"}
+                            onClick={() => onRunAiWithClient("Claude")}
+                        >
+                            Run AI (Claude)
+                        </button>
+                        <button
+                            type="button"
+                            className="btn btn-outline-primary w-100"
+                            disabled={!hasFiles || aiStatus === "running"}
+                            onClick={() => onRunAiWithClient("Gemini")}
+                        >
+                            Run AI (Gemini)
+                        </button>
+                    </div>
+                ) : null}
             </div>
         </>
     );
