@@ -234,7 +234,8 @@ export default function OrderEoppyWizard() {
     setShowAiClientRetry(false);
 
     const controller = new AbortController();
-    const t = window.setTimeout(() => controller.abort(), 240000); // 4 min
+    const pendingTimeoutMs = aiclient === "" ? 45_000 : 120_000;
+    const t = window.setTimeout(() => controller.abort(), pendingTimeoutMs);
 
     try {
       const res = await fetch("/api/orders/runai", {
