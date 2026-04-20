@@ -429,7 +429,7 @@ export default function OrderEoppyWizard() {
       }
       setAiMessage(
         e?.name === "AbortError"
-          ? "Το αίτημα AI άργησε να ολοκληρωθεί. Επιλέξτε Claude/Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
+          ? "Το αίτημα AI έληξε. Επιλέξτε Claude/Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
           : aiclient === ""
             ? "Το αίτημα AI δεν ολοκληρώθηκε. Επιλέξτε Claude ή Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
             : (e?.message || `Η εκτέλεση AI με ${aiclient} δεν ήταν επιτυχής. Δοκιμάστε αργότερα.`)
