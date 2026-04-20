@@ -285,32 +285,29 @@ export default function GnomateuseisArea({
 
             </div>
             <div className="mt-3">
-                <RunAiButton
-                    running={aiStatus === "running"}
-                    disabled={!hasFiles}
-                    onClick={onRunAi}
-                    label="Run AI"
-                />
                 {showAiClientRetry ? (
-                    <div className="d-flex gap-2 mt-2">
-                        <button
-                            type="button"
-                            className="btn btn-outline-primary w-100"
-                            disabled={!hasFiles || aiStatus === "running"}
+                    <div className="d-flex gap-2">
+                        <RunAiButton
+                            running={aiStatus === "running"}
+                            disabled={!hasFiles}
                             onClick={() => onRunAiWithClient("Claude")}
-                        >
-                            Run AI (Claude)
-                        </button>
-                        <button
-                            type="button"
-                            className="btn btn-outline-primary w-100"
-                            disabled={!hasFiles || aiStatus === "running"}
+                            label="Run AI (Claude)"
+                        />
+                        <RunAiButton
+                            running={aiStatus === "running"}
+                            disabled={!hasFiles}
                             onClick={() => onRunAiWithClient("Gemini")}
-                        >
-                            Run AI (Gemini)
-                        </button>
+                            label="Run AI (Gemini)"
+                        />
                     </div>
-                ) : null}
+                ) : (
+                    <RunAiButton
+                        running={aiStatus === "running"}
+                        disabled={!hasFiles}
+                        onClick={onRunAi}
+                        label="Run AI"
+                    />
+                )}
             </div>
         </>
     );
