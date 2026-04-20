@@ -432,7 +432,7 @@ export default function OrderEoppyWizard() {
           ? "Το αίτημα AI έληξε. Επιλέξτε Claude/Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
           : aiclient === ""
             ? "Το αίτημα AI δεν ολοκληρώθηκε. Επιλέξτε Claude ή Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
-            : (e?.message || `Η εκτέλεση AI με ${aiclient} δεν ήταν επιτυχής. Δοκιμάστε αργότερα.`)
+            : (e?.message || `Η εκτέλεση AI με ${aiclient} δεν ήταν επιτυχής. Δοκιμάστε αργότερα ή εισάγετε τα στοιχεία χειροκίνητα.`)
       );
     } finally {
       window.clearTimeout(t);
