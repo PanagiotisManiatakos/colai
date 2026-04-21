@@ -20,7 +20,7 @@ import { AIMaterials as AIMaterialsType } from "@/types/orders";
 import YpervasiPlafonArea from "./YpervasiPlafonArea";
 
 type AiStatus = "idle" | "running" | "done" | "error";
-type AiClient = "" | "Claude" | "Gemini";
+type AiClient = "Claude" | "Gemini";
 type WizardIssue = { step: StepKey; field: string; message: string | boolean; error: string | null };
 
 const isBlank = (v: any) => v == null || String(v).trim() === "";
@@ -228,13 +228,13 @@ export default function OrderEoppyWizard() {
     }
   }
 
-  async function runAi(aiclient: AiClient = "") {
+  async function runAi(aiclient: AiClient = "Claude") {
     setAiStatus("running");
     setAiMessage(null);
     setShowAiClientRetry(false);
 
     const controller = new AbortController();
-    const pendingTimeoutMs = aiclient === "" ? 45_000 : 120_000;
+    const pendingTimeoutMs = 60_000;
     const t = window.setTimeout(() => controller.abort(), pendingTimeoutMs);
 
     try {
@@ -424,14 +424,14 @@ export default function OrderEoppyWizard() {
       setStep(1)
     } catch (e: any) {
       setAiStatus("error");
-      if (aiclient === "") {
+      if (aiclient === "Claude") {
         setShowAiClientRetry(true);
       }
       setAiMessage(
         e?.name === "AbortError"
-          ? "Το αίτημα AI έληξε. Επιλέξτε Claude/Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
-          : aiclient === ""
-            ? "Το αίτημα AI δεν ολοκληρώθηκε. Επιλέξτε Claude ή Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
+          ? "Το αίτημα AI έληξε. Επιλέξτε Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
+          : aiclient === "Claude"
+            ? "Το αίτημα AI δεν ολοκληρώθηκε. Επιλέξτε Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
             : (e?.message || `Η εκτέλεση AI με ${aiclient} δεν ήταν επιτυχής. Δοκιμάστε αργότερα ή εισάγετε τα στοιχεία χειροκίνητα.`)
       );
     } finally {
