@@ -328,7 +328,7 @@ export default function GnomateuseisArea({
             running={aiStatus === "running"}
             disabled={!hasFiles}
             onClick={() => onRunAiWithClient("Gemini")}
-            icon={<SiGooglegemini />}
+            icon={<SiGooglegemini size={18} />}
           />
         ) : (
           <RunAiButton
@@ -336,7 +336,7 @@ export default function GnomateuseisArea({
             disabled={!hasFiles}
             onClick={onRunAi}
             icon={
-              <Image src="/claude.svg" alt="Claude" width={14} height={14} />
+              <Image src="/claude.svg" alt="Claude" width={18} height={18} />
             }
           />
         )}
