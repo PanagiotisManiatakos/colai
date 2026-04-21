@@ -32,7 +32,7 @@ export default function GnomateuseisArea({
     aiStatus: AiStatus;
     onRunAi: () => void;
     showAiClientRetry: boolean;
-    onRunAiWithClient: (aiclient: "" | "Claude" | "Gemini") => void;
+    onRunAiWithClient: (aiclient: "Claude" | "Gemini") => void;
 }) {
     const dispatch = useAppDispatch();
 
@@ -286,13 +286,7 @@ export default function GnomateuseisArea({
             </div>
             <div className="mt-3">
                 {showAiClientRetry ? (
-                    <div className="d-flex gap-2">
-                        <RunAiButton
-                            running={aiStatus === "running"}
-                            disabled={!hasFiles}
-                            onClick={() => onRunAiWithClient("Claude")}
-                            label="Run AI (Claude)"
-                        />
+                    <div className="d-flex">
                         <RunAiButton
                             running={aiStatus === "running"}
                             disabled={!hasFiles}
