@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 
-const CACHE_NAME = "colai-pwa-v1";
+const CACHE_NAME = "colai-pwa-v2";
 const PRECACHE_URLS = ["/", "/offline", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -23,6 +23,16 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
+  const url = new URL(event.request.url);
+
+  // Only handle same-origin requests.
+  if (url.origin !== self.location.origin) return;
+
+  // Never cache API calls or Next.js build assets/chunks.
+  // These must always come from network to avoid stale-client crashes after deploys.
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_next/")) {
+    return;
+  }
 
   // Navigation requests: network-first, offline fallback
   if (event.request.mode === "navigate") {
