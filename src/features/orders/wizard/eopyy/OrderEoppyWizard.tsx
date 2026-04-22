@@ -162,6 +162,8 @@ export default function OrderEoppyWizard() {
     };
 
     if (draftOrder.isTempSave != 1) {
+      add("gnomateuseis", "recipe_file_required", true, "Ανεβάστε τουλάχιστον ένα αρχείο γνωμάτευσης", !hasFiles);
+
       const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
       add("customer", "customer_tel_otp", "Συμπληρώστε ΟΤP (6 ψηφία)", "Συμπληρώστε ΟΤP (6 ψηφία)", otp.length !== 6);
 
@@ -194,12 +196,16 @@ export default function OrderEoppyWizard() {
     }
 
     return issues;
-  }, [draftOrder, hasConsentFormFiles]);
+  }, [draftOrder, hasConsentFormFiles, hasFiles]);
 
   const touchdownIssues = React.useMemo(() => {
     if (currentKey !== "touchdown") return [];
     return validateEoppyOrder();
   }, [currentKey, validateEoppyOrder]);
+  const hasValidationIssues = React.useMemo(
+    () => validateEoppyOrder().length > 0,
+    [validateEoppyOrder],
+  );
 
 
   async function onSave() {
@@ -479,7 +485,12 @@ export default function OrderEoppyWizard() {
             </button>}
 
           {step == maxStep &&
-            <button type="button" disabled={submitState.loading} className="btn btn-success flex-fill" onClick={onSave}>
+            <button
+              type="button"
+              disabled={submitState.loading || hasValidationIssues}
+              className="btn btn-success flex-fill"
+              onClick={onSave}
+            >
               <i className="bi bi-check2-circle me-2" />
               {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
             </button>}
