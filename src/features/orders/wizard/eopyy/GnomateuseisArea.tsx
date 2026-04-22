@@ -70,7 +70,7 @@ export default function GnomateuseisArea({
     <>
       <div className="app-card p-4">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
-          <div className="fw-semibold">Αρχεία</div>
+          <div className="fw-semibold">Αρχείο γνωμάτευσης</div>
 
           <div className="d-flex align-items-center gap-2">
             <FileUploadButton
@@ -318,7 +318,7 @@ export default function GnomateuseisArea({
           </div>
         ) : (
           <div className="small text-secondary">
-            Πάτα + για να ανεβάσεις extra αρχεία.
+            Πάτα + για να ανεβάσεις επιπλέον αρχεία.
           </div>
         )}
       </div>
