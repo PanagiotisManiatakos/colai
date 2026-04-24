@@ -5,10 +5,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "node server.js",
-    "lint": "next lint"
+    "start": "next start",
+    "lint": "next lint",
+    "cap:copy": "mkdir -p www && cp -R public/. www/ && if [ ! -f www/index.html ]; then printf '<!doctype html><html><head><meta charset=\"utf-8\"><title>Colai</title></head><body><p>Colai native shell.</p></body></html>' > www/index.html; fi",
+    "cap:sync": "npm run cap:copy && npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "cap:run:android": "npm run cap:sync && npx cap run android",
+    "cap:run:ios": "npm run cap:sync && npx cap run ios"
   },
   "dependencies": {
+    "@capacitor/android": "^8.3.1",
+    "@capacitor/core": "^8.3.1",
+    "@capacitor/ios": "^8.3.1",
     "@reduxjs/toolkit": "^2.2.3",
     "axios": "^1.13.4",
     "bootstrap": "^5.3.3",
@@ -22,6 +31,7 @@
     "react-redux": "^9.1.2"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.3.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
