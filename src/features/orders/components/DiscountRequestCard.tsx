@@ -18,8 +18,10 @@ export default function DiscountRequestCard({
   canSwipeDelete?: boolean;
 }) {
   const isPending = request.isDiscountApproved == -1;
-  const userInfo = useAppSelector((s) => s.auth.userInfos)
-  const userCanMakeAction = useAppSelector((s) => s.discountRequests.userCanMakeAction);
+  const userInfo = useAppSelector((s) => s.auth.userInfos);
+  const userCanMakeAction = useAppSelector(
+    (s) => s.discountRequests.userCanMakeAction,
+  );
   const list_order_types = useAppSelector((s) => s.staticData.list_Order_Types);
   const dispatch = useAppDispatch();
 
@@ -33,14 +35,17 @@ export default function DiscountRequestCard({
   // bottom-sheet state
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [sheetMode, setSheetMode] = React.useState<SheetMode>(null);
-  const [amount, setAmount] = React.useState<string>(String(request.posoDiscounted ?? ""));
+  const [amount, setAmount] = React.useState<string>(
+    String(request.posoDiscounted ?? ""),
+  );
 
   React.useEffect(() => {
     // keep amount in sync (only when sheet is closed)
     if (!sheetOpen) setAmount(String(request.posoDiscounted ?? ""));
   }, [request.posoDiscounted, sheetOpen]);
 
-  const typeText = list_order_types?.find((t) => t.value == request.type)?.text ?? "";
+  const typeText =
+    list_order_types?.find((t) => t.value == request.type)?.text ?? "";
   const groupText = request?.group_EOPPY ?? "";
 
   const chipStyle: React.CSSProperties = {
@@ -67,7 +72,9 @@ export default function DiscountRequestCard({
 
   const headerStyle: React.CSSProperties = {
     padding: "14px 14px 12px",
-    borderBottom: open ? "1px solid var(--bs-border-color-translucent)" : "1px solid transparent",
+    borderBottom: open
+      ? "1px solid var(--bs-border-color-translucent)"
+      : "1px solid transparent",
   };
 
   const actionGridStyle: React.CSSProperties = {
@@ -106,11 +113,24 @@ export default function DiscountRequestCard({
 
     try {
       if (sheetMode === "approve") {
-        await dispatch(reviewDiscountRequest({ id: request.id, uid: request.uid, isapproved: 1 })).unwrap();
+        await dispatch(
+          reviewDiscountRequest({
+            id: request.id,
+            uid: request.uid,
+            isapproved: 1,
+            overrideamount: request.posoDiscounted,
+          }),
+        ).unwrap();
       }
 
       if (sheetMode === "deny") {
-        await dispatch(reviewDiscountRequest({ id: request.id, uid: request.uid, isapproved: 0 })).unwrap();
+        await dispatch(
+          reviewDiscountRequest({
+            id: request.id,
+            uid: request.uid,
+            isapproved: 0,
+          }),
+        ).unwrap();
       }
 
       if (sheetMode === "amount") {
@@ -118,7 +138,12 @@ export default function DiscountRequestCard({
         if (!Number.isFinite(parsed) || parsed < 0) return;
 
         await dispatch(
-          reviewDiscountRequest({ id: request.id, uid: request.uid, isapproved: 1, overrideamount: parsed })
+          reviewDiscountRequest({
+            id: request.id,
+            uid: request.uid,
+            isapproved: 1,
+            overrideamount: parsed,
+          }),
         ).unwrap();
       }
 
@@ -139,9 +164,19 @@ export default function DiscountRequestCard({
           ? "Αλλαγή ποσού έκπτωσης"
           : "";
 
-  const confirmText = sheetMode === "approve" ? "Έγκριση" : sheetMode === "deny" ? "Απόρριψη" : "Αποθήκευση";
+  const confirmText =
+    sheetMode === "approve"
+      ? "Έγκριση"
+      : sheetMode === "deny"
+        ? "Απόρριψη"
+        : "Αποθήκευση";
 
-  const confirmVariant = sheetMode === "approve" ? "success" : sheetMode === "deny" ? "danger" : "primary";
+  const confirmVariant =
+    sheetMode === "approve"
+      ? "success"
+      : sheetMode === "deny"
+        ? "danger"
+        : "primary";
 
   return (
     <>
@@ -199,7 +234,9 @@ export default function DiscountRequestCard({
           <details
             className="app-card"
             style={cardStyle}
-            onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
+            onToggle={(e) =>
+              setOpen((e.currentTarget as HTMLDetailsElement).open)
+            }
           >
             <summary
               className="d-flex align-items-start justify-content-between gap-3"
@@ -211,14 +248,16 @@ export default function DiscountRequestCard({
               }}
             >
               <div style={{ minWidth: 0 }}>
-                <div className="d-flex flex-wrap align-items-center gap-2">
+                <div className="d-flex align-items-center flex-wrap gap-2">
                   <span style={{ ...chipStyle, ...softPrimaryStyle }}>
                     <i className="bi bi-hash" />
                     <span className="fw-semibold">{request.id}</span>
                   </span>
 
                   {typeText ? <span style={chipStyle}>{typeText}</span> : null}
-                  {groupText ? <span style={chipStyle}>{groupText}</span> : null}
+                  {groupText ? (
+                    <span style={chipStyle}>{groupText}</span>
+                  ) : null}
                 </div>
 
                 <div
@@ -235,14 +274,21 @@ export default function DiscountRequestCard({
                   {request.customer_name}
                 </div>
 
-                <div className="text-secondary" style={{ fontSize: 13, marginTop: 2 }}>
-                  <span style={{ letterSpacing: 0.3 }}>{userInfo?.isSeller ? "" : request.sellerName}</span>
+                <div
+                  className="text-secondary"
+                  style={{ fontSize: 13, marginTop: 2 }}
+                >
+                  <span style={{ letterSpacing: 0.3 }}>
+                    {userInfo?.isSeller ? "" : request.sellerName}
+                  </span>
                 </div>
               </div>
 
               <div className="text-end" style={{ flexShrink: 0 }}>
-                <DiscountRequestStatusBadge status={request.isDiscountApproved} />
-                <div className="mt-2 fw-semibold" style={{ fontSize: 15 }}>
+                <DiscountRequestStatusBadge
+                  status={request.isDiscountApproved}
+                />
+                <div className="fw-semibold mt-2" style={{ fontSize: 15 }}>
                   {formatCurrencyGR(request.posoDiscounted)}€
                 </div>
               </div>
@@ -251,25 +297,40 @@ export default function DiscountRequestCard({
             <div style={{ padding: "14px 14px 14px" }}>
               <div className="row g-3">
                 <div className="col-8">
-                  <div className="small text-secondary">Ημερομηνία Συνταγής</div>
-                  <div className="fw-medium">{formatUIDate(request.dateOfSyntagi)}</div>
+                  <div className="small text-secondary">
+                    Ημερομηνία Συνταγής
+                  </div>
+                  <div className="fw-medium">
+                    {formatUIDate(request.dateOfSyntagi)}
+                  </div>
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Κόστος υλικών</div>
-                  <div className="fw-medium">{formatCurrencyGR(request.kostos)}€</div>
+                  <div className="fw-medium">
+                    {formatCurrencyGR(request.kostos)}€
+                  </div>
                 </div>
                 <div className="col-8">
-                  <div className="small text-secondary">Ημερομηνία Υποβολής</div>
-                  <div className="fw-medium">{formatUIDate(request.dateIn)}</div>
+                  <div className="small text-secondary">
+                    Ημερομηνία Υποβολής
+                  </div>
+                  <div className="fw-medium">
+                    {formatUIDate(request.dateIn)}
+                  </div>
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Συμμετοχή</div>
-                  <div className="fw-medium">{formatCurrencyGR(request.posoSymmetoxis)}€ {request.symmPercentage ?? "0"}%</div>
+                  <div className="fw-medium">
+                    {formatCurrencyGR(request.posoSymmetoxis)}€{" "}
+                    {request.symmPercentage ?? "0"}%
+                  </div>
                 </div>
                 <div className="col-12">
                   <div className="small text-secondary">Ιατρός</div>
                   <div className="fw-medium">{request.doctor_name}</div>
-                  <div className="text-secondary small">AMKA: {request.doctor_amka}</div>
+                  <div className="text-secondary small">
+                    AMKA: {request.doctor_amka}
+                  </div>
                 </div>
               </div>
 
@@ -323,7 +384,7 @@ export default function DiscountRequestCard({
           </details>
         </div>
       </div>
-      {userCanMakeAction &&
+      {userCanMakeAction && (
         <Modal
           show={sheetOpen}
           onHide={closeSheet}
@@ -348,14 +409,21 @@ export default function DiscountRequestCard({
 
           <Modal.Body style={{ paddingTop: 12 }}>
             <div className="text-secondary" style={{ fontSize: 13 }}>
-              Πελάτης: <span className="fw-semibold text-body">{request.customer_name}</span>
+              Πελάτης:{" "}
+              <span className="fw-semibold text-body">
+                {request.customer_name}
+              </span>
               <span className="mx-2">•</span>
               Αίτημα #{request.id}
             </div>
 
             {/* error */}
             {errorMsg ? (
-              <div className="alert alert-danger py-2 mt-3 mb-0" role="alert" style={{ borderRadius: 12 }}>
+              <div
+                className="alert alert-danger mt-3 mb-0 py-2"
+                role="alert"
+                style={{ borderRadius: 12 }}
+              >
                 <div className="d-flex align-items-start gap-2">
                   <i className="bi bi-exclamation-triangle-fill mt-1" />
                   <div style={{ minWidth: 0 }}>
@@ -367,7 +435,7 @@ export default function DiscountRequestCard({
             ) : null}
 
             {sheetMode === "approve" ? (
-              <div className="mt-3 d-flex gap-3">
+              <div className="d-flex mt-3 gap-3">
                 <div
                   className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                   style={{
@@ -380,17 +448,21 @@ export default function DiscountRequestCard({
                   <i className="bi bi-check2-circle text-success" />
                 </div>
                 <div>
-                  <div className="fw-semibold">Είστε σίγουροι ότι θέλετε να εγκρίνετε το αίτημα;</div>
+                  <div className="fw-semibold">
+                    Είστε σίγουροι ότι θέλετε να εγκρίνετε το αίτημα;
+                  </div>
                   <div className="text-secondary small mt-1">
                     Ποσό έκπτωσης:{" "}
-                    <span className="fw-semibold text-body">{formatCurrencyGR(request.posoDiscounted)}€</span>
+                    <span className="fw-semibold text-body">
+                      {formatCurrencyGR(request.posoDiscounted)}€
+                    </span>
                   </div>
                 </div>
               </div>
             ) : null}
 
             {sheetMode === "deny" ? (
-              <div className="mt-3 d-flex gap-3">
+              <div className="d-flex mt-3 gap-3">
                 <div
                   className="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
                   style={{
@@ -403,8 +475,12 @@ export default function DiscountRequestCard({
                   <i className="bi bi-x-circle text-danger" />
                 </div>
                 <div>
-                  <div className="fw-semibold">Είστε σίγουροι ότι θέλετε να απορρίψετε το αίτημα;</div>
-                  <div className="text-secondary small mt-1">Η ενέργεια αυτή θα καταγραφεί στο ιστορικό.</div>
+                  <div className="fw-semibold">
+                    Είστε σίγουροι ότι θέλετε να απορρίψετε το αίτημα;
+                  </div>
+                  <div className="text-secondary small mt-1">
+                    Η ενέργεια αυτή θα καταγραφεί στο ιστορικό.
+                  </div>
                 </div>
               </div>
             ) : null}
@@ -413,8 +489,14 @@ export default function DiscountRequestCard({
               <div className="mt-3">
                 <div className="fw-semibold mb-2">Νέο ποσό έκπτωσης</div>
 
-                <div className="input-group" style={{ borderRadius: 14, overflow: "hidden" }}>
-                  <span className="input-group-text" style={{ borderRadius: 0 }}>
+                <div
+                  className="input-group"
+                  style={{ borderRadius: 14, overflow: "hidden" }}
+                >
+                  <span
+                    className="input-group-text"
+                    style={{ borderRadius: 0 }}
+                  >
                     <i className="bi bi-cash-coin" />
                   </span>
                   <input
@@ -425,32 +507,55 @@ export default function DiscountRequestCard({
                     placeholder="π.χ. 10.00"
                     disabled={isBusy}
                   />
-                  <span className="input-group-text" style={{ borderRadius: 0 }}>
+                  <span
+                    className="input-group-text"
+                    style={{ borderRadius: 0 }}
+                  >
                     €
                   </span>
                 </div>
 
                 <div className="text-secondary small mt-2">
-                  Τρέχον: <span className="fw-semibold text-body">{formatCurrencyGR(request.posoDiscounted)}€</span>
+                  Τρέχον:{" "}
+                  <span className="fw-semibold text-body">
+                    {formatCurrencyGR(request.posoDiscounted)}€
+                  </span>
                 </div>
               </div>
             ) : null}
           </Modal.Body>
 
-          <Modal.Footer style={{ borderTop: "1px solid var(--bs-border-color-translucent)" }}>
-            <Button variant="outline-secondary" onClick={closeSheet} disabled={isBusy} style={{ borderRadius: 12 }}>
+          <Modal.Footer
+            style={{
+              borderTop: "1px solid var(--bs-border-color-translucent)",
+            }}
+          >
+            <Button
+              variant="outline-secondary"
+              onClick={closeSheet}
+              disabled={isBusy}
+              style={{ borderRadius: 12 }}
+            >
               Ακύρωση
             </Button>
 
             <Button
               variant={confirmVariant}
               onClick={onConfirmSheet}
-              disabled={isBusy || !sheetMode || (sheetMode === "amount" && String(amount).trim() === "")}
+              disabled={
+                isBusy ||
+                !sheetMode ||
+                (sheetMode === "amount" && String(amount).trim() === "")
+              }
               style={{ borderRadius: 12, minWidth: 140 }}
             >
               {isBusy ? (
                 <>
-                  <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                    aria-hidden="true"
+                  />
                   Επεξεργασία…
                 </>
               ) : (
@@ -459,7 +564,7 @@ export default function DiscountRequestCard({
             </Button>
           </Modal.Footer>
         </Modal>
-      }
+      )}
     </>
   );
 }

@@ -175,7 +175,7 @@ export default function OrderEoppyWizard() {
         const rAmka = onlyDigits(draftOrder.recipient_amka ?? "");
         add("customer", "recipient_amka", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).", rAmka.length !== 11);
         add("customer", "recipient_afm", true, "ΑΦΜ παραλήπτη", isBlank(draftOrder.recipient_afm));
-        add("customer", "recipient_tel", true, "Τηλεφωνο παραλήπτη", isBlank(draftOrder.recipient_tel));
+        add("customer", "recipient_mobile", true, "Κινητό παραλήπτη", isBlank(draftOrder.recipient_mobile));
         add("customer", "recipient_passport", true, "Αριθμό διαβατηρίου παραλήπτη", isBlank(draftOrder.recipient_passport));
         add("customer", "recipient_address", true, "Διεύθυνση παραλήπτη", isBlank(draftOrder.recipient_address));
         add("customer", "recipient_city", true, "Πόλη παραλήπτη", isBlank(draftOrder.recipient_city));
@@ -186,6 +186,9 @@ export default function OrderEoppyWizard() {
         add("customer", "customer_other_address", true, "Διεύθυνση παραδοσης", isBlank(draftOrder.customer_other_address));
         add("customer", "customer_other_city", true, "Πόλη παραδοσης", isBlank(draftOrder.customer_other_city));
         add("customer", "customer_other_tk", true, "ΤΚ παραδοσης", isBlank(draftOrder.customer_other_tk));
+      }
+      if (draftOrder.has_other_recipient != 1 && draftOrder.shipTo_other_address != 1) {
+        add("customer", "address_ErpGID", true, "Επιλέξτε αποθηκευμένη διεύθυνση", isBlank(draftOrder.address_ErpGID));
       }
 
       if ((!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "") && hasConsentFormFiles.length == 0) {
