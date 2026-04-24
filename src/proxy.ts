@@ -2,7 +2,13 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { cookieName } from "./lib/auth"; // if your file is in src/lib/auth.ts use "./src/lib/auth"
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/auth/logout"];
+const PUBLIC_PATHS = [
+    "/login",
+    "/privacy-policy",
+    "/terms-of-use",
+    "/api/auth/login",
+    "/api/auth/logout",
+];
 const PUBLIC_FILE = /\.(.*)$/;
 
 function isAsset(pathname: string) {

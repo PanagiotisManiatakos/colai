@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { loginOk, loginFail } from "@/features/auth/authSlice";
@@ -114,7 +115,18 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
                   )}
                 </button>
               </form>
-              <div className="text-center small text-secondary mt-3">Version {appVersion}</div>
+              <div className="text-center mt-3">
+                <div className="small">
+                  <Link href="/privacy-policy" className="text-decoration-none">
+                    Πολιτική Απορρήτου
+                  </Link>
+                  <span className="mx-2 text-secondary">|</span>
+                  <Link href="/terms-of-use" className="text-decoration-none">
+                    Όροι Χρήσης
+                  </Link>
+                </div>
+                <div className="small text-secondary mt-2">Version {appVersion}</div>
+              </div>
             </div>
           </div>
         </div>
