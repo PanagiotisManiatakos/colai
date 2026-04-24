@@ -116,6 +116,9 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
   if (!order.customer_tel?.trim() && order.customer_mobile?.trim()) {
     order.customer_tel = order.customer_mobile.trim();
   }
+  if (!order.customer_mobile?.trim() && order.customer_tel?.trim()) {
+    order.customer_mobile = order.customer_tel.trim();
+  }
   if (!order.recipient_tel?.trim() && order.recipient_mobile?.trim()) {
     order.recipient_tel = order.recipient_mobile.trim();
   }
