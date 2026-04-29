@@ -47,6 +47,12 @@ export default function DiscountRequestCard({
   const typeText =
     list_order_types?.find((t) => t.value == request.type)?.text ?? "";
   const groupText = request?.group_EOPPY ?? "";
+  const discPercent = Number(
+    String(request.calculatedDiscPercent ?? 0).replace(",", "."),
+  );
+  const discPercentText = Number.isFinite(discPercent)
+    ? `${formatCurrencyGR(discPercent)}%`
+    : "0%";
 
   const chipStyle: React.CSSProperties = {
     display: "inline-flex",
@@ -161,7 +167,7 @@ export default function DiscountRequestCard({
       : sheetMode === "deny"
         ? "Επιβεβαίωση απόρριψης"
         : sheetMode === "amount"
-          ? "Αλλαγή ποσού έκπτωσης"
+          ? "Αλλαγή τελικού ποσού"
           : "";
 
   const confirmText =
@@ -290,6 +296,12 @@ export default function DiscountRequestCard({
                 />
                 <div className="fw-semibold mt-2" style={{ fontSize: 15 }}>
                   {formatCurrencyGR(request.posoDiscounted)}€
+                </div>
+                <div
+                  className="text-secondary"
+                  style={{ fontSize: 14, lineHeight: 1.2, marginTop: 2 }}
+                >
+                  {discPercentText}
                 </div>
               </div>
             </summary>
@@ -487,7 +499,7 @@ export default function DiscountRequestCard({
 
             {sheetMode === "amount" ? (
               <div className="mt-3">
-                <div className="fw-semibold mb-2">Νέο ποσό έκπτωσης</div>
+                <div className="fw-semibold mb-2">Νέο τελικό ποσό</div>
 
                 <div
                   className="input-group"
