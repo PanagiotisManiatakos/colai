@@ -4,7 +4,7 @@ const serverUrl = "https://mobileapp.amsaworks.gr/";
 
 const config: CapacitorConfig = {
   appId: "pro.colai.mobile",
-  appName: "Colai",
+  appName: "ColAI",
   webDir: "www",
   server: serverUrl
     ? {

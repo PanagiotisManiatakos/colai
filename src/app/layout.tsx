@@ -17,8 +17,8 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: "Colai",
-    template: "%s · Colai",
+    default: "ColAI",
+    template: "%s · ColAI",
   },
   description: "Mobile-first PWA for orders and requests.",
   manifest: "/manifest.webmanifest",
@@ -28,12 +28,14 @@ export const metadata: Metadata = {
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Colai",
+    title: "ColAI",
   },
 };
 
@@ -76,13 +78,20 @@ const runtimeInitScript = `(() => {
   } catch {}
 })();`;
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" className={outfit.className} suppressHydrationWarning>
       <head>
         <meta name="color-scheme" content="dark light" />
         <script dangerouslySetInnerHTML={{ __html: runtimeInitScript }} />
-        <link rel="apple-touch-startup-image" href="/splash/iphone-portrait.png" />
+        <link
+          rel="apple-touch-startup-image"
+          href="/splash/iphone-portrait.png"
+        />
       </head>
       <body>
         <StoreProvider>
