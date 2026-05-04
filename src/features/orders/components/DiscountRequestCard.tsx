@@ -464,7 +464,7 @@ export default function DiscountRequestCard({
                     Είστε σίγουροι ότι θέλετε να εγκρίνετε το αίτημα;
                   </div>
                   <div className="text-secondary small mt-1">
-                    Ποσό έκπτωσης:{" "}
+                    Τελικό ποσό πληρωμής:{" "}
                     <span className="fw-semibold text-body">
                       {formatCurrencyGR(request.posoDiscounted)}€
                     </span>
