@@ -1,6 +1,6 @@
 {
-  "name": "Colai",
-  "short_name": "Colai",
+  "name": "ColAI",
+  "short_name": "ColAI",
   "description": "Mavrogenis order taking pwa app",
   "start_url": "/",
   "display": "standalone",
