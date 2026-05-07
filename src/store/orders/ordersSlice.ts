@@ -122,6 +122,8 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
   if (!order.recipient_tel?.trim() && order.recipient_mobile?.trim()) {
     order.recipient_tel = order.recipient_mobile.trim();
   }
+  const parsedFinalAmount = parseFloat(String(order.posoDiscounted).replace(",", "."));
+  const canShowMidenikiToggle = order.payFullOrDiscount == 2 && Number.isFinite(parsedFinalAmount) && parsedFinalAmount === 0;
 
   const payload = {
     order: {
@@ -131,6 +133,9 @@ export const submitDraftAsync = createAsyncThunk<any, void, { state: RootState }
       dateIsxyeiEos: formatStringToISODDateTime(order.dateIsxyeiEos),
       posoDiscounted: parseFloat(String(order.posoDiscounted)),
       posoSymmetoxis: parseFloat(String(order.posoSymmetoxis)),
+      hasConfirmedMidenikiPliromi: canShowMidenikiToggle
+        ? Boolean(order.hasConfirmedMidenikiPliromi)
+        : null,
       appVersion: process.env.NEXT_PUBLIC_APP_VERSION
     },
     ylika: draft.ylika,

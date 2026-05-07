@@ -119,6 +119,7 @@ export type Order = {
   aiCalculated: boolean;
   hasAnoia: boolean;
   eopyyVerifyNoParticipation: number;
+  hasConfirmedMidenikiPliromi?: boolean | null;
   maxPosoKostousGiaSymmetoxi?: number;
   plafonGiftAmount?: number;
 };
@@ -195,7 +196,7 @@ export type AIMaterials = {
   xronia_pathisi: string;
   matched_by?: string;
   fuzzy_matched?: number;
-}
+};
 
 export type AIMaterialsErpProducts = {
   erp_code: string;
@@ -205,7 +206,7 @@ export type AIMaterialsErpProducts = {
   erp_price: number;
   matched_by?: string;
   fuzzy_matched?: number;
-}
+};
 
 export type OrdeListOfSelections = {
   disabled: boolean;
@@ -214,19 +215,18 @@ export type OrdeListOfSelections = {
   value: string;
   plafonAmount?: number;
   plafonGiftAmount?: number;
-}
-
+};
 
 export type OrderListOfAddressPersons = {
   person_ErpGID: string;
   personName: string;
   addresses: OrderAddress[];
   isCustomer: boolean;
-}
+};
 
 export type OrderAddress = {
   address_ErpGID: string;
   address: string;
   city: string;
   tk: string;
-}
+};
