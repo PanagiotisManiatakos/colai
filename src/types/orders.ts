@@ -118,6 +118,13 @@ export type Order = {
   isTempSave: number;
   aiCalculated: boolean;
   hasAnoia: boolean;
+  shouldUpdateRecipientInfos?: number;
+  updateRecipient_amka?: string;
+  updateRecipient_afm?: string;
+  updateRecipient_passport?: string;
+  updateRecipient_address?: string;
+  updateRecipient_tk?: string;
+  updateRecipient_mobile?: string;
   eopyyVerifyNoParticipation: number;
   hasConfirmedMidenikiPliromi?: boolean | null;
   maxPosoKostousGiaSymmetoxi?: number;
@@ -220,6 +227,10 @@ export type OrdeListOfSelections = {
 export type OrderListOfAddressPersons = {
   person_ErpGID: string;
   personName: string;
+  personAMKA?: string;
+  personVatNumber?: string;
+  personPassport?: string;
+  personMobile?: string;
   addresses: OrderAddress[];
   isCustomer: boolean;
 };
