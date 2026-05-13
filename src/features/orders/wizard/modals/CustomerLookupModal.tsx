@@ -8,6 +8,9 @@ import { applyLastErpOrderData, applyLastOrderData } from "@/lib/applyLastOrderD
 import AppLoader from "@/components/ui/AppLoader";
 
 export type CustomerSearchResult = {
+    telephone1: any;
+    peS_TEL_1: any;
+    taytothta: any;
     explain?: string;
     iS_CERTIFIED_PHONE: number;
     pE_ActivityCode?: string;
@@ -139,9 +142,11 @@ export default function CustomerLookupModal({
         dispatch(setDraftProperty({ key: "customer_address", value: c.peS_Address1 }));
         dispatch(setDraftProperty({ key: "customer_city", value: c.peS_CityCode }));
         dispatch(setDraftProperty({ key: "customer_tk", value: c.peS_FPOSTALCODE }));
-        dispatch(setDraftProperty({ key: "customer_tel", value: "" }));
+        dispatch(setDraftProperty({ key: "customer_tel", value: c.telephone1 }));
+        dispatch(setDraftProperty({ key: "customer_mobile", value: c.peS_TEL_1 }));
         dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
         dispatch(setDraftProperty({ key: "customer_email", value: "" }));
+        dispatch(setDraftProperty({ key: "customer_passport", value: c.taytothta }));
         try {
             await dispatch(
                 loadCustomerAddressesAsync({

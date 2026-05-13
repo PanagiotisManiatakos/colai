@@ -46,28 +46,24 @@ export default function UpdateRecipientArea() {
         data.customer_afm,
       ),
       passport: pickPersonString(
+        selectedPerson?.personIDCode,
         selectedPerson?.personPassport,
         data.recipient_passport,
         data.customer_passport,
       ),
-      mobile: pickPersonString(
-        selectedPerson?.personMobile,
-        data.recipient_mobile,
-        data.customer_mobile,
-      ),
+      // Κινητό: prefill from addresses when API returns it (same source as personIDCode); until then empty.
+      mobile: "",
     }),
     [
       data.customer_afm,
       data.customer_amka,
-      data.customer_mobile,
       data.customer_passport,
       data.recipient_afm,
       data.recipient_amka,
-      data.recipient_mobile,
       data.recipient_passport,
       pickPersonString,
       selectedPerson?.personAMKA,
-      selectedPerson?.personMobile,
+      selectedPerson?.personIDCode,
       selectedPerson?.personPassport,
       selectedPerson?.personVatNumber,
     ],
@@ -130,7 +126,7 @@ export default function UpdateRecipientArea() {
     dispatch(
       setDraftProperty({
         key: "updateRecipient_mobile",
-        value: mobileValue,
+        value: mobileValue.trim() === "" ? null : mobileValue,
       }),
     );
     dispatch(setDraftProperty({ key: "updateRecipient_address", value: null }));

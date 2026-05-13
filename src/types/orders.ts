@@ -1,4 +1,5 @@
 export type Order = {
+  customer_afm(personVatNumber: string | undefined, recipient_afm: string, customer_afm: any): string;
   id: number;
   uid: string;
   type: string;
@@ -229,6 +230,8 @@ export type OrderListOfAddressPersons = {
   personName: string;
   personAMKA?: string;
   personVatNumber?: string;
+  /** From search-address / addresses API (e.g. ID card / passport code). */
+  personIDCode?: string;
   personPassport?: string;
   personMobile?: string;
   addresses: OrderAddress[];
