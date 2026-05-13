@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "cap:copy": "mkdir -p www && cp -R public/. www/ && if [ ! -f www/index.html ]; then printf '<!doctype html><html><head><meta charset=\"utf-8\"><title>ColAI</title></head><body><p>ColAI native shell.</p></body></html>' > www/index.html; fi",
     "cap:sync": "npm run cap:copy && npx cap sync",
     "cap:open:android": "npx cap open android",
