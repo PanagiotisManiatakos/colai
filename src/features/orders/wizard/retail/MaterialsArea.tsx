@@ -28,7 +28,6 @@ export default function MaterialsArea() {
             <MaterialsLookupModal
                 show={showLookup}
                 onClose={() => setShowLookup(false)}
-                initialQuery={""}
             />
 
 

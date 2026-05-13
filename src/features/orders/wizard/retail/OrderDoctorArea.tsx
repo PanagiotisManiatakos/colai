@@ -43,7 +43,6 @@ export default function OrderDoctorArea() {
                 show={showLookup}
                 isSuggested
                 onClose={() => setShowLookup(false)}
-                initialQuery={data.doctorSuggested_amka ?? data.doctorSuggested_name ?? ""}
             />
 
 

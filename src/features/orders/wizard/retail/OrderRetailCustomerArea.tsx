@@ -118,7 +118,6 @@ export default function OrderRetailCustomerArea() {
       <CustomerLookupModal
         show={showLookup}
         onClose={() => setShowLookup(false)}
-        initialQuery={data.customer_amka ?? data.customer_name ?? ""}
       />
 
       <Field label="Ονοματεπώνυμο">

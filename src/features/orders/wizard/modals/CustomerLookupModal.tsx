@@ -42,14 +42,12 @@ function isNonEmptyRecord(v: unknown): v is Record<string, unknown> {
 export default function CustomerLookupModal({
     show,
     onClose,
-    initialQuery = "",
 }: {
     show: boolean;
     onClose: () => void;
-    initialQuery?: string;
 }) {
     const dispatch = useAppDispatch();
-    const [q, setQ] = React.useState(initialQuery);
+    const [q, setQ] = React.useState("");
     const [loading, setLoading] = React.useState(false);
     const [applying, setApplying] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
@@ -58,13 +56,13 @@ export default function CustomerLookupModal({
     const inputRef = React.useRef<HTMLInputElement | null>(null);
 
     React.useEffect(() => {
-        if (show) {
-            setQ(initialQuery);
-            setResults([]);
-            setError(null);
-            setHasSearched(false);
-        }
-    }, [show, initialQuery]);
+        setQ("");
+        setResults([]);
+        setError(null);
+        setHasSearched(false);
+        setLoading(false);
+        setApplying(false);
+    }, [show]);
 
     async function search() {
         inputRef.current?.blur();
@@ -161,6 +159,9 @@ export default function CustomerLookupModal({
             dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
             dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: false }));
             dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
+            dispatch(
+                setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
+            );
         } catch {
             // Continue without address list
         }

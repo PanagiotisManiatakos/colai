@@ -130,7 +130,10 @@ export default function OrderEoppyWizard() {
     {
       key: "updateRecipient",
       label: "Επικαιροποίηση",
-      show: !showSynainesiPanel && draftOrder.has_other_recipient != 1,
+      show:
+        !showSynainesiPanel &&
+        (draftOrder.has_other_recipient != 1 ||
+          draftOrder.recipient_from_erp_lookup == 1),
       render: () => <UpdateRecipientArea />,
     },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
@@ -365,7 +368,8 @@ export default function OrderEoppyWizard() {
         !draftOrder.customer_ErpGID || !lastOrderInfoCustomerErpGID;
       if (
         !showSynainesiPanel &&
-        draftOrder.has_other_recipient != 1 &&
+        (draftOrder.has_other_recipient != 1 ||
+          draftOrder.recipient_from_erp_lookup == 1) &&
         draftOrder.shouldUpdateRecipientInfos == 1 &&
         isBlank(draftOrder.updateRecipient_passport)
       ) {

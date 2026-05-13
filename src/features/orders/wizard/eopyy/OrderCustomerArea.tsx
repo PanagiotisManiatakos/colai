@@ -178,7 +178,6 @@ export default function OrderCustomerArea({
         <CustomerLookupModal
           show={showLookup}
           onClose={() => setShowLookup(false)}
-          initialQuery={data.customer_amka ?? data.customer_name ?? ""}
         />
 
         {consentStepShown ? (
@@ -515,7 +514,14 @@ export default function OrderCustomerArea({
                       value: false,
                     }),
                   );
+                  dispatch(
+                    setDraftProperty({
+                      key: "recipient_from_erp_lookup",
+                      value: null,
+                    }),
+                  );
                 } else {
+                  const hadErpRecipient = data.recipient_from_erp_lookup == 1;
                   dispatch(
                     setDraftProperty({
                       key: "person_ErpGID",
@@ -528,6 +534,50 @@ export default function OrderCustomerArea({
                       value: preselected_address_GID,
                     }),
                   );
+                  dispatch(
+                    setDraftProperty({
+                      key: "recipient_from_erp_lookup",
+                      value: null,
+                    }),
+                  );
+                  if (hadErpRecipient) {
+                    dispatch(
+                      setDraftProperty({
+                        key: "shouldUpdateRecipientInfos",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({ key: "updateRecipient_afm", value: null }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_passport",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_mobile",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_address",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({ key: "updateRecipient_tk", value: null }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_amka",
+                        value: null,
+                      }),
+                    );
+                  }
                 }
               }}
               id="has_other_recipient"
@@ -555,7 +605,6 @@ export default function OrderCustomerArea({
             <ErpContactsLookupModal
               show={showErpContactsLookup}
               onClose={() => setShowErpContactsLookup(false)}
-              initialQuery={data.recipient_name ?? data.recipient_amka ?? ""}
               person_GID={
                 preselected_person_GID ??
                 data.customer_ErpGID ??

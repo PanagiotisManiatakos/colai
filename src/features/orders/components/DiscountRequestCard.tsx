@@ -35,14 +35,11 @@ export default function DiscountRequestCard({
   // bottom-sheet state
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [sheetMode, setSheetMode] = React.useState<SheetMode>(null);
-  const [amount, setAmount] = React.useState<string>(
-    String(request.posoDiscounted ?? ""),
-  );
+  const [amount, setAmount] = React.useState("");
 
   React.useEffect(() => {
-    // keep amount in sync (only when sheet is closed)
-    if (!sheetOpen) setAmount(String(request.posoDiscounted ?? ""));
-  }, [request.posoDiscounted, sheetOpen]);
+    if (!sheetOpen) setAmount("");
+  }, [sheetOpen]);
 
   const typeText =
     list_order_types?.find((t) => t.value == request.type)?.text ?? "";

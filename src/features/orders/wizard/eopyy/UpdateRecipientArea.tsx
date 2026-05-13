@@ -33,6 +33,11 @@ export default function UpdateRecipientArea() {
     String(data.customer_amka ?? "").trim() !== "" &&
     String(data.customer_amka ?? "").trim() ===
       String(selectedPerson?.personAMKA ?? "").trim();
+
+  /** Lookup-selected recipient may match customer AMKA but still needs ΑΦΜ on this step. */
+  const showAfmField =
+    !isSamePersonAndCustomerAmka || data.recipient_from_erp_lookup == 1;
+
   const initialValues = React.useMemo(
     () => ({
       amka: pickPersonString(
@@ -68,6 +73,38 @@ export default function UpdateRecipientArea() {
       selectedPerson?.personVatNumber,
     ],
   );
+
+  /** After Αποθήκευση, overrides live on the draft order; remount must rehydrate from those, not only CRM/person defaults. */
+  const seedValues = React.useMemo(() => {
+    if (data.shouldUpdateRecipientInfos != 1) return initialValues;
+    const afmFromDraft =
+      data.updateRecipient_afm != null &&
+      String(data.updateRecipient_afm).trim() !== ""
+        ? String(data.updateRecipient_afm)
+        : initialValues.afm;
+    const passportFromDraft =
+      data.updateRecipient_passport !== undefined &&
+      data.updateRecipient_passport !== null
+        ? String(data.updateRecipient_passport)
+        : initialValues.passport;
+    const mobileFromDraft =
+      data.updateRecipient_mobile != null &&
+      String(data.updateRecipient_mobile).trim() !== ""
+        ? String(data.updateRecipient_mobile)
+        : "";
+    return {
+      amka: initialValues.amka,
+      afm: afmFromDraft,
+      passport: passportFromDraft,
+      mobile: mobileFromDraft,
+    };
+  }, [
+    data.shouldUpdateRecipientInfos,
+    data.updateRecipient_afm,
+    data.updateRecipient_passport,
+    data.updateRecipient_mobile,
+    initialValues,
+  ]);
   const [afmValue, setAfmValue] = React.useState("");
   const [passportValue, setPassportValue] = React.useState("");
   const [mobileValue, setMobileValue] = React.useState("");
@@ -83,15 +120,15 @@ export default function UpdateRecipientArea() {
   }, [dispatch, initialValues.amka]);
 
   React.useEffect(() => {
-    setAfmValue(initialValues.afm);
-    setPassportValue(initialValues.passport);
-    setMobileValue(initialValues.mobile);
+    setAfmValue(seedValues.afm);
+    setPassportValue(seedValues.passport);
+    setMobileValue(seedValues.mobile);
     setSavedValues({
-      afm: initialValues.afm,
-      passport: initialValues.passport,
-      mobile: initialValues.mobile,
+      afm: seedValues.afm,
+      passport: seedValues.passport,
+      mobile: seedValues.mobile,
     });
-  }, [initialValues.afm, initialValues.mobile, initialValues.passport]);
+  }, [seedValues.afm, seedValues.mobile, seedValues.passport]);
 
   React.useEffect(() => {
     if (data.shouldUpdateRecipientInfos == 1) return;
@@ -105,7 +142,7 @@ export default function UpdateRecipientArea() {
   }, [data.shouldUpdateRecipientInfos, dispatch]);
 
   const isDirty =
-    (!isSamePersonAndCustomerAmka && afmValue !== savedValues.afm) ||
+    (showAfmField && afmValue !== savedValues.afm) ||
     passportValue !== savedValues.passport ||
     mobileValue !== savedValues.mobile;
 
@@ -114,7 +151,7 @@ export default function UpdateRecipientArea() {
     dispatch(
       setDraftProperty({
         key: "updateRecipient_afm",
-        value: isSamePersonAndCustomerAmka ? null : afmValue,
+        value: showAfmField ? afmValue : null,
       }),
     );
     dispatch(
@@ -153,11 +190,15 @@ export default function UpdateRecipientArea() {
       <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
         <div className="fw-semibold">
           Επικαιροποίηση στοιχείων παραλήπτη
-          {selectedPerson?.personName ? ` - ${selectedPerson.personName}` : ""}
+          {selectedPerson?.personName
+            ? ` - ${selectedPerson.personName}`
+            : String(data.recipient_name ?? "").trim() !== ""
+              ? ` - ${String(data.recipient_name).trim()}`
+              : ""}
         </div>
       </div>
 
-      {isSamePersonAndCustomerAmka ? (
+      {!showAfmField ? (
         <>
           <div className="row g-2">
             <div className="col-12">
