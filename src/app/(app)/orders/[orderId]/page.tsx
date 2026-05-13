@@ -22,7 +22,7 @@ export default function OrderStartPage() {
   React.useEffect(() => {
     dispatch(setDraftProperty({ key: "groupid", value: 4 }));
     dispatch(setDraftProperty({ key: "type", value: null }));
-  }, []);
+  }, [dispatch]);
 
   React.useEffect(() => {
     if (type) setError(null);

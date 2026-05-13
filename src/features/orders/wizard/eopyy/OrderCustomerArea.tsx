@@ -14,9 +14,14 @@ import OtpInput from "@/components/ui/OTPInput";
 type Props = {
   errors?: Record<string, string | boolean>;
   clearError?: (field: string) => void;
+  consentStepShown?: boolean;
 };
 
-export default function OrderCustomerArea({ errors, clearError }: Props) {
+export default function OrderCustomerArea({
+  errors,
+  clearError,
+  consentStepShown = true,
+}: Props) {
   const data = useAppSelector((s) => s.orders.draft.order);
   const dispatch = useAppDispatch();
   const [showLookup, setShowLookup] = React.useState(false);
@@ -62,13 +67,6 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
   React.useEffect(() => {
     if (!selectedAddress) return;
     const addressObj = selectedAddress as Record<string, any>;
-    const pickString = (...keys: string[]) => {
-      for (const key of keys) {
-        const raw = addressObj[key];
-        if (raw != null && String(raw).trim() !== "") return String(raw);
-      }
-      return "";
-    };
     const pickPersonString = (
       preferredValue?: string | null,
       ...fallbackKeys: string[]
@@ -86,57 +84,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
     dispatch(
       setDraftProperty({
         key: "updateRecipient_amka",
-        value: pickPersonString(
-          selectedPerson?.personAMKA,
-          "recipient_amka",
-          "amka",
-          "customer_amka",
-        ),
-      }),
-    );
-    dispatch(
-      setDraftProperty({
-        key: "updateRecipient_afm",
-        value: pickPersonString(
-          selectedPerson?.personVatNumber,
-          "recipient_afm",
-          "afm",
-          "customer_afm",
-        ),
-      }),
-    );
-    dispatch(
-      setDraftProperty({
-        key: "updateRecipient_passport",
-        value: pickPersonString(
-          selectedPerson?.personPassport,
-          "recipient_passport",
-          "passport",
-          "customer_passport",
-        ),
-      }),
-    );
-    dispatch(
-      setDraftProperty({
-        key: "updateRecipient_address",
-        value: pickString("recipient_address", "address"),
-      }),
-    );
-    dispatch(
-      setDraftProperty({
-        key: "updateRecipient_tk",
-        value: pickString("recipient_tk", "tk"),
-      }),
-    );
-    dispatch(
-      setDraftProperty({
-        key: "updateRecipient_mobile",
-        value: pickPersonString(
-          selectedPerson?.personMobile,
-          "recipient_mobile",
-          "mobile",
-          "customer_mobile",
-        ),
+        value: null,
       }),
     );
   }, [selectedAddress, selectedPerson, dispatch]);
@@ -230,25 +178,63 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
         <CustomerLookupModal
           show={showLookup}
           onClose={() => setShowLookup(false)}
-          initialQuery={data.customer_amka ?? data.customer_name ?? ""}
         />
 
-        <OrderField label={`Ονοματεπώνυμο`}>
-          <input
-            className="form-control"
-            name="customer_name"
-            value={data.customer_name ?? ""}
-            onChange={(e) =>
-              dispatch(
-                setDraftProperty({
-                  key: "customer_name",
-                  value: e.target.value,
-                }),
-              )
-            }
-          />
-          <span></span>
-        </OrderField>
+        {consentStepShown ? (
+          <div className="row g-2">
+            <div className="col-6">
+              <OrderField label={`Ονοματεπώνυμο`}>
+                <input
+                  className="form-control"
+                  name="customer_name"
+                  value={data.customer_name ?? ""}
+                  onChange={(e) =>
+                    dispatch(
+                      setDraftProperty({
+                        key: "customer_name",
+                        value: e.target.value,
+                      }),
+                    )
+                  }
+                />
+              </OrderField>
+            </div>
+            <div className="col-6">
+              <OrderField label="ΑΤ/Διαβατήριο">
+                <input
+                  className="form-control"
+                  name="customer_passport"
+                  value={data.customer_passport ?? ""}
+                  onChange={(e) =>
+                    dispatch(
+                      setDraftProperty({
+                        key: "customer_passport",
+                        value: e.target.value,
+                      }),
+                    )
+                  }
+                />
+              </OrderField>
+            </div>
+          </div>
+        ) : (
+          <OrderField label={`Ονοματεπώνυμο`}>
+            <input
+              className="form-control"
+              name="customer_name"
+              value={data.customer_name ?? ""}
+              onChange={(e) =>
+                dispatch(
+                  setDraftProperty({
+                    key: "customer_name",
+                    value: e.target.value,
+                  }),
+                )
+              }
+            />
+            <span></span>
+          </OrderField>
+        )}
 
         <div className="row g-2">
           <div className="col-6">
@@ -302,26 +288,6 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
             </OrderField>
           </div>
           <div className="col-6">
-            <OrderField label="Κινητό 2">
-              <input
-                className="form-control"
-                name="customer_mobile2"
-                inputMode="tel"
-                value={data.customer_mobile2 ?? ""}
-                onChange={(e) =>
-                  dispatch(
-                    setDraftProperty({
-                      key: "customer_mobile2",
-                      value: e.target.value,
-                    }),
-                  )
-                }
-              />
-            </OrderField>
-          </div>
-        </div>
-        <div className="row g-2">
-          <div className="col-6">
             <OrderField label="Τηλέφωνο">
               <input
                 className="form-control"
@@ -339,25 +305,50 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
               />
             </OrderField>
           </div>
-          <div className="col-6">
-            <OrderField label="Email">
-              <input
-                className="form-control"
-                name="customer_email"
-                inputMode="email"
-                value={data.customer_email ?? ""}
-                onChange={(e) =>
-                  dispatch(
-                    setDraftProperty({
-                      key: "customer_email",
-                      value: e.target.value,
-                    }),
-                  )
-                }
-              />
-            </OrderField>
-          </div>
         </div>
+        {consentStepShown ? (
+          <div className="row g-2">
+            <div className="col-12">
+              <OrderField label="Email">
+                <input
+                  className="form-control"
+                  name="customer_email"
+                  inputMode="email"
+                  value={data.customer_email ?? ""}
+                  onChange={(e) =>
+                    dispatch(
+                      setDraftProperty({
+                        key: "customer_email",
+                        value: e.target.value,
+                      }),
+                    )
+                  }
+                />
+              </OrderField>
+            </div>
+          </div>
+        ) : (
+          <div className="row g-2">
+            <div className="col-12">
+              <OrderField label="Email">
+                <input
+                  className="form-control"
+                  name="customer_email"
+                  inputMode="email"
+                  value={data.customer_email ?? ""}
+                  onChange={(e) =>
+                    dispatch(
+                      setDraftProperty({
+                        key: "customer_email",
+                        value: e.target.value,
+                      }),
+                    )
+                  }
+                />
+              </OrderField>
+            </div>
+          </div>
+        )}
 
         <OrderField label="Διεύθυνση">
           <input
@@ -523,7 +514,14 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                       value: false,
                     }),
                   );
+                  dispatch(
+                    setDraftProperty({
+                      key: "recipient_from_erp_lookup",
+                      value: null,
+                    }),
+                  );
                 } else {
+                  const hadErpRecipient = data.recipient_from_erp_lookup == 1;
                   dispatch(
                     setDraftProperty({
                       key: "person_ErpGID",
@@ -536,6 +534,50 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                       value: preselected_address_GID,
                     }),
                   );
+                  dispatch(
+                    setDraftProperty({
+                      key: "recipient_from_erp_lookup",
+                      value: null,
+                    }),
+                  );
+                  if (hadErpRecipient) {
+                    dispatch(
+                      setDraftProperty({
+                        key: "shouldUpdateRecipientInfos",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({ key: "updateRecipient_afm", value: null }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_passport",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_mobile",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_address",
+                        value: null,
+                      }),
+                    );
+                    dispatch(
+                      setDraftProperty({ key: "updateRecipient_tk", value: null }),
+                    );
+                    dispatch(
+                      setDraftProperty({
+                        key: "updateRecipient_amka",
+                        value: null,
+                      }),
+                    );
+                  }
                 }
               }}
               id="has_other_recipient"
@@ -563,7 +605,6 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
             <ErpContactsLookupModal
               show={showErpContactsLookup}
               onClose={() => setShowErpContactsLookup(false)}
-              initialQuery={data.recipient_name ?? data.recipient_amka ?? ""}
               person_GID={
                 preselected_person_GID ??
                 data.customer_ErpGID ??
@@ -621,7 +662,7 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
           data.person_ErpGID != "" &&
           selectedPersonAddresses.length > 0 && (
             <>
-              <OrderField label="Αποθηκευμένη διέυθυνση">
+              <OrderField label="Αποθηκευμένη διεύθυνση">
                 <FormSelect
                   name="address_ErpGID"
                   value={data.address_ErpGID ?? ""}
@@ -642,139 +683,6 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                   ))}
                 </FormSelect>
               </OrderField>
-              <div className="form-check form-switch switch-lg mb-2">
-                <input
-                  className="form-check-input"
-                  name="shouldUpdateRecipientInfos"
-                  type="checkbox"
-                  checked={data.shouldUpdateRecipientInfos == 1}
-                  onChange={(e) =>
-                    dispatch(
-                      setDraftProperty({
-                        key: "shouldUpdateRecipientInfos",
-                        value: e.target.checked ? 1 : 0,
-                      }),
-                    )
-                  }
-                  id="shouldUpdateRecipientInfos"
-                />
-                <label
-                  className="form-check-label"
-                  htmlFor="shouldUpdateRecipientInfos"
-                >
-                  Επικαιροποίηση στοιχείων
-                </label>
-              </div>
-              {data.shouldUpdateRecipientInfos == 1 && (
-                <>
-                  <div className="row g-2">
-                    <div className="col-6">
-                      <OrderField label="ΑΜΚΑ">
-                        <input
-                          className="form-control"
-                          name="updateRecipient_amka"
-                          inputMode="numeric"
-                          value={data.updateRecipient_amka ?? ""}
-                          onChange={(e) =>
-                            dispatch(
-                              setDraftProperty({
-                                key: "updateRecipient_amka",
-                                value: e.target.value,
-                              }),
-                            )
-                          }
-                        />
-                      </OrderField>
-                    </div>
-                    <div className="col-6">
-                      <OrderField label="ΑΦΜ">
-                        <input
-                          className="form-control"
-                          name="updateRecipient_afm"
-                          inputMode="numeric"
-                          value={data.updateRecipient_afm ?? ""}
-                          onChange={(e) =>
-                            dispatch(
-                              setDraftProperty({
-                                key: "updateRecipient_afm",
-                                value: e.target.value,
-                              }),
-                            )
-                          }
-                        />
-                      </OrderField>
-                    </div>
-                  </div>
-                  <div className="row g-2">
-                    <div className="col-6">
-                      <OrderField label="ΑΤ/Διαβατήριο">
-                        <input
-                          className="form-control"
-                          name="updateRecipient_passport"
-                          value={data.updateRecipient_passport ?? ""}
-                          onChange={(e) =>
-                            dispatch(
-                              setDraftProperty({
-                                key: "updateRecipient_passport",
-                                value: e.target.value,
-                              }),
-                            )
-                          }
-                        />
-                      </OrderField>
-                    </div>
-                    <div className="col-6">
-                      <OrderField label="Κινητό">
-                        <input
-                          className="form-control"
-                          name="updateRecipient_mobile"
-                          inputMode="tel"
-                          value={data.updateRecipient_mobile ?? ""}
-                          onChange={(e) =>
-                            dispatch(
-                              setDraftProperty({
-                                key: "updateRecipient_mobile",
-                                value: e.target.value,
-                              }),
-                            )
-                          }
-                        />
-                      </OrderField>
-                    </div>
-                  </div>
-                  <OrderField label="Διεύθυνση">
-                    <input
-                      className="form-control"
-                      name="updateRecipient_address"
-                      value={data.updateRecipient_address ?? ""}
-                      onChange={(e) =>
-                        dispatch(
-                          setDraftProperty({
-                            key: "updateRecipient_address",
-                            value: e.target.value,
-                          }),
-                        )
-                      }
-                    />
-                  </OrderField>
-                  <OrderField label="ΤΚ">
-                    <input
-                      className="form-control"
-                      name="updateRecipient_tk"
-                      inputMode="numeric"
-                      value={data.updateRecipient_tk ?? ""}
-                      onChange={(e) =>
-                        dispatch(
-                          setDraftProperty({
-                            key: "updateRecipient_tk",
-                            value: e.target.value,
-                          }),
-                        )
-                      }
-                    />
-                  </OrderField>
-                </>
-              )}
             </>
           )}
 
@@ -879,82 +787,129 @@ export default function OrderCustomerArea({ errors, clearError }: Props) {
                 </OrderField>
               </div>
             </div>
-            <div className="row g-2">
-              <div className="col-6">
-                <OrderField label="Κινητό">
-                  <input
-                    className="form-control"
-                    name="recipient_mobile"
-                    inputMode="tel"
-                    value={data.recipient_mobile ?? ""}
-                    onChange={(e) =>
-                      dispatch(
-                        setDraftProperty({
-                          key: "recipient_mobile",
-                          value: e.target.value,
-                        }),
-                      )
-                    }
-                  />
-                </OrderField>
-              </div>
-              <div className="col-6">
-                <OrderField label="Κινητό 2">
-                  <input
-                    className="form-control"
-                    name="recipient_mobile2"
-                    inputMode="tel"
-                    value={data.recipient_mobile2 ?? ""}
-                    onChange={(e) =>
-                      dispatch(
-                        setDraftProperty({
-                          key: "recipient_mobile2",
-                          value: e.target.value,
-                        }),
-                      )
-                    }
-                  />
-                </OrderField>
-              </div>
-            </div>
-            <div className="row g-2">
-              <div className="col-6">
-                <OrderField label="Τηλέφωνο">
-                  <input
-                    className="form-control"
-                    inputMode="tel"
-                    name="recipient_tel"
-                    value={data.recipient_tel ?? ""}
-                    onChange={(e) =>
-                      dispatch(
-                        setDraftProperty({
-                          key: "recipient_tel",
-                          value: e.target.value,
-                        }),
-                      )
-                    }
-                  />
-                </OrderField>
-              </div>
-              <div className="col-6">
-                <OrderField label="ΑΤ/Διαβατήριο">
-                  <input
-                    className="form-control"
-                    type="numeric"
-                    name="recipient_passport"
-                    value={data.recipient_passport ?? ""}
-                    onChange={(e) =>
-                      dispatch(
-                        setDraftProperty({
-                          key: "recipient_passport",
-                          value: e.target.value,
-                        }),
-                      )
-                    }
-                  />
-                </OrderField>
-              </div>
-            </div>
+            {consentStepShown ? (
+              <>
+                <div className="row g-2">
+                  <div className="col-6">
+                    <OrderField label="Κινητό">
+                      <input
+                        className="form-control"
+                        name="recipient_mobile"
+                        inputMode="tel"
+                        value={data.recipient_mobile ?? ""}
+                        onChange={(e) =>
+                          dispatch(
+                            setDraftProperty({
+                              key: "recipient_mobile",
+                              value: e.target.value,
+                            }),
+                          )
+                        }
+                      />
+                    </OrderField>
+                  </div>
+                  <div className="col-6">
+                    <OrderField label="Τηλέφωνο">
+                      <input
+                        className="form-control"
+                        inputMode="tel"
+                        name="recipient_tel"
+                        value={data.recipient_tel ?? ""}
+                        onChange={(e) =>
+                          dispatch(
+                            setDraftProperty({
+                              key: "recipient_tel",
+                              value: e.target.value,
+                            }),
+                          )
+                        }
+                      />
+                    </OrderField>
+                  </div>
+                </div>
+                <div className="row g-2">
+                  <div className="col-6">
+                    <OrderField label="ΑΤ/Διαβατήριο">
+                      <input
+                        className="form-control"
+                        type="numeric"
+                        name="recipient_passport"
+                        value={data.recipient_passport ?? ""}
+                        onChange={(e) =>
+                          dispatch(
+                            setDraftProperty({
+                              key: "recipient_passport",
+                              value: e.target.value,
+                            }),
+                          )
+                        }
+                      />
+                    </OrderField>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="row g-2">
+                  <div className="col-6">
+                    <OrderField label="Κινητό">
+                      <input
+                        className="form-control"
+                        name="recipient_mobile"
+                        inputMode="tel"
+                        value={data.recipient_mobile ?? ""}
+                        onChange={(e) =>
+                          dispatch(
+                            setDraftProperty({
+                              key: "recipient_mobile",
+                              value: e.target.value,
+                            }),
+                          )
+                        }
+                      />
+                    </OrderField>
+                  </div>
+                  <div className="col-6">
+                    <OrderField label="Τηλέφωνο">
+                      <input
+                        className="form-control"
+                        inputMode="tel"
+                        name="recipient_tel"
+                        value={data.recipient_tel ?? ""}
+                        onChange={(e) =>
+                          dispatch(
+                            setDraftProperty({
+                              key: "recipient_tel",
+                              value: e.target.value,
+                            }),
+                          )
+                        }
+                      />
+                    </OrderField>
+                  </div>
+                </div>
+                <div className="row g-2">
+                  <div className="col-6">
+                    <OrderField label="ΑΤ/Διαβατήριο">
+                      <input
+                        className="form-control"
+                        type="numeric"
+                        name="recipient_passport"
+                        value={data.recipient_passport ?? ""}
+                        onChange={(e) =>
+                          dispatch(
+                            setDraftProperty({
+                              key: "recipient_passport",
+                              value: e.target.value,
+                            }),
+                          )
+                        }
+                      />
+                    </OrderField>
+                  </div>
+                </div>
+              </>
+            )}
             <OrderField label="Διεύθυνση">
               <input
                 className="form-control"

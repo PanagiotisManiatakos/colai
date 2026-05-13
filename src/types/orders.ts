@@ -12,6 +12,7 @@ export type Order = {
   sellerName: string;
   dateIn: string; // ISO datetime
   customer_amka: string;
+  customer_afm: string;
   customer_passport: string;
   customer_name: string;
   customer_address: string;
@@ -33,6 +34,8 @@ export type Order = {
   customer_other_tk: string;
   customer_notes: string;
   has_other_recipient: number;
+  /** 1 after choosing a person via search-erp-contacts while Παραλαβή από νέο πρόσωπο is on (shows Επικαιροποίηση). */
+  recipient_from_erp_lookup?: number;
   recipient_relation_id: number;
   recipient_relation: string;
   recipient_reason_id: number;
@@ -229,6 +232,8 @@ export type OrderListOfAddressPersons = {
   personName: string;
   personAMKA?: string;
   personVatNumber?: string;
+  /** From search-address / addresses API (e.g. ID card / passport code). */
+  personIDCode?: string;
   personPassport?: string;
   personMobile?: string;
   addresses: OrderAddress[];

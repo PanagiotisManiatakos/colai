@@ -42,7 +42,6 @@ export default function OrderDoctorArea() {
             <DoctorLookupModal
                 show={showLookup}
                 onClose={() => setShowLookup(false)}
-                initialQuery={data.doctor_amka ?? data.doctor_name ?? ""}
             />
 
             <Field label="Ονοματεπώνυμο">
@@ -173,7 +172,6 @@ export default function OrderDoctorArea() {
                         show={showSuggestedLookup}
                         isSuggested
                         onClose={() => setShowSuggestedLookup(false)}
-                        initialQuery={data.doctorSuggested_amka ?? data.doctorSuggested_name ?? ""}
                     />
                     <Field label="Ονοματεπώνυμο">
                         <input

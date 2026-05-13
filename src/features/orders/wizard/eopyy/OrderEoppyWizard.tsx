@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import AIMaterials from "./AIMaterials";
 import { AIMaterials as AIMaterialsType } from "@/types/orders";
 import YpervasiPlafonArea from "./YpervasiPlafonArea";
+import UpdateRecipientArea from "./UpdateRecipientArea";
 
 type AiStatus = "idle" | "running" | "done" | "error";
 type AiClient = "Claude" | "Gemini";
@@ -44,6 +45,7 @@ const onlyDigits = (s: string) => s.replace(/\D/g, "");
 type StepKey =
   | "gnomateuseis"
   | "customer"
+  | "updateRecipient"
   | "doctor"
   | "aiMaterials"
   | "materials"
@@ -118,8 +120,21 @@ export default function OrderEoppyWizard() {
       key: "customer",
       label: "Ασθενής",
       render: () => (
-        <OrderCustomerArea errors={errorsByField} clearError={clearError} />
+        <OrderCustomerArea
+          errors={errorsByField}
+          clearError={clearError}
+          consentStepShown={showSynainesiPanel}
+        />
       ),
+    },
+    {
+      key: "updateRecipient",
+      label: "Επικαιροποίηση",
+      show:
+        !showSynainesiPanel &&
+        (draftOrder.has_other_recipient != 1 ||
+          draftOrder.recipient_from_erp_lookup == 1),
+      render: () => <UpdateRecipientArea />,
     },
     { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
     {
@@ -299,7 +314,7 @@ export default function OrderEoppyWizard() {
           "customer",
           "recipient_passport",
           true,
-          "Αριθμό διαβατηρίου παραλήπτη",
+          "ΑΔΤ/Αριθμό διαβατηρίου παραλήπτη",
           isBlank(draftOrder.recipient_passport),
         );
         add(
@@ -349,6 +364,24 @@ export default function OrderEoppyWizard() {
         );
       }
 
+      const showSynainesiPanel =
+        !draftOrder.customer_ErpGID || !lastOrderInfoCustomerErpGID;
+      if (
+        !showSynainesiPanel &&
+        (draftOrder.has_other_recipient != 1 ||
+          draftOrder.recipient_from_erp_lookup == 1) &&
+        draftOrder.shouldUpdateRecipientInfos == 1 &&
+        isBlank(draftOrder.updateRecipient_passport)
+      ) {
+        add(
+          "updateRecipient",
+          "updateRecipient_passport",
+          "Συμπληρώστε ΑΤ/Διαβατήριο (επικαιροποίηση στοιχείων)",
+          "Συμπληρώστε ΑΤ/Διαβατήριο (επικαιροποίηση στοιχείων)",
+          true,
+        );
+      }
+
       if (
         (!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "") &&
         hasConsentFormFiles.length == 0
@@ -373,7 +406,7 @@ export default function OrderEoppyWizard() {
     }
 
     return issues;
-  }, [draftOrder, hasConsentFormFiles, hasFiles]);
+  }, [draftOrder, hasConsentFormFiles, hasFiles, lastOrderInfoCustomerErpGID]);
 
   const touchdownIssues = React.useMemo(() => {
     if (currentKey !== "touchdown") return [];

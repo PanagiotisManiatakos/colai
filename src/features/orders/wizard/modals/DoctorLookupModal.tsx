@@ -25,27 +25,24 @@ export default function DoctorLookupModal({
     show,
     onClose,
     isSuggested,
-    initialQuery = "",
 }: {
     show: boolean;
     isSuggested?: boolean;
     onClose: () => void;
-    initialQuery?: string;
 }) {
     const dispatch = useAppDispatch();
-    const [q, setQ] = React.useState(initialQuery);
+    const [q, setQ] = React.useState("");
     const [loading, setLoading] = React.useState(false);
     const [error, setError] = React.useState<string | null>(null);
     const [results, setResults] = React.useState<DoctorLookupModal[]>([]);
     const inputRef = React.useRef<HTMLInputElement | null>(null);
 
     React.useEffect(() => {
-        if (show) {
-            setQ(initialQuery);
-            setResults([]);
-            setError(null);
-        }
-    }, [show, initialQuery]);
+        setQ("");
+        setResults([]);
+        setError(null);
+        setLoading(false);
+    }, [show]);
 
     async function search() {
         inputRef.current?.blur();
