@@ -4,7 +4,7 @@ import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  addDraftYliko,
+  clearDraftAddressesList,
   fetchOrders,
   loadCustomerAddressesAsync,
   setAIMaterials,
@@ -26,7 +26,7 @@ import SymmetoxiArea from "./SymmetoxiArea";
 import SynenaiseisArea from "./SynenaiseisArea";
 import { useRouter } from "next/navigation";
 import AIMaterials from "./AIMaterials";
-import { AIMaterials as AIMaterialsType } from "@/types/orders";
+import { AIMaterials as AIMaterialsType, OrderYlika } from "@/types/orders";
 import YpervasiPlafonArea from "./YpervasiPlafonArea";
 import UpdateRecipientArea from "./UpdateRecipientArea";
 
@@ -473,6 +473,11 @@ export default function OrderEoppyWizard() {
       }
       const data = response.data;
       if (data.isSuccess) {
+        dispatch(setDraftYlika([]));
+        dispatch(setAIMaterials([]));
+        dispatch(setLastOrderInfoCustomerErpGID(undefined));
+        dispatch(clearDraftAddressesList());
+
         dispatch(setDraftProperty({ key: "aiCalculated", value: true }));
         dispatch(
           setDraftProperty({ key: "hasAnoia", value: data.jsonDoc.hasAnoia }),
@@ -893,7 +898,6 @@ export default function OrderEoppyWizard() {
               setDraftProperty({ key: "plafonGiftAmount", value: 6 }),
             ));
         }
-        //AI MATERIALS
         const aiMaterials = data.jsonDoc.ylika;
         if (Array.isArray(aiMaterials) && aiMaterials.length > 0) {
           const uniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter(
@@ -905,44 +909,36 @@ export default function OrderEoppyWizard() {
               x.erp_products?.length != 1 || !x.erp_products,
           );
 
-          for (let i = 0; i < uniqueAiMaterials.length; i++) {
-            dispatch(
-              addDraftYliko({
-                id: draftOrder.id,
-                uid: draftOrder.uid,
-                orderId: draftOrder.id,
-                orderUID: draftOrder.uid,
-                erpGid: uniqueAiMaterials[i].erp_products[0].erp_gid || "",
-                aiMatchedErpGid:
-                  uniqueAiMaterials[i].erp_products[0].erp_gid || "",
-                erpCode: uniqueAiMaterials[i].erp_products[0].erp_code || "",
-                erpName: uniqueAiMaterials[i].erp_products[0].erp_name || "",
-                erp_Price: uniqueAiMaterials[i].erp_products[0].erp_price || 0,
-                erp_EoppyPrice:
-                  uniqueAiMaterials[i].erp_products[0].erp_eoppyprice || 0,
-                qty: parseFloat(uniqueAiMaterials[i].synoliki_posotita_eidous),
-                eoppy_CleanName: uniqueAiMaterials[i].clean_name,
-                eoppy_Code: uniqueAiMaterials[i].kodikos_ylikou,
-                eoppy_Diagnosi_Code: uniqueAiMaterials[i].kodikos_diagnosis,
-                eoppy_Diagnosi_Name: uniqueAiMaterials[i].perigrafi_diagnosis,
-                eoppy_Diagnosi2_Code: uniqueAiMaterials[i].kodikos_diagnosis2,
-                eoppy_Diagnosi2_Name: uniqueAiMaterials[i].perigrafi_diagnosis2,
-                eoppy_DiarkiaTherapias: String(
-                  uniqueAiMaterials[i].diarkeia_therapeias_se_mines,
-                ),
-                eoppy_SlugName: uniqueAiMaterials[i].slug_name,
-                eoppy_SynPosotita: String(
-                  uniqueAiMaterials[i].synoliki_posotita_eidous,
-                ),
-                eoppy_AnatomPerioxi: uniqueAiMaterials[i].anatomiki_perioxi,
-                eoppy_Symmetoxi: uniqueAiMaterials[i].symmetoxi,
-                eoppy_Sxolia: uniqueAiMaterials[i].sxolia,
-                aiMatchedBy: uniqueAiMaterials[i].matched_by,
-                fuzzyMatched: uniqueAiMaterials[i].fuzzy_matched,
-              }),
-            );
-          }
-
+          const o = store.getState().orders.draft.order;
+          const fromAi: OrderYlika[] = uniqueAiMaterials.map((m) => ({
+            id: o.id,
+            uid: o.uid,
+            orderId: o.id,
+            orderUID: o.uid,
+            erpGid: m.erp_products[0].erp_gid || "",
+            aiMatchedErpGid: m.erp_products[0].erp_gid || "",
+            erpCode: m.erp_products[0].erp_code || "",
+            erpName: m.erp_products[0].erp_name || "",
+            erp_Price: m.erp_products[0].erp_price || 0,
+            erp_EoppyPrice: m.erp_products[0].erp_eoppyprice || 0,
+            qty: parseFloat(m.synoliki_posotita_eidous),
+            eoppy_CleanName: m.clean_name,
+            eoppy_Code: m.kodikos_ylikou,
+            eoppy_Diagnosi_Code: m.kodikos_diagnosis,
+            eoppy_Diagnosi_Name: m.perigrafi_diagnosis,
+            eoppy_Diagnosi2_Code: m.kodikos_diagnosis2,
+            eoppy_Diagnosi2_Name: m.perigrafi_diagnosis2,
+            eoppy_DiarkiaTherapias: String(m.diarkeia_therapeias_se_mines),
+            eoppy_SlugName: m.slug_name,
+            eoppy_SynPosotita: String(m.synoliki_posotita_eidous),
+            eoppy_AnatomPerioxi: m.anatomiki_perioxi,
+            eoppy_Symmetoxi: m.symmetoxi,
+            eoppy_Sxolia: m.sxolia,
+            aiMatchedBy: m.matched_by,
+            fuzzyMatched: m.fuzzy_matched,
+          }));
+          const ylikaBeforeAi = store.getState().orders.draft.ylika;
+          dispatch(setDraftYlika([...ylikaBeforeAi, ...fromAi]));
           dispatch(setAIMaterials(nonUniqueAiMaterials));
         }
       }
@@ -1014,7 +1010,11 @@ export default function OrderEoppyWizard() {
           {step == maxStep && (
             <button
               type="button"
-              disabled={submitState.loading || hasValidationIssues}
+              disabled={
+                submitState.loading ||
+                hasValidationIssues ||
+                aiStatus === "running"
+              }
               className="btn btn-success flex-fill"
               onClick={onSave}
             >
