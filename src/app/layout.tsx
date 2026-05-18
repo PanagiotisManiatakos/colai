@@ -59,15 +59,6 @@ const runtimeInitScript = `(() => {
 
     document.documentElement.setAttribute("data-pwa", isStandalone ? "true" : "false");
 
-    const cap = window.Capacitor;
-    const native =
-      cap && typeof cap.isNativePlatform === "function" && cap.isNativePlatform();
-    document.documentElement.setAttribute("data-native", native ? "true" : "false");
-    document.documentElement.setAttribute(
-      "data-platform",
-      native && typeof cap.getPlatform === "function" ? cap.getPlatform() : "web",
-    );
-
     const color = theme === "dark" ? "#0b1220" : "#ffffff";
     let meta = document.querySelector('meta[name="theme-color"]');
     if (!meta) {
