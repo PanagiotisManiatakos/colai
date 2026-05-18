@@ -7,7 +7,6 @@ import "./globals.css";
 
 import { StoreProvider } from "@/store/StoreProvider";
 import { BootstrapThemeSync } from "@/components/ui/BootstrapThemeSync";
-import { ServiceWorkerRegister } from "@/components/ui/ServiceWorkerRegister";
 import { ViewportRuntime } from "@/components/ui/ViewportRuntime";
 
 const outfit = Outfit({
@@ -20,7 +19,7 @@ export const metadata: Metadata = {
     default: "ColAI",
     template: "%s · ColAI",
   },
-  description: "Mobile-first PWA for orders and requests.",
+  description: "Orders and requests for Mavrogenis.",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [
@@ -31,11 +30,6 @@ export const metadata: Metadata = {
     apple: [
       { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
-  },
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "ColAI",
   },
 };
 
@@ -88,16 +82,11 @@ export default function RootLayout({
       <head>
         <meta name="color-scheme" content="dark light" />
         <script dangerouslySetInnerHTML={{ __html: runtimeInitScript }} />
-        <link
-          rel="apple-touch-startup-image"
-          href="/splash/iphone-portrait.png"
-        />
       </head>
       <body>
         <StoreProvider>
           <ViewportRuntime />
           <BootstrapThemeSync />
-          <ServiceWorkerRegister />
           {children}
         </StoreProvider>
       </body>

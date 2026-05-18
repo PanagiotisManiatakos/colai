@@ -108,7 +108,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <main className="app-content flex-grow-1">{children}</main>
+      <main className="app-content">{children}</main>
       <BottomNav />
     </div>
   );
