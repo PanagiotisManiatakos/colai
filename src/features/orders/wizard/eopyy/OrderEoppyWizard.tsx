@@ -963,27 +963,18 @@ export default function OrderEoppyWizard() {
     }
   }
   console.log(draftOrder);
+  const showWizardNav = step > 0;
+
   return (
-    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
-      {/* fixed top */}
-      <div style={{ flex: "0 0 auto" }}>
-        <StepIndicator steps={labels} current={step} setStep={setStep} />
-      </div>
+    <div
+      className={`order-wizard d-flex flex-column gap-2${showWizardNav ? "order-wizard--has-nav" : ""}`}
+    >
+      <StepIndicator steps={labels} current={step} setStep={setStep} />
 
-      <div className="flex-grow-1 overflow-auto" style={{ minHeight: 0 }}>
-        {current?.render()}
-      </div>
+      {current?.render()}
 
-      {/* fixed bottom - sticky so always visible when content overflows (e.g. large font sizes) */}
-      <div
-        className="flex-shrink-0 pt-1 pb-0"
-        style={{
-          position: "sticky",
-          bottom: 0,
-          zIndex: 10,
-        }}
-      >
-        <div className="d-flex gap-2">
+      {showWizardNav ? (
+        <div className="order-wizard-nav">
           {step > 0 && (
             <button
               type="button"
@@ -1023,7 +1014,7 @@ export default function OrderEoppyWizard() {
             </button>
           )}
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

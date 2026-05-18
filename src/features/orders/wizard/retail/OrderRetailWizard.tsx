@@ -14,7 +14,7 @@ const steps = ["Ασθενής", "Ιατρός", "Υλικά", "Touchdown"] as c
 
 export default function OrderRetailWizard() {
   const dispatch = useAppDispatch();
-  const router = useRouter()
+  const router = useRouter();
 
   const [step, setStep] = React.useState(0);
   const submitState = useAppSelector((s) => s.orders.draft.submitState)
@@ -53,19 +53,15 @@ export default function OrderRetailWizard() {
   const currentLabel = effectiveSteps[step];
 
   return (
-    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
-      <div style={{ flex: "0 0 auto" }}>
-        <StepIndicator steps={effectiveSteps as unknown as string[]} current={step} setStep={setStep} />
-      </div>
-      <div className="flex-grow-1 overflow-auto" style={{ minHeight: 0 }}>
-        {currentLabel === "Ασθενής" ? <OrderRetailCustomerArea /> : null}
-        {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}
-        {currentLabel === "Υλικά" ? <MaterialsArea /> : null}
-        {currentLabel === "Touchdown" ? <CompletionArea /> : null}
-      </div>
+    <div className="order-wizard order-wizard--has-nav d-flex flex-column gap-2">
+      <StepIndicator steps={effectiveSteps as unknown as string[]} current={step} setStep={setStep} />
 
-      <div className="pb-0 pt-1" style={{ flex: "0 0 auto" }}>
-        <div className="d-flex gap-2">
+      {currentLabel === "Ασθενής" ? <OrderRetailCustomerArea /> : null}
+      {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}
+      {currentLabel === "Υλικά" ? <MaterialsArea /> : null}
+      {currentLabel === "Touchdown" ? <CompletionArea /> : null}
+
+      <div className="order-wizard-nav">
           <button
             type="button"
             className="btn btn-outline-secondary flex-fill"
@@ -87,7 +83,6 @@ export default function OrderRetailWizard() {
               {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
             </button>
           )}
-        </div>
       </div>
     </div>
   );

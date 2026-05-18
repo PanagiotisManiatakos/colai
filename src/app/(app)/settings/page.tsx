@@ -13,10 +13,12 @@ export default function SettingsPage() {
   const theme = useAppSelector((s) => s.settings.theme);
 
   const handleTheming = () => {
-    dispatch(toggleTheme())
+    dispatch(toggleTheme());
     if (typeof document === "undefined") return;
 
-    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    let meta = document.querySelector(
+      'meta[name="theme-color"]',
+    ) as HTMLMetaElement | null;
     if (!meta) {
       meta = document.createElement("meta");
       meta.name = "theme-color";
@@ -25,7 +27,7 @@ export default function SettingsPage() {
     meta.content = THEME_COLOR[theme];
 
     document.body.style.backgroundColor = THEME_COLOR[theme];
-  }
+  };
 
   return (
     <div
@@ -51,18 +53,6 @@ export default function SettingsPage() {
             <i className={`bi ${theme === "dark" ? "bi-sun" : "bi-moon"} me-2`} />
             {theme === "dark" ? "Light" : "Dark"}
           </button>
-        </div>
-      </div>
-
-      <div className="app-card p-4 mb-3">
-        <div className="fw-semibold mb-2">Install</div>
-        <div className="text-secondary small">
-          <div>
-            Android/Chrome: menu → <span className="fw-semibold">Install app</span>.
-          </div>
-          <div>
-            iPhone/Safari: Share → <span className="fw-semibold">Add to Home Screen</span>.
-          </div>
         </div>
       </div>
 
