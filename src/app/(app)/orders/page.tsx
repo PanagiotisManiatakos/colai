@@ -63,7 +63,7 @@ export default function OrdersPage() {
   const showInitialLoader = listLoading && orders.length === 0;
 
   return (
-    <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
+    <>
       <div className="app-card p-2 mb-3">
         <SearchBar
           placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)"
@@ -73,8 +73,8 @@ export default function OrdersPage() {
           onClear={onClearSearch}
         />
       </div>
-      <PullToRefresh useSelfScroll className="flex-grow-1" onRefresh={onRefresh} isRefreshing={refreshing}>
 
+      <PullToRefresh onRefresh={onRefresh} isRefreshing={refreshing}>
         {showInitialLoader ? (
           <AppLoader label="Φόρτωση παραγγελιών…" />
         ) : orders.length ? (
@@ -89,6 +89,6 @@ export default function OrdersPage() {
       </PullToRefresh>
 
       {userInfo?.isSeller && <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />}
-    </div>
+    </>
   );
 }

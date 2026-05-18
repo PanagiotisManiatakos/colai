@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { Capacitor } from "@capacitor/core";
 
 function setPwaAttr() {
   const standalone =
@@ -16,21 +15,9 @@ function setPwaAttr() {
   );
 }
 
-function setNativeAttrs() {
-  const native = Capacitor.isNativePlatform();
-  const platform = Capacitor.getPlatform();
-
-  document.documentElement.setAttribute(
-    "data-native",
-    native ? "true" : "false",
-  );
-  document.documentElement.setAttribute("data-platform", platform);
-}
-
 export function ViewportRuntime() {
   useEffect(() => {
     setPwaAttr();
-    setNativeAttrs();
 
     const mq = window.matchMedia("(display-mode: standalone)");
     const onDisplayModeChange = () => setPwaAttr();
