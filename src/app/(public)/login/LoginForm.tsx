@@ -60,10 +60,9 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
   }
 
   return (
-    <>
-      <div className="app-viewport" style={{ minHeight: "100vh" }}>
-        <div className="app-content d-flex align-items-center" style={{ paddingBottom: 24 }}>
-          <div className="w-100">
+    <div className="app-viewport login-screen">
+      <div className="login-screen__content">
+        <div className="w-100">
             {/* Logo */}
             <div className="text-center mb-3">
               <Image
@@ -128,9 +127,8 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
                 <div className="small text-secondary mt-2">Version {appVersion}</div>
               </div>
             </div>
-          </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }

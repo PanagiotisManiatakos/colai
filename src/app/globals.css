@@ -213,6 +213,36 @@ html[data-bs-theme="dark"] .app-header {
   padding: 14px 12px calc(18px + var(--app-nav-height) + var(--safe-bottom)) 12px;
 }
 
+.login-screen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-height: -webkit-fill-available;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-screen__content {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding: calc(16px + env(safe-area-inset-top, 0px)) 12px
+    calc(18px + env(safe-area-inset-bottom, 0px));
+}
+
+/* Android WebView often reports 0 safe-area; use status-bar / nav-bar fallbacks. */
+html[data-platform="android"] .login-screen__content {
+  padding-top: calc(16px + max(env(safe-area-inset-top, 0px), 28px));
+  padding-bottom: calc(18px + max(env(safe-area-inset-bottom, 0px), 20px));
+}
+
+html[data-platform="ios"][data-native="true"] .login-screen__content {
+  padding-top: calc(16px + max(env(safe-area-inset-top, 0px), 20px));
+  padding-bottom: calc(18px + max(env(safe-area-inset-bottom, 0px), 20px));
+}
+
 .order-wizard--has-nav {
   padding-bottom: calc(var(--order-wizard-nav-height) + 12px);
 }
