@@ -5,8 +5,8 @@ import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import PullToRefresh from "@/components/ui/PullToRefresh";
 import AppLoader from "@/components/ui/AppLoader";
+import PullToRefresh from "@/components/ui/PullToRefresh";
 import WCDiadikasiaGroupedList from "@/features/orders/components/diadikasia/WCDiadikasiaGroupedList";
 import { fetchWCCalendar } from "@/store/wcDiadikasia/wcDiadikasiaSlice";
 import { Alert, Button, FormSelect, Modal } from "react-bootstrap";
@@ -123,7 +123,9 @@ export default function DiadikasiaWC() {
     }, [applySearchToUrl, clearDebounceTimer]);
 
     const onRefresh = React.useCallback(async () => {
-        await dispatch(fetchWCCalendar(urlSearch ? { q: urlSearch, force: true } : { force: true })).unwrap();
+        await dispatch(
+            fetchWCCalendar(urlSearch ? { q: urlSearch, force: true } : { force: true }),
+        ).unwrap();
     }, [dispatch, urlSearch]);
 
     const visibleItems = React.useMemo(() => {
@@ -144,7 +146,7 @@ export default function DiadikasiaWC() {
     const showInitialLoader = listLoading && wcDiadikasia.calendar.length === 0;
 
     return (
-        <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
+        <>
             <div className="d-flex align-items-center gap-2 mb-2 flex-wrap">
                 <div className="app-card flex-grow-1">
                     <SearchBar
@@ -186,7 +188,8 @@ export default function DiadikasiaWC() {
                     <span className="text-nowrap">Μήνας</span>
                 </button>
             </div>
-            <PullToRefresh useSelfScroll className="flex-grow-1" onRefresh={onRefresh} isRefreshing={refreshing}>
+
+            <PullToRefresh onRefresh={onRefresh} isRefreshing={refreshing}>
                 {error ? (
                     <Alert variant="danger">{error}</Alert>
                 ) : showInitialLoader ? (
@@ -235,6 +238,6 @@ export default function DiadikasiaWC() {
                     <Button variant="success" onClick={applyFilters}>Εφαρμογή</Button>
                 </Modal.Footer>
             </Modal>
-        </div>
+        </>
     );
 }

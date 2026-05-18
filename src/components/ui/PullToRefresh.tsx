@@ -14,6 +14,24 @@ type Props = {
     className?: string;
 };
 
+function resolveScrollElement(
+    useSelfScroll: boolean,
+    container: HTMLDivElement | null,
+    scrollSelector: string,
+): HTMLElement | null {
+    if (useSelfScroll) return container;
+
+    const preferred = document.querySelector(scrollSelector) as HTMLElement | null;
+    if (preferred) {
+        const oy = getComputedStyle(preferred).overflowY;
+        if (oy === "auto" || oy === "scroll" || oy === "overlay") {
+            return preferred;
+        }
+    }
+
+    return (document.scrollingElement ?? document.documentElement) as HTMLElement | null;
+}
+
 export default function PullToRefresh({
     onRefresh,
     isRefreshing = false,
@@ -69,11 +87,11 @@ export default function PullToRefresh({
 
     // Native touch listeners (passive:false on move) so preventDefault works
     React.useEffect(() => {
-        const scrollEl =
-            (useSelfScroll ? (containerRef.current as unknown as HTMLElement | null) : null) ??
-            (document.querySelector(scrollSelector) as HTMLElement | null) ??
-            (containerRef.current?.parentElement as HTMLElement | null) ??
-            null;
+        const scrollEl = resolveScrollElement(
+            useSelfScroll,
+            containerRef.current,
+            scrollSelector,
+        );
 
         scrollElRef.current = scrollEl;
         if (!scrollEl) return;
