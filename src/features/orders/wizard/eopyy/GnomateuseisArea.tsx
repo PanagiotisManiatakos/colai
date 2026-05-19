@@ -29,6 +29,7 @@ export default function GnomateuseisArea({
   aiMessage,
   aiStatus,
   showAiClientRetry,
+  bothAiProvidersFailed,
   onRunAi,
   onRunAiWithClient,
 }: {
@@ -36,6 +37,7 @@ export default function GnomateuseisArea({
   aiStatus: AiStatus;
   onRunAi: () => void;
   showAiClientRetry: boolean;
+  bothAiProvidersFailed?: boolean;
   onRunAiWithClient: (aiclient: "Claude" | "Gemini") => void;
 }) {
   const dispatch = useAppDispatch();
@@ -340,6 +342,12 @@ export default function GnomateuseisArea({
             }
           />
         )}
+        {bothAiProvidersFailed ? (
+          <p className="small text-secondary mt-2 mb-0 text-center">
+            Μπορείτε να δοκιμάσετε ξανά με Claude ή να εισάγετε τα στοιχεία
+            χειροκίνητα.
+          </p>
+        ) : null}
       </div>
     </>
   );

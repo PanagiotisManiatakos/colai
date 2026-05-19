@@ -16,6 +16,7 @@ import {
 } from "@/store/orders/ordersSlice";
 import { store } from "@/store/store";
 import { applyLastOrderData, normalizeZeroOne } from "@/lib/applyLastOrderData";
+import { getAiRunErrorMessage, type AiClient } from "@/lib/utils/ai";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
@@ -31,7 +32,6 @@ import YpervasiPlafonArea from "./YpervasiPlafonArea";
 import UpdateRecipientArea from "./UpdateRecipientArea";
 
 type AiStatus = "idle" | "running" | "done" | "error";
-type AiClient = "Claude" | "Gemini";
 type WizardIssue = {
   step: StepKey;
   field: string;
@@ -73,6 +73,7 @@ export default function OrderEoppyWizard() {
   const [aiStatus, setAiStatus] = React.useState<AiStatus>("idle");
   const [aiMessage, setAiMessage] = React.useState<string | null>(null);
   const [showAiClientRetry, setShowAiClientRetry] = React.useState(false);
+  const [claudeAiFailed, setClaudeAiFailed] = React.useState(false);
   const [issues, setIssues] = React.useState<WizardIssue[]>([]);
 
   const draftOrder = useAppSelector((s) => s.orders.draft.order);
@@ -111,6 +112,7 @@ export default function OrderEoppyWizard() {
           aiMessage={aiMessage}
           aiStatus={aiStatus}
           showAiClientRetry={showAiClientRetry}
+          bothAiProvidersFailed={claudeAiFailed && aiStatus === "error"}
           onRunAi={runAi}
           onRunAiWithClient={runAi}
         />
@@ -444,9 +446,14 @@ export default function OrderEoppyWizard() {
   }
 
   async function runAi(aiclient: AiClient = "Claude") {
+    const claudeFailedEarlier = claudeAiFailed;
+
     setAiStatus("running");
     setAiMessage(null);
     setShowAiClientRetry(false);
+    if (aiclient === "Claude") {
+      setClaudeAiFailed(false);
+    }
 
     const controller = new AbortController();
     const pendingTimeoutMs = 60_000;
@@ -943,21 +950,16 @@ export default function OrderEoppyWizard() {
         }
       }
 
+      setClaudeAiFailed(false);
       setAiStatus("done");
       setStep(1);
     } catch (e: any) {
       setAiStatus("error");
       if (aiclient === "Claude") {
+        setClaudeAiFailed(true);
         setShowAiClientRetry(true);
       }
-      setAiMessage(
-        e?.name === "AbortError"
-          ? "Το αίτημα AI έληξε. Επιλέξτε Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
-          : aiclient === "Claude"
-            ? "Το αίτημα AI δεν ολοκληρώθηκε. Επιλέξτε Gemini ή εισάγετε τα στοιχεία χειροκίνητα."
-            : e?.message ||
-              `Η εκτέλεση AI με ${aiclient} δεν ήταν επιτυχής. Δοκιμάστε αργότερα ή εισάγετε τα στοιχεία χειροκίνητα.`,
-      );
+      setAiMessage(getAiRunErrorMessage(e, aiclient, claudeFailedEarlier));
     } finally {
       window.clearTimeout(t);
     }
