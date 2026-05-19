@@ -15,7 +15,15 @@ import {
   submitDraftAsync,
 } from "@/store/orders/ordersSlice";
 import { store } from "@/store/store";
-import { applyLastOrderData, normalizeZeroOne } from "@/lib/applyLastOrderData";
+import {
+  applyLastOrderData,
+  applyPersonErpGIDFromLastOrder,
+  extractAddressErpGID,
+  extractPersonErpGID,
+  extractShipToOtherAddress,
+  normalizeZeroOne,
+  syncShipToOtherAddressFlags,
+} from "@/lib/applyLastOrderData";
 import { getAiRunErrorMessage, type AiClient } from "@/lib/utils/ai";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
@@ -490,6 +498,17 @@ export default function OrderEoppyWizard() {
           setDraftProperty({ key: "hasAnoia", value: data.jsonDoc.hasAnoia }),
         );
 
+        const lastWebOrderRaw =
+          data.jsonDoc?.last_web_order &&
+          typeof data.jsonDoc.last_web_order === "object" &&
+          !Array.isArray(data.jsonDoc.last_web_order)
+            ? (data.jsonDoc.last_web_order as Record<string, unknown>)
+            : undefined;
+
+        if (lastWebOrderRaw) {
+          applyLastOrderData(lastWebOrderRaw, dispatch);
+        }
+
         const lastOrderInfo = data.jsonDoc?.last_order_info;
         const hasLastOrderInfo =
           lastOrderInfo &&
@@ -571,6 +590,22 @@ export default function OrderEoppyWizard() {
               }),
             );
 
+          const shipToFromLastOrder = extractShipToOtherAddress(
+            orderObj,
+            raw,
+            lastWebOrderRaw,
+          );
+          const personFromLastOrder = extractPersonErpGID(
+            orderObj,
+            raw,
+            lastWebOrderRaw,
+          );
+          const addressFromLastOrder = extractAddressErpGID(
+            orderObj,
+            raw,
+            lastWebOrderRaw,
+          );
+
           const lastOrderAmka = String(
             orderObj.customer_amka ?? raw.customer_amka ?? "",
           ).trim();
@@ -591,30 +626,46 @@ export default function OrderEoppyWizard() {
                       ? String(orderObj.customer_address)
                       : undefined,
                   customer_amka: lastOrderAmka,
-                  preferredPersonErpGID:
-                    orderObj.person_ErpGID != null
-                      ? String(orderObj.person_ErpGID)
-                      : undefined,
-                  preferredAddressErpGID:
-                    orderObj.address_ErpGID != null
-                      ? String(orderObj.address_ErpGID)
-                      : undefined,
+                  preferredPersonErpGID: personFromLastOrder,
+                  preferredAddressErpGID: addressFromLastOrder,
                 }),
               ).unwrap();
-              dispatch(
-                setDraftProperty({ key: "shipTo_other_address", value: 0 }),
-              );
-              dispatch(
-                setDraftProperty({
-                  key: "shipToOtherAddressBool",
-                  value: false,
-                }),
-              );
-              dispatch(
-                setDraftProperty({ key: "has_other_recipient", value: 0 }),
-              );
+
+              if (shipToFromLastOrder === 1) {
+                syncShipToOtherAddressFlags(dispatch, 1);
+                applyPersonErpGIDFromLastOrder(dispatch, personFromLastOrder);
+                const prePerson =
+                  store.getState().orders.draft.preselected_person_GID;
+                if (
+                  !store.getState().orders.draft.order.person_ErpGID?.trim() &&
+                  prePerson
+                ) {
+                  dispatch(
+                    setDraftProperty({
+                      key: "person_ErpGID",
+                      value: prePerson,
+                    }),
+                  );
+                }
+              } else {
+                dispatch(
+                  setDraftProperty({ key: "shipTo_other_address", value: 0 }),
+                );
+                dispatch(
+                  setDraftProperty({
+                    key: "shipToOtherAddressBool",
+                    value: false,
+                  }),
+                );
+                dispatch(
+                  setDraftProperty({ key: "has_other_recipient", value: 0 }),
+                );
+              }
             } catch {
-              // Address list is optional if search-address fails
+              if (shipToFromLastOrder === 1) {
+                syncShipToOtherAddressFlags(dispatch, 1);
+                applyPersonErpGIDFromLastOrder(dispatch, personFromLastOrder);
+              }
             }
           }
         }
