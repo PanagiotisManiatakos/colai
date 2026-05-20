@@ -14,6 +14,10 @@ import type {
 } from "@/lib/interface";
 import { RootState } from "@/store/store";
 import { formatStringToISODDateTime, formatUIDate } from "@/lib/utils/date";
+import {
+  pickDefaultAddressGid,
+  pickDefaultPersonRow,
+} from "@/lib/utils/customerAddresses";
 
 type OrderDraftType = "eopyy" | "non_eoppy";
 
@@ -890,30 +894,34 @@ const ordersSlice = createSlice({
             p.addresses?.some((a) => a.address_ErpGID === aid),
         );
 
-      if (metaP && personInList(metaP)) {
-        state.draft.order.person_ErpGID = metaP;
-        if (metaA && addressInListForPerson(metaP, metaA)) {
-          state.draft.order.address_ErpGID = metaA;
-        } else {
-          const firstAddr = addresses.find((p) => p.person_ErpGID === metaP)
-            ?.addresses?.[0]?.address_ErpGID;
-          state.draft.order.address_ErpGID = firstAddr ?? preAddr ?? null;
-        }
-      } else if (savedPerson && personInList(savedPerson)) {
-        /** Restore persisted / merged draft selection (e.g. after page refresh). */
-        state.draft.order.person_ErpGID = savedPerson;
-        if (savedAddr && addressInListForPerson(savedPerson, savedAddr)) {
-          state.draft.order.address_ErpGID = savedAddr;
-        } else {
-          const firstAddr = addresses.find(
-            (p) => p.person_ErpGID === savedPerson,
-          )?.addresses?.[0]?.address_ErpGID;
-          state.draft.order.address_ErpGID = firstAddr ?? preAddr ?? null;
-        }
-      } else {
-        state.draft.order.person_ErpGID = prePerson;
-        state.draft.order.address_ErpGID = preAddr;
+      const preferredPersonGid =
+        (metaP && personInList(metaP) ? metaP : null) ??
+        (savedPerson && personInList(savedPerson) ? savedPerson : null) ??
+        (prePerson != null && personInList(String(prePerson))
+          ? String(prePerson)
+          : null);
+
+      const personRow = pickDefaultPersonRow(addresses, preferredPersonGid);
+      const personGid = personRow?.person_ErpGID ?? null;
+
+      let preferredAddr: string | null = null;
+      if (personGid) {
+        if (metaA && addressInListForPerson(personGid, metaA)) preferredAddr = metaA;
+        else if (savedAddr && addressInListForPerson(personGid, savedAddr))
+          preferredAddr = savedAddr;
+        else if (
+          preAddr != null &&
+          addressInListForPerson(personGid, String(preAddr))
+        )
+          preferredAddr = String(preAddr);
       }
+
+      state.draft.order.person_ErpGID = personGid;
+      state.draft.order.address_ErpGID = pickDefaultAddressGid(
+        personRow?.addresses,
+        preferredAddr,
+      );
+
       persistStateToLocalStorage(state);
     });
   },

@@ -245,4 +245,5 @@ export type OrderAddress = {
   address: string;
   city: string;
   tk: string;
+  isAddressPreselected?: boolean;
 };

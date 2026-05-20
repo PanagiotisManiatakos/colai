@@ -510,12 +510,6 @@ export default function OrderCustomerArea({
                   );
                   dispatch(
                     setDraftProperty({
-                      key: "shipToOtherAddressBool",
-                      value: false,
-                    }),
-                  );
-                  dispatch(
-                    setDraftProperty({
                       key: "recipient_from_erp_lookup",
                       value: null,
                     }),
@@ -661,8 +655,7 @@ export default function OrderCustomerArea({
           </OrderField>
         )}
 
-        {!data.shipToOtherAddressBool &&
-          data.shipTo_other_address != 1 &&
+        {data.shipTo_other_address != 1 &&
           listAddressesPersons.length > 0 &&
           data.person_ErpGID &&
           data.person_ErpGID != "" &&
@@ -1000,12 +993,6 @@ export default function OrderCustomerArea({
                   setDraftProperty({
                     key: "shipTo_other_address",
                     value: checked ? 1 : 0,
-                  }),
-                );
-                dispatch(
-                  setDraftProperty({
-                    key: "shipToOtherAddressBool",
-                    value: checked,
                   }),
                 );
                 if (checked) {
