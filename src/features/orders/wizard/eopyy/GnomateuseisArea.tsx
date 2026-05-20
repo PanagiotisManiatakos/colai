@@ -68,7 +68,7 @@ export default function GnomateuseisArea({
 
   return (
     <>
-      <div className="app-card p-4">
+      <div className="app-card p-3">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Αρχείο γνωμάτευσης</div>
 
@@ -203,7 +203,7 @@ export default function GnomateuseisArea({
           </div>
         )}
       </div>
-      <div className="app-card mt-3 p-4">
+      <div className="app-card mt-1 p-4">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Συμπληρωματικά αρχεία</div>
 
@@ -322,7 +322,7 @@ export default function GnomateuseisArea({
           </div>
         )}
       </div>
-      <div className="d-flex flex-column mt-3 gap-2">
+      <div className="d-flex flex-column mt-1 gap-1">
         <RunAiButton
           label="Run AI (Claude)"
           running={aiStatus === "running" && aiRunningClient === "Claude"}

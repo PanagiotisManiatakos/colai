@@ -63,7 +63,7 @@ const SymmetoxiArea = ({ errors, clearError }: Props) => {
   }, [data.hasConfirmedMidenikiPliromi, dispatch, isFinalAmountZero]);
 
   return (
-    <div className="app-card p-4">
+    <div className="app-card p-3">
       <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
         <div
           style={{ height: 51 }}

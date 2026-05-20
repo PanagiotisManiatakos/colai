@@ -53,7 +53,7 @@ export function StepIndicator({
       const targetCenter = activeEl.offsetLeft + activeEl.offsetWidth / 2;
       const nextScrollLeft = Math.min(
         maxScrollLeft,
-        Math.max(0, targetCenter - containerWidth / 2)
+        Math.max(0, targetCenter - containerWidth / 2),
       );
 
       container.scrollTo({ left: nextScrollLeft, behavior: "smooth" });
@@ -63,7 +63,7 @@ export function StepIndicator({
   }, [current, overflowing]);
 
   return (
-    <div className="app-card p-3 mb-3">
+    <div className="app-card mb-2 p-3">
       <div
         ref={rowRef}
         className="d-flex align-items-center"
@@ -87,7 +87,7 @@ export function StepIndicator({
               }}
               type="button"
               onClick={() => setStep(idx)}
-              className="btn p-0 border-0 bg-transparent"
+              className="btn border-0 bg-transparent p-0"
               style={
                 overflowing
                   ? { flex: "0 0 auto", minWidth: 88 }

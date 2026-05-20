@@ -146,7 +146,7 @@ export default function OrderCustomerArea({
     listAddressesPersons.length,
   ]);
   return (
-    <div className="app-card p-4">
+    <div className="app-card p-3">
       <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="d-flex justify-content-start align-items-center flex-row gap-2">
@@ -548,7 +548,10 @@ export default function OrderCustomerArea({
                       }),
                     );
                     dispatch(
-                      setDraftProperty({ key: "updateRecipient_afm", value: null }),
+                      setDraftProperty({
+                        key: "updateRecipient_afm",
+                        value: null,
+                      }),
                     );
                     dispatch(
                       setDraftProperty({
@@ -569,7 +572,10 @@ export default function OrderCustomerArea({
                       }),
                     );
                     dispatch(
-                      setDraftProperty({ key: "updateRecipient_tk", value: null }),
+                      setDraftProperty({
+                        key: "updateRecipient_tk",
+                        value: null,
+                      }),
                     );
                     dispatch(
                       setDraftProperty({

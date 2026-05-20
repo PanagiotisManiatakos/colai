@@ -17,7 +17,7 @@ export default function OrdersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const userInfo = useAppSelector((s) => s.auth.userInfos)
+  const userInfo = useAppSelector((s) => s.auth.userInfos);
 
   const orders = useAppSelector((s) => s.orders.orders);
   const listLoading = useAppSelector((s) => s.orders.loadingOrders);
@@ -45,7 +45,7 @@ export default function OrdersPage() {
       const qs = params.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams],
   );
 
   const onSubmitSearch = React.useCallback(() => {
@@ -57,14 +57,16 @@ export default function OrdersPage() {
   }, [applySearchToUrl]);
 
   const onRefresh = React.useCallback(async () => {
-    await dispatch(fetchOrders(urlSearch ? { q: urlSearch, force: true } : { force: true })).unwrap();
+    await dispatch(
+      fetchOrders(urlSearch ? { q: urlSearch, force: true } : { force: true }),
+    ).unwrap();
   }, [dispatch, urlSearch]);
 
   const showInitialLoader = listLoading && orders.length === 0;
 
   return (
     <>
-      <div className="app-card p-2 mb-3">
+      <div className="app-card mb-3 p-2">
         <SearchBar
           placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)"
           value={q}
@@ -80,15 +82,19 @@ export default function OrdersPage() {
         ) : orders.length ? (
           <div className="d-flex flex-column gap-2">
             {orders.map((o) => (
-              <OrderCard key={o.id} order={o} onDelete={() => { }} />
+              <OrderCard key={o.id} order={o} onDelete={() => {}} />
             ))}
           </div>
         ) : (
-          <div className="app-card p-4 text-center text-secondary">Δεν βρέθηκαν παραγγελίες.</div>
+          <div className="app-card text-secondary p-3 text-center">
+            Δεν βρέθηκαν παραγγελίες.
+          </div>
         )}
       </PullToRefresh>
 
-      {userInfo?.isSeller && <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />}
+      {userInfo?.isSeller && (
+        <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
+      )}
     </>
   );
 }

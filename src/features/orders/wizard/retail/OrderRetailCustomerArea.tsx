@@ -101,7 +101,7 @@ export default function OrderRetailCustomerArea() {
   ]);
 
   return (
-    <div className="app-card p-4">
+    <div className="app-card p-3">
       <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
         <div className="fw-semibold">Στοιχεία ασθενή</div>
 

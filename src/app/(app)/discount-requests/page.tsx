@@ -23,9 +23,10 @@ export default function DiscountRequestsPage() {
   const urlSearch = (searchParams.get("search") ?? "").trim();
   const [q, setQ] = React.useState(urlSearch);
 
-
   React.useEffect(() => {
-    void dispatch(fetchDiscountRequests(urlSearch ? { q: urlSearch } : undefined));
+    void dispatch(
+      fetchDiscountRequests(urlSearch ? { q: urlSearch } : undefined),
+    );
   }, [dispatch, urlSearch]);
 
   const applySearchToUrl = React.useCallback(
@@ -39,7 +40,7 @@ export default function DiscountRequestsPage() {
       const qs = params.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
     },
-    [pathname, router, searchParams]
+    [pathname, router, searchParams],
   );
 
   const onSubmitSearch = React.useCallback(() => {
@@ -51,14 +52,19 @@ export default function DiscountRequestsPage() {
   }, [applySearchToUrl]);
 
   const onRefresh = React.useCallback(async () => {
-    await dispatch(fetchDiscountRequests(urlSearch ? { q: urlSearch, force: true } : { force: true })).unwrap();
+    await dispatch(
+      fetchDiscountRequests(
+        urlSearch ? { q: urlSearch, force: true } : { force: true },
+      ),
+    ).unwrap();
   }, [dispatch, urlSearch]);
 
-  const showInitialLoader = listLoading && discountRequests.requests.length === 0;
+  const showInitialLoader =
+    listLoading && discountRequests.requests.length === 0;
 
   return (
-    <div className="h-100 d-flex flex-column" style={{ minHeight: 0 }}>
-      <div className="app-card p-2 mb-3">
+    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
+      <div className="app-card mb-3 p-2">
         <SearchBar
           placeholder="Αναζήτηση αιτήματος"
           value={q}
@@ -67,8 +73,12 @@ export default function DiscountRequestsPage() {
           onClear={onClearSearch}
         />
       </div>
-      <PullToRefresh useSelfScroll className="flex-grow-1" onRefresh={onRefresh} isRefreshing={refreshing}>
-
+      <PullToRefresh
+        useSelfScroll
+        className="flex-grow-1"
+        onRefresh={onRefresh}
+        isRefreshing={refreshing}
+      >
         {showInitialLoader ? (
           <AppLoader label="Φόρτωση αιτημάτων..." />
         ) : discountRequests.requests.length ? (
@@ -78,7 +88,9 @@ export default function DiscountRequestsPage() {
             ))}
           </div>
         ) : (
-          <div className="app-card p-4 text-center text-secondary">Δεν βρέθηκαν αιτήματα.</div>
+          <div className="app-card text-secondary p-3 text-center">
+            Δεν βρέθηκαν αιτήματα.
+          </div>
         )}
       </PullToRefresh>
     </div>

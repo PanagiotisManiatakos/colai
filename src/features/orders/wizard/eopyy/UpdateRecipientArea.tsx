@@ -132,9 +132,13 @@ export default function UpdateRecipientArea() {
 
   React.useEffect(() => {
     if (data.shouldUpdateRecipientInfos == 1) return;
-    dispatch(setDraftProperty({ key: "shouldUpdateRecipientInfos", value: null }));
+    dispatch(
+      setDraftProperty({ key: "shouldUpdateRecipientInfos", value: null }),
+    );
     dispatch(setDraftProperty({ key: "updateRecipient_afm", value: null }));
-    dispatch(setDraftProperty({ key: "updateRecipient_passport", value: null }));
+    dispatch(
+      setDraftProperty({ key: "updateRecipient_passport", value: null }),
+    );
     dispatch(setDraftProperty({ key: "updateRecipient_mobile", value: null }));
     dispatch(setDraftProperty({ key: "updateRecipient_address", value: null }));
     dispatch(setDraftProperty({ key: "updateRecipient_tk", value: null }));
@@ -186,7 +190,7 @@ export default function UpdateRecipientArea() {
   }, [isSaveFeedbackActive]);
 
   return (
-    <div className="app-card p-4">
+    <div className="app-card p-3">
       <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
         <div className="fw-semibold">
           Επικαιροποίηση στοιχείων παραλήπτη

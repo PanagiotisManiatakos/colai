@@ -102,7 +102,7 @@ export default function Touchdown({
         </div>
       )}
 
-      <div className="app-card p-4">
+      <div className="app-card p-3">
         <div
           style={{ height: 51 }}
           className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2"
