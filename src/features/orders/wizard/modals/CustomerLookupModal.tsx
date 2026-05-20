@@ -4,7 +4,16 @@ import React from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
 import { loadCustomerAddressesAsync, setDraftProperty, setLastOrderInfoCustomerErpGID } from "@/store/orders/ordersSlice";
-import { applyLastErpOrderData, applyLastOrderData } from "@/lib/applyLastOrderData";
+import {
+    applyLastErpOrderData,
+    applyLastOrderData,
+    applyPersonErpGIDFromLastOrder,
+    extractAddressErpGID,
+    extractPersonErpGID,
+    extractShipToOtherAddress,
+    syncShipToOtherAddressFlags,
+} from "@/lib/applyLastOrderData";
+import { store } from "@/store/store";
 import AppLoader from "@/components/ui/AppLoader";
 
 export type CustomerSearchResult = {
@@ -94,6 +103,7 @@ export default function CustomerLookupModal({
         setApplying(true);
         let preferredPerson: string | undefined;
         let preferredAddr: string | undefined;
+        let shipToFromLast: 0 | 1 | undefined;
         try {
             const res = await fetch("/api/load-last-customer-order-info", {
                 method: "POST",
@@ -111,16 +121,18 @@ export default function CustomerLookupModal({
                     const lwo = data.last_web_order;
                     const leo = data.last_erp_order;
                     if (isNonEmptyRecord(lwo)) {
-                        const lwoCopy = { ...(lwo as Record<string, unknown>) };
-                        const lwoPerson = lwoCopy.person_ErpGID;
-                        const lwoAddr = lwoCopy.address_ErpGID;
+                        const lwoRec = lwo as Record<string, unknown>;
+                        const lwoCopy = { ...lwoRec };
+                        const lwoPerson = extractPersonErpGID(lwoRec);
+                        const lwoAddr = extractAddressErpGID(lwoRec);
+                        shipToFromLast = extractShipToOtherAddress(lwoRec);
                         delete lwoCopy.person_ErpGID;
                         delete lwoCopy.address_ErpGID;
                         delete lwoCopy.preselected_person_GID;
                         delete lwoCopy.preselected_address_GID;
                         applyLastOrderData(lwoCopy, dispatch, true);
-                        preferredPerson = String(lwoPerson ?? "").trim() || undefined;
-                        preferredAddr = String(lwoAddr ?? "").trim() || undefined;
+                        preferredPerson = lwoPerson;
+                        preferredAddr = lwoAddr;
                     } else if (isNonEmptyRecord(leo)) {
                         applyLastErpOrderData(leo, dispatch);
                         preferredPerson = String(leo.deliveryPersonGID ?? "").trim() || undefined;
@@ -156,14 +168,32 @@ export default function CustomerLookupModal({
                     preferredAddressErpGID: preferredAddr,
                 })
             ).unwrap();
-            dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
-            dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: false }));
-            dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
-            dispatch(
-                setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
-            );
+
+            if (shipToFromLast === 1) {
+                syncShipToOtherAddressFlags(dispatch, 1);
+                applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
+                const prePerson = store.getState().orders.draft.preselected_person_GID;
+                if (
+                    !store.getState().orders.draft.order.person_ErpGID?.trim() &&
+                    prePerson
+                ) {
+                    dispatch(
+                        setDraftProperty({ key: "person_ErpGID", value: prePerson }),
+                    );
+                }
+            } else {
+                dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
+                dispatch(setDraftProperty({ key: "shipToOtherAddressBool", value: false }));
+                dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
+                dispatch(
+                    setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
+                );
+            }
         } catch {
-            // Continue without address list
+            if (shipToFromLast === 1) {
+                syncShipToOtherAddressFlags(dispatch, 1);
+                applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
+            }
         }
         dispatch(setLastOrderInfoCustomerErpGID(c.tR_GID));
         onClose();

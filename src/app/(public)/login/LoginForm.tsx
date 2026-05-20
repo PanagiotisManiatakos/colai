@@ -62,7 +62,7 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
   return (
     <div className="app-viewport login-screen">
       <div className="w-100">
-        <div className="text-center mb-3">
+        <div className="mb-3 text-center">
           <Image
             src="/logo_auth.png"
             alt="Mavrogenis"
@@ -73,8 +73,10 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
           />
         </div>
 
-        <div className="app-card p-4">
-          {error ? <div className="alert alert-danger py-2 small">{error}</div> : null}
+        <div className="app-card p-3">
+          {error ? (
+            <div className="alert alert-danger small py-2">{error}</div>
+          ) : null}
 
           <form onSubmit={onSubmit}>
             <div className="mb-3">
@@ -98,10 +100,17 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
+            <button
+              type="submit"
+              className="btn btn-primary w-100"
+              disabled={loading}
+            >
               {loading ? (
                 <span className="d-inline-flex align-items-center gap-2">
-                  <span className="spinner-border spinner-border-sm" aria-hidden />
+                  <span
+                    className="spinner-border spinner-border-sm"
+                    aria-hidden
+                  />
                   Συνδέεται…
                 </span>
               ) : (
@@ -112,17 +121,19 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
               )}
             </button>
           </form>
-          <div className="text-center mt-3">
+          <div className="mt-3 text-center">
             <div className="small">
               <Link href="/privacy-policy" className="text-decoration-none">
                 Πολιτική Απορρήτου
               </Link>
-              <span className="mx-2 text-secondary">|</span>
+              <span className="text-secondary mx-2">|</span>
               <Link href="/terms-of-use" className="text-decoration-none">
                 Όροι Χρήσης
               </Link>
             </div>
-            <div className="small text-secondary mt-2">Version {appVersion}</div>
+            <div className="small text-secondary mt-2">
+              Version {appVersion}
+            </div>
           </div>
         </div>
       </div>

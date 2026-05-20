@@ -25,18 +25,18 @@ function isPdf(name: string, mimeType?: string) {
   return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
+type AiClient = "Claude" | "Gemini";
+
 export default function GnomateuseisArea({
   aiMessage,
   aiStatus,
-  showAiClientRetry,
-  onRunAi,
+  aiRunningClient,
   onRunAiWithClient,
 }: {
   aiMessage: string | null;
   aiStatus: AiStatus;
-  onRunAi: () => void;
-  showAiClientRetry: boolean;
-  onRunAiWithClient: (aiclient: "Claude" | "Gemini") => void;
+  aiRunningClient: AiClient | null;
+  onRunAiWithClient: (aiclient: AiClient) => void;
 }) {
   const dispatch = useAppDispatch();
 
@@ -68,7 +68,7 @@ export default function GnomateuseisArea({
 
   return (
     <>
-      <div className="app-card p-4">
+      <div className="app-card p-3">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Αρχείο γνωμάτευσης</div>
 
@@ -203,7 +203,7 @@ export default function GnomateuseisArea({
           </div>
         )}
       </div>
-      <div className="app-card mt-3 p-4">
+      <div className="app-card mt-1 p-4">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Συμπληρωματικά αρχεία</div>
 
@@ -322,24 +322,35 @@ export default function GnomateuseisArea({
           </div>
         )}
       </div>
-      <div className="mt-3">
-        {showAiClientRetry ? (
-          <RunAiButton
-            running={aiStatus === "running"}
-            disabled={!hasFiles}
-            onClick={() => onRunAiWithClient("Gemini")}
-            icon={<SiGooglegemini size={18} />}
-          />
-        ) : (
-          <RunAiButton
-            running={aiStatus === "running"}
-            disabled={!hasFiles}
-            onClick={onRunAi}
-            icon={
-              <Image src="/claude.svg" alt="Claude" width={18} height={18} />
-            }
-          />
-        )}
+      <div className="d-flex flex-column mt-1 gap-1">
+        <RunAiButton
+          label="Run AI (Claude)"
+          running={aiStatus === "running" && aiRunningClient === "Claude"}
+          disabled={
+            !hasFiles ||
+            (aiStatus === "running" && aiRunningClient !== "Claude")
+          }
+          onClick={() => onRunAiWithClient("Claude")}
+          icon={<Image src="/claude.svg" alt="Claude" width={18} height={18} />}
+        />
+        <div
+          className="d-flex align-items-center text-secondary small gap-2 px-1"
+          aria-hidden
+        >
+          <hr className="m-0 flex-grow-1" />
+          <span className="text-uppercase fw-semibold">ή</span>
+          <hr className="m-0 flex-grow-1" />
+        </div>
+        <RunAiButton
+          label="Run AI (Gemini)"
+          running={aiStatus === "running" && aiRunningClient === "Gemini"}
+          disabled={
+            !hasFiles ||
+            (aiStatus === "running" && aiRunningClient !== "Gemini")
+          }
+          onClick={() => onRunAiWithClient("Gemini")}
+          icon={<SiGooglegemini size={18} />}
+        />
       </div>
     </>
   );

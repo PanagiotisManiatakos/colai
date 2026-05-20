@@ -4,7 +4,11 @@ import React, { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAppSelector } from "@/store/hooks";
 
-export default function RequireAuth({ children }: { children: React.ReactNode }) {
+export default function RequireAuth({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const status = useAppSelector((s) => s.auth.status);
   const router = useRouter();
   const pathname = usePathname();
@@ -18,12 +22,12 @@ export default function RequireAuth({ children }: { children: React.ReactNode })
 
   if (status === "unknown") {
     // return (
-    //   <div className="app-card p-4 text-center">
+    //   <div className="app-card p-3 text-center">
     //     <div className="spinner-border" role="status" aria-hidden />
     //     <div className="mt-2 text-secondary small">Loading…</div>
     //   </div>
     // );
-    return null
+    return null;
   }
 
   if (status === "unauthenticated") {

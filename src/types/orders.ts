@@ -26,8 +26,8 @@ export type Order = {
   customer_tel_otp: string;
   amka_origin: string;
   customer_ErpGID: string;
-  person_ErpGID: string;
-  address_ErpGID: string;
+  person_ErpGID: string | null;
+  address_ErpGID: string | null;
   shipTo_other_address: number; // 0/1
   customer_other_address: string;
   customer_other_city: string;

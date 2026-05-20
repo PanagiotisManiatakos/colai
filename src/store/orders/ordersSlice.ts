@@ -864,6 +864,17 @@ const ordersSlice = createSlice({
       const metaP = action.meta.arg.preferredPersonErpGID?.trim();
       const metaA = action.meta.arg.preferredAddressErpGID?.trim();
 
+      if (state.draft.order.shipTo_other_address === 1) {
+        const person =
+          metaP ||
+          savedPerson ||
+          (prePerson != null ? String(prePerson).trim() : "");
+        if (person) state.draft.order.person_ErpGID = person;
+        state.draft.order.address_ErpGID = null;
+        persistStateToLocalStorage(state);
+        return;
+      }
+
       const personInList = (pid: string | undefined) =>
         !!pid && addresses.some((p) => p.person_ErpGID === pid);
 
