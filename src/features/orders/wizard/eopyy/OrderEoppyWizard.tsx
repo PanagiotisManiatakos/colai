@@ -510,6 +510,8 @@ export default function OrderEoppyWizard() {
           !Array.isArray(lastOrderInfo) &&
           Object.keys(lastOrderInfo).length > 0;
 
+        let customerAddressesLoaded = false;
+
         if (hasLastOrderInfo) {
           const raw = lastOrderInfo as Record<string, unknown>;
           const orderObj =
@@ -624,6 +626,7 @@ export default function OrderEoppyWizard() {
                   preferredAddressErpGID: addressFromLastOrder,
                 }),
               ).unwrap();
+              customerAddressesLoaded = true;
 
               if (shipToFromLastOrder === 1) {
                 syncShipToOtherAddressFlags(dispatch, 1);
@@ -644,12 +647,6 @@ export default function OrderEoppyWizard() {
               } else {
                 dispatch(
                   setDraftProperty({ key: "shipTo_other_address", value: 0 }),
-                );
-                dispatch(
-                  setDraftProperty({
-                    key: "shipToOtherAddressBool",
-                    value: false,
-                  }),
                 );
                 dispatch(
                   setDraftProperty({ key: "has_other_recipient", value: 0 }),
@@ -992,6 +989,26 @@ export default function OrderEoppyWizard() {
           const ylikaBeforeAi = store.getState().orders.draft.ylika;
           dispatch(setDraftYlika([...ylikaBeforeAi, ...fromAi]));
           dispatch(setAIMaterials(nonUniqueAiMaterials));
+        }
+
+        if (!customerAddressesLoaded) {
+          const o = store.getState().orders.draft.order;
+          const gid = String(o.customer_ErpGID ?? "").trim();
+          const amka = String(o.customer_amka ?? "").trim();
+          if (gid && amka) {
+            try {
+              await dispatch(
+                loadCustomerAddressesAsync({
+                  customer_ErpGID: gid,
+                  customer_name: o.customer_name,
+                  customer_address: o.customer_address,
+                  customer_amka: amka,
+                }),
+              ).unwrap();
+            } catch {
+              // Address list is optional if search-address fails
+            }
+          }
         }
       }
 

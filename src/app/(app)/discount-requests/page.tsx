@@ -63,7 +63,7 @@ export default function DiscountRequestsPage() {
     listLoading && discountRequests.requests.length === 0;
 
   return (
-    <div className="d-flex flex-column h-100" style={{ minHeight: 0 }}>
+    <>
       <div className="app-card mb-3 p-2">
         <SearchBar
           placeholder="Αναζήτηση αιτήματος"
@@ -73,12 +73,8 @@ export default function DiscountRequestsPage() {
           onClear={onClearSearch}
         />
       </div>
-      <PullToRefresh
-        useSelfScroll
-        className="flex-grow-1"
-        onRefresh={onRefresh}
-        isRefreshing={refreshing}
-      >
+
+      <PullToRefresh onRefresh={onRefresh} isRefreshing={refreshing}>
         {showInitialLoader ? (
           <AppLoader label="Φόρτωση αιτημάτων..." />
         ) : discountRequests.requests.length ? (
@@ -93,6 +89,6 @@ export default function DiscountRequestsPage() {
           </div>
         )}
       </PullToRefresh>
-    </div>
+    </>
   );
 }
