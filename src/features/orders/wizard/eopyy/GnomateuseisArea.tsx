@@ -25,20 +25,18 @@ function isPdf(name: string, mimeType?: string) {
   return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
+type AiClient = "Claude" | "Gemini";
+
 export default function GnomateuseisArea({
   aiMessage,
   aiStatus,
-  showAiClientRetry,
-  bothAiProvidersFailed,
-  onRunAi,
+  aiRunningClient,
   onRunAiWithClient,
 }: {
   aiMessage: string | null;
   aiStatus: AiStatus;
-  onRunAi: () => void;
-  showAiClientRetry: boolean;
-  bothAiProvidersFailed?: boolean;
-  onRunAiWithClient: (aiclient: "Claude" | "Gemini") => void;
+  aiRunningClient: AiClient | null;
+  onRunAiWithClient: (aiclient: AiClient) => void;
 }) {
   const dispatch = useAppDispatch();
 
@@ -324,30 +322,35 @@ export default function GnomateuseisArea({
           </div>
         )}
       </div>
-      <div className="mt-3">
-        {showAiClientRetry ? (
-          <RunAiButton
-            running={aiStatus === "running"}
-            disabled={!hasFiles}
-            onClick={() => onRunAiWithClient("Gemini")}
-            icon={<SiGooglegemini size={18} />}
-          />
-        ) : (
-          <RunAiButton
-            running={aiStatus === "running"}
-            disabled={!hasFiles}
-            onClick={onRunAi}
-            icon={
-              <Image src="/claude.svg" alt="Claude" width={18} height={18} />
-            }
-          />
-        )}
-        {bothAiProvidersFailed ? (
-          <p className="small text-secondary mt-2 mb-0 text-center">
-            Μπορείτε να δοκιμάσετε ξανά με Claude ή να εισάγετε τα στοιχεία
-            χειροκίνητα.
-          </p>
-        ) : null}
+      <div className="d-flex flex-column mt-3 gap-2">
+        <RunAiButton
+          label="Run AI (Claude)"
+          running={aiStatus === "running" && aiRunningClient === "Claude"}
+          disabled={
+            !hasFiles ||
+            (aiStatus === "running" && aiRunningClient !== "Claude")
+          }
+          onClick={() => onRunAiWithClient("Claude")}
+          icon={<Image src="/claude.svg" alt="Claude" width={18} height={18} />}
+        />
+        <div
+          className="d-flex align-items-center text-secondary small gap-2 px-1"
+          aria-hidden
+        >
+          <hr className="m-0 flex-grow-1" />
+          <span className="text-uppercase fw-semibold">ή</span>
+          <hr className="m-0 flex-grow-1" />
+        </div>
+        <RunAiButton
+          label="Run AI (Gemini)"
+          running={aiStatus === "running" && aiRunningClient === "Gemini"}
+          disabled={
+            !hasFiles ||
+            (aiStatus === "running" && aiRunningClient !== "Gemini")
+          }
+          onClick={() => onRunAiWithClient("Gemini")}
+          icon={<SiGooglegemini size={18} />}
+        />
       </div>
     </>
   );

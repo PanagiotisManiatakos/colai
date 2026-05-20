@@ -80,8 +80,9 @@ export default function OrderEoppyWizard() {
   const router = useRouter();
   const [aiStatus, setAiStatus] = React.useState<AiStatus>("idle");
   const [aiMessage, setAiMessage] = React.useState<string | null>(null);
-  const [showAiClientRetry, setShowAiClientRetry] = React.useState(false);
-  const [claudeAiFailed, setClaudeAiFailed] = React.useState(false);
+  const [aiRunningClient, setAiRunningClient] = React.useState<AiClient | null>(
+    null,
+  );
   const [issues, setIssues] = React.useState<WizardIssue[]>([]);
 
   const draftOrder = useAppSelector((s) => s.orders.draft.order);
@@ -119,9 +120,7 @@ export default function OrderEoppyWizard() {
         <GnomateuseisArea
           aiMessage={aiMessage}
           aiStatus={aiStatus}
-          showAiClientRetry={showAiClientRetry}
-          bothAiProvidersFailed={claudeAiFailed && aiStatus === "error"}
-          onRunAi={runAi}
+          aiRunningClient={aiRunningClient}
           onRunAiWithClient={runAi}
         />
       ),
@@ -453,15 +452,10 @@ export default function OrderEoppyWizard() {
     }
   }
 
-  async function runAi(aiclient: AiClient = "Claude") {
-    const claudeFailedEarlier = claudeAiFailed;
-
+  async function runAi(aiclient: AiClient) {
     setAiStatus("running");
+    setAiRunningClient(aiclient);
     setAiMessage(null);
-    setShowAiClientRetry(false);
-    if (aiclient === "Claude") {
-      setClaudeAiFailed(false);
-    }
 
     const controller = new AbortController();
     const pendingTimeoutMs = 60_000;
@@ -1001,17 +995,13 @@ export default function OrderEoppyWizard() {
         }
       }
 
-      setClaudeAiFailed(false);
       setAiStatus("done");
       setStep(1);
     } catch (e: any) {
       setAiStatus("error");
-      if (aiclient === "Claude") {
-        setClaudeAiFailed(true);
-        setShowAiClientRetry(true);
-      }
-      setAiMessage(getAiRunErrorMessage(e, aiclient, claudeFailedEarlier));
+      setAiMessage(getAiRunErrorMessage(e, aiclient));
     } finally {
+      setAiRunningClient(null);
       window.clearTimeout(t);
     }
   }
