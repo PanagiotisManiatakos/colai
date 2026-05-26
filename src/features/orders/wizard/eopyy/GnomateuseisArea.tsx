@@ -25,17 +25,53 @@ function isPdf(name: string, mimeType?: string) {
   return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
+function TruncatedFileName({
+  name,
+  className = "fw-semibold",
+}: {
+  name?: string | null;
+  className?: string;
+}) {
+  const displayName = name ?? "";
+  if (!displayName) return null;
+
+  return (
+    <div
+      className={className}
+      title={displayName}
+      style={{
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        maxWidth: "100%",
+      }}
+    >
+      {displayName}
+    </div>
+  );
+}
+
+const fileInfoWrapStyle: React.CSSProperties = {
+  minWidth: 0,
+  overflow: "hidden",
+  flex: "1 1 0%",
+};
+
 type AiClient = "Claude" | "Gemini";
+
+const MAX_RECIPE_FILES = 2;
 
 export default function GnomateuseisArea({
   aiMessage,
   aiStatus,
   aiRunningClient,
+  aiDisabledClients = [],
   onRunAiWithClient,
 }: {
   aiMessage: string | null;
   aiStatus: AiStatus;
   aiRunningClient: AiClient | null;
+  aiDisabledClients?: AiClient[];
   onRunAiWithClient: (aiclient: AiClient) => void;
 }) {
   const dispatch = useAppDispatch();
@@ -61,61 +97,73 @@ export default function GnomateuseisArea({
 
   const isUploadingNow = status === "uploading";
   const isUploadingNowExtra = statusExtra === "uploading";
-  const hasFiles = files.some((o: any) => o?.documentCategory === "recipe");
+  const recipeFiles = files.filter(
+    (o: any) => o?.documentCategory === "recipe",
+  );
+  const recipeFileCount = recipeFiles.length;
+  const canAddRecipeFile = recipeFileCount < MAX_RECIPE_FILES;
+  const hasFiles = recipeFileCount > 0;
   const hasAuxFiles = files.some(
     (o: any) => o?.documentCategory === "recipe_aux",
   );
 
   return (
     <>
-      <div className="app-card p-3">
+      <div className="app-card overflow-hidden p-3">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
-          <div className="fw-semibold">Αρχείο γνωμάτευσης</div>
+          <div className="fw-semibold">Γνωμάτευση (μέχρι δύο σελίδες)</div>
 
-          <div className="d-flex align-items-center gap-2">
-            <FileUploadButton
-              ariaLabel="Προσθήκη"
-              disabled={isUploadingNow || aiStatus === "running"}
-              accept="application/pdf,image/*"
-              dispatchFileToRedux={(d: any) =>
-                dispatch(setDraftSyntagiUploaded(d))
-              }
-              position={files.length}
-              setMessage={(s: any) => setMessage(s)}
-              setProgress={(i: number) => setProgress(i)}
-              orderUid={orderUid}
-              setUploading={(s: any) => setUploading(s)}
-              setStatus={(s: any) => setStatus(s)}
-              endpoint="/api/orders/file"
-            >
-              {isUploadingNow ? (
-                <span
-                  className="spinner-border spinner-border-sm"
-                  aria-hidden
-                />
-              ) : (
-                <i className="bi bi-plus-lg" />
-              )}
-            </FileUploadButton>
-          </div>
+          {canAddRecipeFile ? (
+            <div className="d-flex align-items-center gap-2">
+              <FileUploadButton
+                ariaLabel="Προσθήκη"
+                disabled={isUploadingNow || aiStatus === "running"}
+                accept="application/pdf,image/*"
+                dispatchFileToRedux={(d: any) =>
+                  dispatch(setDraftSyntagiUploaded(d))
+                }
+                position={recipeFileCount}
+                setMessage={(s: any) => setMessage(s)}
+                setProgress={(i: number) => setProgress(i)}
+                orderUid={orderUid}
+                setUploading={(s: any) => setUploading(s)}
+                setStatus={(s: any) => setStatus(s)}
+                endpoint="/api/orders/file"
+              >
+                {isUploadingNow ? (
+                  <span
+                    className="spinner-border spinner-border-sm"
+                    aria-hidden
+                  />
+                ) : (
+                  <i className="bi bi-plus-lg" />
+                )}
+              </FileUploadButton>
+            </div>
+          ) : null}
         </div>
 
         {uploading ? (
           <div className="mb-3 rounded border p-3">
-            <div className="d-flex align-items-start justify-content-between">
-              <div className="d-flex gap-2">
+            <div className="d-flex align-items-start justify-content-between overflow-hidden">
+              <div
+                className="d-flex me-2 flex-grow-1 gap-2 overflow-hidden"
+                style={fileInfoWrapStyle}
+              >
                 <i
-                  className={`bi ${isPdf(uploading.name, uploading.fileType) ? "bi-filetype-pdf" : "bi-image"}`}
+                  className={`bi flex-shrink-0 ${isPdf(uploading.name, uploading.fileType) ? "bi-filetype-pdf" : "bi-image"}`}
                 />
-                <div>
-                  <div className="fw-semibold">{uploading.name}</div>
+                <div style={fileInfoWrapStyle}>
+                  <TruncatedFileName name={uploading.name} />
                   <div className="small text-secondary">
                     {uploading.fileSize}
                   </div>
                 </div>
               </div>
 
-              <div className="small text-secondary">{progress}%</div>
+              <div className="small text-secondary flex-shrink-0">
+                {progress}%
+              </div>
             </div>
 
             <div className="progress mt-2" style={{ height: 10 }}>
@@ -168,44 +216,46 @@ export default function GnomateuseisArea({
         ) : null}
 
         {hasFiles ? (
-          <div className="d-flex flex-column gap-2">
-            {files.map((f: OrderFile) => {
+          <div className="d-flex flex-column gap-2 overflow-hidden">
+            {recipeFiles.map((f: OrderFile) => {
               const name = f.originalFileName ?? f.name ?? f.base64filename;
               const pdf = isPdf(name ?? "", f.fileType);
 
-              if (f.documentCategory == "recipe") {
-                return (
+              return (
+                <div
+                  key={`${f.position}-${name}`}
+                  className="d-flex justify-content-between align-items-center overflow-hidden rounded border p-2"
+                  style={{ minWidth: 0 }}
+                >
                   <div
-                    key={`${f.position}-${name}`}
-                    className="d-flex justify-content-between align-items-center rounded border p-2"
+                    className="d-flex align-items-start me-2 gap-2 overflow-hidden"
+                    style={fileInfoWrapStyle}
                   >
-                    <div className="d-flex align-items-start gap-2">
-                      <i
-                        className={`bi ${pdf ? "bi-filetype-pdf" : "bi-image"}`}
-                      />
-                      <div>
-                        <div className="fw-semibold">{name}</div>
-                        <div className="small text-secondary">{f.fileSize}</div>
-                      </div>
+                    <i
+                      className={`bi flex-shrink-0 ${pdf ? "bi-filetype-pdf" : "bi-image"}`}
+                    />
+                    <div style={fileInfoWrapStyle}>
+                      <TruncatedFileName name={name} />
+                      <div className="small text-secondary">{f.fileSize}</div>
                     </div>
-
-                    <span className="badge text-bg-success">Uploaded</span>
                   </div>
-                );
-              } else {
-                return null;
-              }
+
+                  <span className="badge text-bg-success flex-shrink-0">
+                    Uploaded
+                  </span>
+                </div>
+              );
             })}
           </div>
         ) : (
           <div className="small text-secondary">
-            Πάτα + για να ανεβάσεις νέα γνωμάτευση.
+            Πάτα + για να ανεβάσεις γνωμάτευση μέχρι δύο σελίδες.
           </div>
         )}
       </div>
-      <div className="app-card mt-1 p-4">
+      <div className="app-card mt-1 overflow-hidden p-4">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
-          <div className="fw-semibold">Συμπληρωματικά αρχεία</div>
+          <div className="fw-semibold">Άλλα αρχεία</div>
 
           <div className="d-flex align-items-center gap-2">
             <FileUploadButton
@@ -238,20 +288,25 @@ export default function GnomateuseisArea({
 
         {uploadingExtra ? (
           <div className="mb-3 rounded border p-3">
-            <div className="d-flex align-items-start justify-content-between">
-              <div className="d-flex gap-2">
+            <div className="d-flex align-items-start justify-content-between overflow-hidden">
+              <div
+                className="d-flex me-2 flex-grow-1 gap-2 overflow-hidden"
+                style={fileInfoWrapStyle}
+              >
                 <i
-                  className={`bi ${isPdf(uploadingExtra.name, uploadingExtra.fileType) ? "bi-filetype-pdf" : "bi-image"}`}
+                  className={`bi flex-shrink-0 ${isPdf(uploadingExtra.name, uploadingExtra.fileType) ? "bi-filetype-pdf" : "bi-image"}`}
                 />
-                <div>
-                  <div className="fw-semibold">{uploadingExtra.name}</div>
+                <div style={fileInfoWrapStyle}>
+                  <TruncatedFileName name={uploadingExtra.name} />
                   <div className="small text-secondary">
                     {`${(uploadingExtra.fileSize / 1024 / 1024).toFixed(2)} MB`}
                   </div>
                 </div>
               </div>
 
-              <div className="small text-secondary">{progressExtra}%</div>
+              <div className="small text-secondary flex-shrink-0">
+                {progressExtra}%
+              </div>
             </div>
 
             <div className="progress mt-2" style={{ height: 10 }}>
@@ -280,7 +335,7 @@ export default function GnomateuseisArea({
         ) : null}
 
         {hasAuxFiles ? (
-          <div className="d-flex flex-column gap-2">
+          <div className="d-flex flex-column gap-2 overflow-hidden">
             {files.map((f: OrderFile) => {
               const name = f.name ?? f.base64filename ?? f.originalFileName;
               const sizeMb = (
@@ -294,21 +349,27 @@ export default function GnomateuseisArea({
                 return (
                   <div
                     key={`${f.position}-${name}`}
-                    className="d-flex justify-content-between align-items-center rounded border p-2"
+                    className="d-flex justify-content-between align-items-center overflow-hidden rounded border p-2"
+                    style={{ minWidth: 0 }}
                   >
-                    <div className="d-flex align-items-start gap-2">
+                    <div
+                      className="d-flex align-items-start me-2 gap-2 overflow-hidden"
+                      style={fileInfoWrapStyle}
+                    >
                       <i
-                        className={`bi ${pdf ? "bi-filetype-pdf" : "bi-image"}`}
+                        className={`bi flex-shrink-0 ${pdf ? "bi-filetype-pdf" : "bi-image"}`}
                       />
-                      <div>
-                        <div className="fw-semibold">{name}</div>
+                      <div style={fileInfoWrapStyle}>
+                        <TruncatedFileName name={name} />
                         <div className="small text-secondary">
                           {sizeMb ? ` ${sizeMb} MB` : ""}
                         </div>
                       </div>
                     </div>
 
-                    <span className="badge text-bg-success">Uploaded</span>
+                    <span className="badge text-bg-success flex-shrink-0">
+                      Uploaded
+                    </span>
                   </div>
                 );
               } else {
@@ -318,40 +379,48 @@ export default function GnomateuseisArea({
           </div>
         ) : (
           <div className="small text-secondary">
-            Πάτα + για να ανεβάσεις επιπλέον αρχεία.
+            Πάτα + για να ανεβάσεις επιπλέον αρχεία που δεν αφορούν γνωμάτευση.
           </div>
         )}
       </div>
-      <div className="d-flex flex-column mt-1 gap-1">
-        <RunAiButton
-          label="Run AI (Claude)"
-          running={aiStatus === "running" && aiRunningClient === "Claude"}
-          disabled={
-            !hasFiles ||
-            (aiStatus === "running" && aiRunningClient !== "Claude")
-          }
-          onClick={() => onRunAiWithClient("Claude")}
-          icon={<Image src="/claude.svg" alt="Claude" width={18} height={18} />}
-        />
-        <div
-          className="d-flex align-items-center text-secondary small gap-2 px-1"
-          aria-hidden
-        >
-          <hr className="m-0 flex-grow-1" />
-          <span className="text-uppercase fw-semibold">ή</span>
-          <hr className="m-0 flex-grow-1" />
+      {aiStatus !== "done" ? (
+        <div className="d-flex flex-column mt-1 gap-1">
+          <RunAiButton
+            label="Run AI (Claude)"
+            running={aiStatus === "running" && aiRunningClient === "Claude"}
+            failed={aiDisabledClients.includes("Claude")}
+            disabled={
+              !hasFiles ||
+              aiDisabledClients.includes("Claude") ||
+              (aiStatus === "running" && aiRunningClient !== "Claude")
+            }
+            onClick={() => onRunAiWithClient("Claude")}
+            icon={
+              <Image src="/claude.svg" alt="Claude" width={18} height={18} />
+            }
+          />
+          <div
+            className="d-flex align-items-center text-secondary small gap-2 px-1"
+            aria-hidden
+          >
+            <hr className="m-0 flex-grow-1" />
+            <span className="text-uppercase fw-semibold">ή</span>
+            <hr className="m-0 flex-grow-1" />
+          </div>
+          <RunAiButton
+            label="Run AI (Gemini)"
+            running={aiStatus === "running" && aiRunningClient === "Gemini"}
+            failed={aiDisabledClients.includes("Gemini")}
+            disabled={
+              !hasFiles ||
+              aiDisabledClients.includes("Gemini") ||
+              (aiStatus === "running" && aiRunningClient !== "Gemini")
+            }
+            onClick={() => onRunAiWithClient("Gemini")}
+            icon={<SiGooglegemini size={18} />}
+          />
         </div>
-        <RunAiButton
-          label="Run AI (Gemini)"
-          running={aiStatus === "running" && aiRunningClient === "Gemini"}
-          disabled={
-            !hasFiles ||
-            (aiStatus === "running" && aiRunningClient !== "Gemini")
-          }
-          onClick={() => onRunAiWithClient("Gemini")}
-          icon={<SiGooglegemini size={18} />}
-        />
-      </div>
+      ) : null}
     </>
   );
 }

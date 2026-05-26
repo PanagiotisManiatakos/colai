@@ -27,19 +27,39 @@ export default function OrderDoctorArea() {
   const [showLookup, setShowLookup] = React.useState(false);
   const [showSuggestedLookup, setShowSuggestedLookup] = React.useState(false);
 
+  const openDoctorLookup = () => setShowLookup(true);
+
   return (
     <div className="app-card p-3">
-      <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
-        <div className="fw-semibold">Ιατρός</div>
-
-        <button
-          type="button"
-          className="btn-icon-pill"
-          aria-label="Αναζήτηση"
-          onClick={() => setShowLookup(true)}
-        >
-          <i className="bi bi-search" />
-        </button>
+      <div className="d-flex align-items-center border-bottom mb-3 gap-5 pb-3">
+        <label className="form-label fw-semibold mb-0 flex-shrink-0">
+          Ιατρός
+        </label>
+        <div className="input-group flex-grow-1" style={{ minWidth: 0 }}>
+          <input
+            type="text"
+            readOnly
+            className="form-control"
+            placeholder="Αναζήτηση..."
+            onClick={openDoctorLookup}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openDoctorLookup();
+              }
+            }}
+            aria-label="Αναζήτηση ιατρού"
+            style={{ cursor: "pointer" }}
+          />
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={openDoctorLookup}
+            aria-label="Αναζήτηση"
+          >
+            <i className="bi bi-search" />
+          </button>
+        </div>
       </div>
 
       <DoctorLookupModal
