@@ -5,7 +5,7 @@ function mergeClassName(a?: string, b?: string) {
     return [a, b].filter(Boolean).join(" ");
 }
 
-export default function OrderField({ label, children, hint }: { label?: string; children: React.ReactNode; hint?: string }) {
+export default function OrderField({ label, children, hint }: { label?: React.ReactNode; children: React.ReactNode; hint?: string }) {
     const { errors, clearError } = React.useContext(FormErrorsContext);
 
     const childIsEl = React.isValidElement(children);

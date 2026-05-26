@@ -46,8 +46,31 @@ export default function Touchdown({
 
   return (
     <>
+      <div className="app-card mb-2 p-3">
+        <div className="form-check form-switch switch-lg mb-0">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            checked={data.isTempSave == 1}
+            onChange={(e) =>
+              dispatch(
+                setDraftProperty({
+                  key: "isTempSave",
+                  value: e.target.checked ? 1 : 0,
+                }),
+              )
+            }
+            name="isTempSave"
+            id="isTempSave"
+          />
+          <label className="form-check-label" htmlFor="isTempSave">
+            Προσωρινή αποθήκευση
+          </label>
+        </div>
+      </div>
+
       {uniqueIssues.length > 0 && (
-        <div className="app-card border-danger-subtle mb-3 border p-3">
+        <div className="app-card border-danger-subtle mb-2 border p-3">
           <div className="d-flex align-items-start gap-3">
             <div
               className="d-flex align-items-center justify-content-center rounded-circle border"
@@ -126,26 +149,6 @@ export default function Touchdown({
             }
           />
         </OrderField>
-
-        <div className="form-check form-switch switch-lg mb-2">
-          <input
-            className="form-check-input"
-            type="checkbox"
-            checked={data.isTempSave == 1}
-            onChange={(e) =>
-              dispatch(
-                setDraftProperty({
-                  key: "isTempSave",
-                  value: e.target.checked ? 1 : 0,
-                }),
-              )
-            }
-            name="isTempSave"
-          />
-          <label className="form-check-label" htmlFor="isTempSave">
-            Προσωρινή αποθήκευση
-          </label>
-        </div>
       </div>
 
       {submitState.error && (

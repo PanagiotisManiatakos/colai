@@ -38,6 +38,7 @@ import AIMaterials from "./AIMaterials";
 import { AIMaterials as AIMaterialsType, OrderYlika } from "@/types/orders";
 import YpervasiPlafonArea from "./YpervasiPlafonArea";
 import UpdateRecipientArea from "./UpdateRecipientArea";
+import SubmitOrderConfirmModal from "../modals/SubmitOrderConfirmModal";
 
 type AiStatus = "idle" | "running" | "done" | "error";
 type WizardIssue = {
@@ -83,11 +84,22 @@ export default function OrderEoppyWizard() {
   const [aiRunningClient, setAiRunningClient] = React.useState<AiClient | null>(
     null,
   );
+  const [aiDisabledClients, setAiDisabledClients] = React.useState<AiClient[]>(
+    [],
+  );
   const [issues, setIssues] = React.useState<WizardIssue[]>([]);
+  const [showSubmitConfirm, setShowSubmitConfirm] = React.useState(false);
 
   const draftOrder = useAppSelector((s) => s.orders.draft.order);
   const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
   const hasFiles = files.some((o: any) => o?.documentCategory === "recipe");
+  const recipeFileCount = files.filter(
+    (o: any) => o?.documentCategory === "recipe",
+  ).length;
+
+  React.useEffect(() => {
+    setAiDisabledClients([]);
+  }, [recipeFileCount]);
   const hasConsentFormFiles = files.some(
     (o: any) => o?.documentCategory === "consent_form",
   );
@@ -121,6 +133,7 @@ export default function OrderEoppyWizard() {
           aiMessage={aiMessage}
           aiStatus={aiStatus}
           aiRunningClient={aiRunningClient}
+          aiDisabledClients={aiDisabledClients}
           onRunAiWithClient={runAi}
         />
       ),
@@ -426,7 +439,7 @@ export default function OrderEoppyWizard() {
     [validateEoppyOrder],
   );
 
-  async function onSave() {
+  function onSaveClick() {
     const found = validateEoppyOrder();
 
     if (found.length > 0) {
@@ -439,9 +452,14 @@ export default function OrderEoppyWizard() {
     }
 
     setIssues([]);
+    setShowSubmitConfirm(true);
+  }
+
+  async function confirmSave() {
     try {
       const result = await dispatch(submitDraftAsync()).unwrap();
       if (result.result) {
+        setShowSubmitConfirm(false);
         router.replace("/orders");
         await dispatch(fetchOrders({ force: true }));
       } else {
@@ -451,6 +469,11 @@ export default function OrderEoppyWizard() {
       console.error(e);
     }
   }
+
+  const submitConfirmAmka =
+    draftOrder.has_other_recipient == 1
+      ? draftOrder.recipient_amka
+      : draftOrder.customer_amka;
 
   async function runAi(aiclient: AiClient) {
     setAiStatus("running");
@@ -739,13 +762,20 @@ export default function OrderEoppyWizard() {
               value: data.jsonDoc.otp,
             }),
           );
-        data.jsonDoc.customer_erpid &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_ErpGID",
-              value: data.jsonDoc.customer_erpid,
-            }),
-          );
+        data.jsonDoc.customer_erpid != null &&
+          String(data.jsonDoc.customer_erpid).trim() !== ""
+          ? dispatch(
+              setDraftProperty({
+                key: "customer_ErpGID",
+                value: String(data.jsonDoc.customer_erpid),
+              }),
+            )
+          : dispatch(
+              setDraftProperty({
+                key: "customer_ErpGID",
+                value: null,
+              }),
+            );
         //DOCTOR
         const doctor = data.jsonDoc.iatros;
         if (doctor) {
@@ -1017,6 +1047,9 @@ export default function OrderEoppyWizard() {
     } catch (e: any) {
       setAiStatus("error");
       setAiMessage(getAiRunErrorMessage(e, aiclient));
+      setAiDisabledClients((prev) =>
+        prev.includes(aiclient) ? prev : [...prev, aiclient],
+      );
     } finally {
       setAiRunningClient(null);
       window.clearTimeout(t);
@@ -1067,7 +1100,7 @@ export default function OrderEoppyWizard() {
                 aiStatus === "running"
               }
               className="btn btn-success flex-fill"
-              onClick={onSave}
+              onClick={onSaveClick}
             >
               <i className="bi bi-check2-circle me-2" />
               {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
@@ -1075,6 +1108,19 @@ export default function OrderEoppyWizard() {
           )}
         </div>
       ) : null}
+
+      <SubmitOrderConfirmModal
+        show={showSubmitConfirm}
+        loading={submitState.loading}
+        error={submitState.error}
+        otp={draftOrder.customer_tel_otp}
+        amka={submitConfirmAmka}
+        barcode={draftOrder.barcode}
+        onClose={() => {
+          if (!submitState.loading) setShowSubmitConfirm(false);
+        }}
+        onConfirm={confirmSave}
+      />
     </div>
   );
 }

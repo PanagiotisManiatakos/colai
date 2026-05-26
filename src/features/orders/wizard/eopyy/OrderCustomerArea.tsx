@@ -5,6 +5,10 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import CustomerLookupModal from "../modals/CustomerLookupModal";
 import ErpContactsLookupModal from "../modals/ErpContactsLookupModal";
+import NewRecipientConfirmModal from "../modals/NewRecipientConfirmModal";
+import SavedRecipientFields, {
+  resolveSavedRecipientSelection,
+} from "./SavedRecipientFields";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
@@ -17,6 +21,26 @@ type Props = {
   consentStepShown?: boolean;
 };
 
+function CustomerNameLabel() {
+  const data = useAppSelector((s) => s.orders.draft.order);
+  const isExistingCustomer = !!String(data.customer_ErpGID ?? "").trim();
+
+  if (!data.aiCalculated) {
+    return <>Ονοματεπώνυμο</>;
+  }
+
+  return (
+    <span className="d-inline-flex align-items-center flex-wrap gap-2">
+      Ονοματεπώνυμο
+      <span
+        className={`badge ${isExistingCustomer ? "text-bg-success" : "text-bg-danger"}`}
+      >
+        {isExistingCustomer ? "Υφιστάμενος" : "Νέος"}
+      </span>
+    </span>
+  );
+}
+
 export default function OrderCustomerArea({
   errors,
   clearError,
@@ -26,6 +50,8 @@ export default function OrderCustomerArea({
   const dispatch = useAppDispatch();
   const [showLookup, setShowLookup] = React.useState(false);
   const [showErpContactsLookup, setShowErpContactsLookup] =
+    React.useState(false);
+  const [showNewRecipientConfirm, setShowNewRecipientConfirm] =
     React.useState(false);
   const listTropoiApostolis = useAppSelector(
     (s) => s.orders.draft.list_TroposApostolis,
@@ -46,23 +72,94 @@ export default function OrderCustomerArea({
     (s) => s.orders.draft.preselected_address_GID,
   );
 
+  const savedRecipientSelectionRef = React.useRef<{
+    person_ErpGID: string | null;
+    address_ErpGID: string | null;
+  } | null>(null);
+
   const selectedPerson = React.useMemo(
     () =>
       listAddressesPersons.find((p) => p.person_ErpGID == data.person_ErpGID) ??
       null,
     [listAddressesPersons, data.person_ErpGID],
   );
-  const selectedPersonAddresses = React.useMemo(() => {
-    return selectedPerson?.addresses ?? [];
-  }, [selectedPerson]);
   const selectedAddress = React.useMemo(() => {
-    if (!selectedPersonAddresses.length) return null;
+    const addresses = selectedPerson?.addresses ?? [];
+    if (!addresses.length) return null;
     return (
-      selectedPersonAddresses.find(
-        (a) => a.address_ErpGID == data.address_ErpGID,
-      ) ?? selectedPersonAddresses[0]
+      addresses.find((a) => a.address_ErpGID == data.address_ErpGID) ??
+      addresses[0]
     );
-  }, [selectedPersonAddresses, data.address_ErpGID]);
+  }, [selectedPerson, data.address_ErpGID]);
+
+  const enableOtherRecipient = React.useCallback(() => {
+    savedRecipientSelectionRef.current = {
+      person_ErpGID: data.person_ErpGID ?? null,
+      address_ErpGID: data.address_ErpGID ?? null,
+    };
+    dispatch(setDraftProperty({ key: "has_other_recipient", value: 1 }));
+    dispatch(setDraftProperty({ key: "person_ErpGID", value: null }));
+    dispatch(setDraftProperty({ key: "address_ErpGID", value: null }));
+    dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
+    dispatch(
+      setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
+    );
+  }, [data.address_ErpGID, data.person_ErpGID, dispatch]);
+
+  const disableOtherRecipient = React.useCallback(() => {
+    const hadErpRecipient = data.recipient_from_erp_lookup == 1;
+    const saved = savedRecipientSelectionRef.current;
+    const { person_ErpGID, address_ErpGID } = resolveSavedRecipientSelection(
+      listAddressesPersons,
+      {
+        personErpGID: saved?.person_ErpGID ?? data.person_ErpGID,
+        addressErpGID: saved?.address_ErpGID ?? data.address_ErpGID,
+        preselectedPerson: preselected_person_GID,
+        preselectedAddress: preselected_address_GID,
+      },
+    );
+
+    dispatch(
+      setDraftProperty({
+        key: "person_ErpGID",
+        value: person_ErpGID,
+      }),
+    );
+    dispatch(
+      setDraftProperty({
+        key: "address_ErpGID",
+        value: address_ErpGID,
+      }),
+    );
+    dispatch(
+      setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
+    );
+    if (hadErpRecipient) {
+      dispatch(
+        setDraftProperty({ key: "shouldUpdateRecipientInfos", value: null }),
+      );
+      dispatch(setDraftProperty({ key: "updateRecipient_afm", value: null }));
+      dispatch(
+        setDraftProperty({ key: "updateRecipient_passport", value: null }),
+      );
+      dispatch(
+        setDraftProperty({ key: "updateRecipient_mobile", value: null }),
+      );
+      dispatch(
+        setDraftProperty({ key: "updateRecipient_address", value: null }),
+      );
+      dispatch(setDraftProperty({ key: "updateRecipient_tk", value: null }));
+      dispatch(setDraftProperty({ key: "updateRecipient_amka", value: null }));
+    }
+  }, [
+    data.address_ErpGID,
+    data.person_ErpGID,
+    data.recipient_from_erp_lookup,
+    dispatch,
+    listAddressesPersons,
+    preselected_address_GID,
+    preselected_person_GID,
+  ]);
 
   React.useEffect(() => {
     if (!selectedAddress) return;
@@ -148,31 +245,35 @@ export default function OrderCustomerArea({
   return (
     <div className="app-card p-3">
       <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
-        <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
-          <div className="d-flex justify-content-start align-items-center flex-row gap-2">
-            <div className="fw-semibold">OTP</div>
-            <OrderField>
-              <OtpInput
-                name="customer_tel_otp"
-                length={6}
-                value={data.customer_tel_otp ?? ""}
-                onChange={(otp) =>
-                  dispatch(
-                    setDraftProperty({ key: "customer_tel_otp", value: otp }),
-                  )
+        <div className="d-flex align-items-center border-bottom mb-3 gap-5 pb-3">
+          <label className="form-label fw-semibold mb-0 flex-shrink-0">
+            Ασθενής
+          </label>
+          <div className="input-group flex-grow-1" style={{ minWidth: 0 }}>
+            <input
+              type="text"
+              readOnly
+              className="form-control"
+              placeholder="Αναζήτηση..."
+              onClick={handleSearchClick}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleSearchClick();
                 }
-              />
-            </OrderField>
+              }}
+              aria-label="Αναζήτηση ασθενή"
+              style={{ cursor: "pointer" }}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleSearchClick}
+              aria-label="Αναζήτηση"
+            >
+              <i className="bi bi-search" />
+            </button>
           </div>
-
-          <button
-            type="button"
-            className="btn-icon-pill"
-            aria-label="Αναζήτηση"
-            onClick={handleSearchClick}
-          >
-            <i className="bi bi-search" />
-          </button>
         </div>
 
         <CustomerLookupModal
@@ -180,61 +281,66 @@ export default function OrderCustomerArea({
           onClose={() => setShowLookup(false)}
         />
 
-        {consentStepShown ? (
-          <div className="row g-2">
-            <div className="col-6">
-              <OrderField label={`Ονοματεπώνυμο`}>
-                <input
-                  className="form-control"
-                  name="customer_name"
-                  value={data.customer_name ?? ""}
-                  onChange={(e) =>
-                    dispatch(
-                      setDraftProperty({
-                        key: "customer_name",
-                        value: e.target.value,
-                      }),
-                    )
-                  }
-                />
-              </OrderField>
-            </div>
-            <div className="col-6">
-              <OrderField label="ΑΤ/Διαβατήριο">
-                <input
-                  className="form-control"
-                  name="customer_passport"
-                  value={data.customer_passport ?? ""}
-                  onChange={(e) =>
-                    dispatch(
-                      setDraftProperty({
-                        key: "customer_passport",
-                        value: e.target.value,
-                      }),
-                    )
-                  }
-                />
-              </OrderField>
-            </div>
-          </div>
-        ) : (
-          <OrderField label={`Ονοματεπώνυμο`}>
-            <input
-              className="form-control"
-              name="customer_name"
-              value={data.customer_name ?? ""}
-              onChange={(e) =>
+        <div className="mb-3">
+          <div className="d-flex align-items-center flex-wrap gap-2">
+            <label
+              className="form-label fw-semibold mb-0"
+              htmlFor="customer_tel_otp_0"
+            >
+              OTP
+            </label>
+            <OtpInput
+              name="customer_tel_otp"
+              length={6}
+              value={data.customer_tel_otp ?? ""}
+              onChange={(otp) => {
                 dispatch(
-                  setDraftProperty({
-                    key: "customer_name",
-                    value: e.target.value,
-                  }),
-                )
-              }
+                  setDraftProperty({ key: "customer_tel_otp", value: otp }),
+                );
+                if (errors?.customer_tel_otp && clearError) {
+                  clearError("customer_tel_otp");
+                }
+              }}
             />
-            <span></span>
-          </OrderField>
-        )}
+          </div>
+          {errors?.customer_tel_otp && errors.customer_tel_otp !== true ? (
+            <div className="invalid-feedback d-block">
+              {errors.customer_tel_otp}
+            </div>
+          ) : null}
+        </div>
+
+        <OrderField label={<CustomerNameLabel />}>
+          <input
+            className="form-control"
+            name="customer_name"
+            value={data.customer_name ?? ""}
+            onChange={(e) =>
+              dispatch(
+                setDraftProperty({
+                  key: "customer_name",
+                  value: e.target.value,
+                }),
+              )
+            }
+          />
+        </OrderField>
+
+        <OrderField label="ΑΤ/Διαβατήριο">
+          <input
+            className="form-control"
+            name="customer_passport"
+            value={data.customer_passport ?? ""}
+            onChange={(e) =>
+              dispatch(
+                setDraftProperty({
+                  key: "customer_passport",
+                  value: e.target.value,
+                }),
+              )
+            }
+          />
+        </OrderField>
 
         <div className="row g-2">
           <div className="col-6">
@@ -495,90 +601,19 @@ export default function OrderCustomerArea({
               checked={data.has_other_recipient == 1}
               onChange={(e) => {
                 const val = e.target.checked ? 1 : 0;
-                dispatch(
-                  setDraftProperty({ key: "has_other_recipient", value: val }),
-                );
                 if (val === 1) {
-                  dispatch(
-                    setDraftProperty({ key: "person_ErpGID", value: null }),
-                  );
-                  dispatch(
-                    setDraftProperty({ key: "address_ErpGID", value: null }),
-                  );
-                  dispatch(
-                    setDraftProperty({ key: "shipTo_other_address", value: 0 }),
-                  );
-                  dispatch(
-                    setDraftProperty({
-                      key: "recipient_from_erp_lookup",
-                      value: null,
-                    }),
-                  );
-                } else {
-                  const hadErpRecipient = data.recipient_from_erp_lookup == 1;
-                  dispatch(
-                    setDraftProperty({
-                      key: "person_ErpGID",
-                      value: preselected_person_GID,
-                    }),
-                  );
-                  dispatch(
-                    setDraftProperty({
-                      key: "address_ErpGID",
-                      value: preselected_address_GID,
-                    }),
-                  );
-                  dispatch(
-                    setDraftProperty({
-                      key: "recipient_from_erp_lookup",
-                      value: null,
-                    }),
-                  );
-                  if (hadErpRecipient) {
-                    dispatch(
-                      setDraftProperty({
-                        key: "shouldUpdateRecipientInfos",
-                        value: null,
-                      }),
-                    );
-                    dispatch(
-                      setDraftProperty({
-                        key: "updateRecipient_afm",
-                        value: null,
-                      }),
-                    );
-                    dispatch(
-                      setDraftProperty({
-                        key: "updateRecipient_passport",
-                        value: null,
-                      }),
-                    );
-                    dispatch(
-                      setDraftProperty({
-                        key: "updateRecipient_mobile",
-                        value: null,
-                      }),
-                    );
-                    dispatch(
-                      setDraftProperty({
-                        key: "updateRecipient_address",
-                        value: null,
-                      }),
-                    );
-                    dispatch(
-                      setDraftProperty({
-                        key: "updateRecipient_tk",
-                        value: null,
-                      }),
-                    );
-                    dispatch(
-                      setDraftProperty({
-                        key: "updateRecipient_amka",
-                        value: null,
-                      }),
-                    );
+                  if (listAddressesPersons.length > 0) {
+                    setShowNewRecipientConfirm(true);
+                    return;
                   }
+                  enableOtherRecipient();
+                  return;
                 }
+
+                dispatch(
+                  setDraftProperty({ key: "has_other_recipient", value: 0 }),
+                );
+                disableOtherRecipient();
               }}
               id="has_other_recipient"
             />
@@ -621,69 +656,7 @@ export default function OrderCustomerArea({
           </>
         )}
 
-        {data.has_other_recipient != 1 && listAddressesPersons.length > 0 && (
-          <OrderField label="Θα παραδοθεί σε">
-            <FormSelect
-              name="person_ErpGID"
-              value={data.person_ErpGID ?? ""}
-              onChange={(e) => {
-                dispatch(
-                  setDraftProperty({
-                    key: "person_ErpGID",
-                    value: e.target.value,
-                  }),
-                );
-                if (data.shipTo_other_address != 1) {
-                  dispatch(
-                    setDraftProperty({
-                      key: "address_ErpGID",
-                      value:
-                        listAddressesPersons.find(
-                          (p) => p.person_ErpGID == e.target.value,
-                        )?.addresses?.[0]?.address_ErpGID ?? null,
-                    }),
-                  );
-                }
-              }}
-            >
-              {listAddressesPersons.map((x) => (
-                <option key={x.person_ErpGID} value={x.person_ErpGID}>
-                  {x.personName}
-                </option>
-              ))}
-            </FormSelect>
-          </OrderField>
-        )}
-
-        {data.shipTo_other_address != 1 &&
-          listAddressesPersons.length > 0 &&
-          data.person_ErpGID &&
-          data.person_ErpGID != "" &&
-          selectedPersonAddresses.length > 0 && (
-            <>
-              <OrderField label="Αποθηκευμένη διεύθυνση">
-                <FormSelect
-                  name="address_ErpGID"
-                  value={data.address_ErpGID ?? ""}
-                  onChange={(e) =>
-                    dispatch(
-                      setDraftProperty({
-                        key: "address_ErpGID",
-                        value: e.target.value,
-                      }),
-                    )
-                  }
-                >
-                  {selectedPersonAddresses.map((a) => (
-                    <option
-                      key={a.address_ErpGID}
-                      value={a.address_ErpGID}
-                    >{`${a.address}, ${a.city}, ${a.tk}`}</option>
-                  ))}
-                </FormSelect>
-              </OrderField>
-            </>
-          )}
+        {data.has_other_recipient != 1 && <SavedRecipientFields />}
 
         {data.has_other_recipient == 1 && (
           <>
@@ -1087,6 +1060,16 @@ export default function OrderCustomerArea({
           </>
         )}
       </FormErrorsContext.Provider>
+
+      <NewRecipientConfirmModal
+        show={showNewRecipientConfirm}
+        onConfirmNewRecipient={() => {
+          enableOtherRecipient();
+          setShowNewRecipientConfirm(false);
+        }}
+        onSelectExisting={() => setShowNewRecipientConfirm(false)}
+        onCancel={() => setShowNewRecipientConfirm(false)}
+      />
     </div>
   );
 }
