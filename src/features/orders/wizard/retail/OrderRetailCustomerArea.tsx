@@ -262,7 +262,7 @@ export default function OrderRetailCustomerArea() {
         <textarea
           className="form-control"
           name="customer_notes"
-          rows={6}
+          rows={2}
           value={data.customer_notes ?? ""}
           onChange={(e) =>
             dispatch(

@@ -157,6 +157,8 @@ export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
   "recipient_city",
   "recipient_tk",
   "recipient_ErpGID",
+  "recipient_ErpContact_PersonGID",
+  "recipient_ErpContact_AddressGID",
   "recipient_Notes",
   "person_ErpGID",
   "address_ErpGID",

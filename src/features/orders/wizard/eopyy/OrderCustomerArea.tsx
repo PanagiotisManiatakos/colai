@@ -495,7 +495,7 @@ export default function OrderCustomerArea({
           <textarea
             className="form-control"
             name="customer_notes"
-            rows={6}
+            rows={2}
             value={data.customer_notes ?? ""}
             onChange={(e) =>
               dispatch(
@@ -919,7 +919,7 @@ export default function OrderCustomerArea({
               <textarea
                 className="form-control"
                 name="recipient_Notes"
-                rows={6}
+                rows={2}
                 value={data.recipient_Notes ?? ""}
                 onChange={(e) =>
                   dispatch(

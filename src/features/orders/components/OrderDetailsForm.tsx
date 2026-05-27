@@ -5,7 +5,12 @@ import type { Order } from "@/types/orders";
 import { formatUIDate } from "@/lib/utils/date";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 
-export default function OrderDetailsForm({order,mode,value,onChange,}: {
+export default function OrderDetailsForm({
+  order,
+  mode,
+  value,
+  onChange,
+}: {
   order: Order;
   mode: "view" | "edit";
   value: Partial<Order>;
@@ -25,7 +30,9 @@ export default function OrderDetailsForm({order,mode,value,onChange,}: {
           </div>
           <div className="text-end">
             <StatusBadge status={order.statusId} />
-            <div className="small text-secondary mt-1">Υλικά: {order.countYlika}</div>
+            <div className="small text-secondary mt-1">
+              Υλικά: {order.countYlika}
+            </div>
           </div>
         </div>
       </div>
@@ -45,7 +52,9 @@ export default function OrderDetailsForm({order,mode,value,onChange,}: {
           </div>
 
           <div className="col-12">
-            <label className="form-label small text-secondary mb-1">Τηλέφωνο</label>
+            <label className="form-label small text-secondary mb-1">
+              Τηλέφωνο
+            </label>
             <input
               className="form-control"
               disabled={disabled}
@@ -55,7 +64,9 @@ export default function OrderDetailsForm({order,mode,value,onChange,}: {
           </div>
 
           <div className="col-12">
-            <label className="form-label small text-secondary mb-1">Email</label>
+            <label className="form-label small text-secondary mb-1">
+              Email
+            </label>
             <input
               className="form-control"
               disabled={disabled}
@@ -65,7 +76,9 @@ export default function OrderDetailsForm({order,mode,value,onChange,}: {
           </div>
 
           <div className="col-12">
-            <label className="form-label small text-secondary mb-1">Διεύθυνση</label>
+            <label className="form-label small text-secondary mb-1">
+              Διεύθυνση
+            </label>
             <input
               className="form-control"
               disabled={disabled}
@@ -107,7 +120,7 @@ export default function OrderDetailsForm({order,mode,value,onChange,}: {
         <div className="fw-semibold mb-2">Σχόλια</div>
         <textarea
           className="form-control"
-          rows={3}
+          rows={2}
           disabled={disabled}
           value={(value.sellerComments ?? order.sellerComments) || ""}
           onChange={(e) => onChange({ sellerComments: e.target.value })}
@@ -122,8 +135,12 @@ export default function OrderDetailsForm({order,mode,value,onChange,}: {
             className="form-check-input"
             type="checkbox"
             disabled={disabled}
-            checked={Boolean((value.deliveryMorning ?? order.deliveryMorning) ? 1 : 0)}
-            onChange={(e) => onChange({ deliveryMorning: e.target.checked ? 1 : 0 } as any)}
+            checked={Boolean(
+              (value.deliveryMorning ?? order.deliveryMorning) ? 1 : 0,
+            )}
+            onChange={(e) =>
+              onChange({ deliveryMorning: e.target.checked ? 1 : 0 } as any)
+            }
             id="deliveryMorning"
           />
           <label className="form-check-label" htmlFor="deliveryMorning">
@@ -136,8 +153,12 @@ export default function OrderDetailsForm({order,mode,value,onChange,}: {
             className="form-check-input"
             type="checkbox"
             disabled={disabled}
-            checked={Boolean((value.deliverySunday ?? order.deliverySunday) ? 1 : 0)}
-            onChange={(e) => onChange({ deliverySunday: e.target.checked ? 1 : 0 } as any)}
+            checked={Boolean(
+              (value.deliverySunday ?? order.deliverySunday) ? 1 : 0,
+            )}
+            onChange={(e) =>
+              onChange({ deliverySunday: e.target.checked ? 1 : 0 } as any)
+            }
             id="deliverySunday"
           />
           <label className="form-check-label" htmlFor="deliverySunday">
