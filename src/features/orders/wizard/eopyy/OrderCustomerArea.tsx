@@ -7,6 +7,7 @@ import CustomerLookupModal from "../modals/CustomerLookupModal";
 import ErpContactsLookupModal from "../modals/ErpContactsLookupModal";
 import NewRecipientConfirmModal from "../modals/NewRecipientConfirmModal";
 import SavedRecipientFields, {
+  clearOtherRecipientFields,
   resolveSavedRecipientSelection,
 } from "./SavedRecipientFields";
 import React from "react";
@@ -107,7 +108,6 @@ export default function OrderCustomerArea({
   }, [data.address_ErpGID, data.person_ErpGID, dispatch]);
 
   const disableOtherRecipient = React.useCallback(() => {
-    const hadErpRecipient = data.recipient_from_erp_lookup == 1;
     const saved = savedRecipientSelectionRef.current;
     const { person_ErpGID, address_ErpGID } = resolveSavedRecipientSelection(
       listAddressesPersons,
@@ -131,30 +131,11 @@ export default function OrderCustomerArea({
         value: address_ErpGID,
       }),
     );
-    dispatch(
-      setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
-    );
-    if (hadErpRecipient) {
-      dispatch(
-        setDraftProperty({ key: "shouldUpdateRecipientInfos", value: null }),
-      );
-      dispatch(setDraftProperty({ key: "updateRecipient_afm", value: null }));
-      dispatch(
-        setDraftProperty({ key: "updateRecipient_passport", value: null }),
-      );
-      dispatch(
-        setDraftProperty({ key: "updateRecipient_mobile", value: null }),
-      );
-      dispatch(
-        setDraftProperty({ key: "updateRecipient_address", value: null }),
-      );
-      dispatch(setDraftProperty({ key: "updateRecipient_tk", value: null }));
-      dispatch(setDraftProperty({ key: "updateRecipient_amka", value: null }));
-    }
+    clearOtherRecipientFields(dispatch);
+    savedRecipientSelectionRef.current = null;
   }, [
     data.address_ErpGID,
     data.person_ErpGID,
-    data.recipient_from_erp_lookup,
     dispatch,
     listAddressesPersons,
     preselected_address_GID,
@@ -975,6 +956,7 @@ export default function OrderCustomerArea({
                   dispatch(
                     setDraftProperty({ key: "has_other_recipient", value: 0 }),
                   );
+                  clearOtherRecipientFields(dispatch);
                   dispatch(
                     setDraftProperty({
                       key: "person_ErpGID",

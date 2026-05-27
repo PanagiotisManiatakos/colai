@@ -3,9 +3,43 @@
 import OrderField from "@/components/ui/OrderField";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
+import type { AppDispatch } from "@/store/store";
 import { OrderListOfAddressPersons } from "@/types/orders";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
+
+const OTHER_RECIPIENT_FIELD_KEYS = [
+  "recipient_reason_id",
+  "recipient_relation_id",
+  "recipient_relation",
+  "recipient_reason",
+  "recipient_name",
+  "recipient_amka",
+  "recipient_afm",
+  "recipient_mobile",
+  "recipient_mobile2",
+  "recipient_tel",
+  "recipient_passport",
+  "recipient_address",
+  "recipient_city",
+  "recipient_tk",
+  "recipient_ErpGID",
+  "recipient_Notes",
+  "recipient_from_erp_lookup",
+  "shouldUpdateRecipientInfos",
+  "updateRecipient_afm",
+  "updateRecipient_passport",
+  "updateRecipient_mobile",
+  "updateRecipient_address",
+  "updateRecipient_tk",
+  "updateRecipient_amka",
+] as const;
+
+export function clearOtherRecipientFields(dispatch: AppDispatch) {
+  for (const key of OTHER_RECIPIENT_FIELD_KEYS) {
+    dispatch(setDraftProperty({ key, value: null }));
+  }
+}
 
 type RecipientSelection = {
   person_ErpGID: string | null;
