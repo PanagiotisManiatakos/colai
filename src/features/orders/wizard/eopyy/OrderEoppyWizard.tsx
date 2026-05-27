@@ -111,6 +111,9 @@ export default function OrderEoppyWizard() {
   const lastOrderInfoCustomerErpGID = useAppSelector(
     (s) => s.orders.draft.lastOrderInfoCustomerErpGID,
   );
+  const listAddressesPersons = useAppSelector(
+    (s) => s.orders.draft.list_AddressesPersons,
+  );
   const showSynainesiPanel =
     !draftOrder.customer_ErpGID || !lastOrderInfoCustomerErpGID;
   const shouldShowAiMaterials = useAppSelector((s) => s.orders.draft.ai_ylika);
@@ -470,10 +473,31 @@ export default function OrderEoppyWizard() {
     }
   }
 
-  const submitConfirmAmka =
-    draftOrder.has_other_recipient == 1
-      ? draftOrder.recipient_amka
-      : draftOrder.customer_amka;
+  const submitConfirmAmka = React.useMemo(() => {
+    const pick = (...values: unknown[]) => {
+      for (const value of values) {
+        if (value != null && String(value).trim() !== "") {
+          return String(value).trim();
+        }
+      }
+      return "";
+    };
+
+    const selectedPerson = listAddressesPersons.find(
+      (p) => p.person_ErpGID == draftOrder.person_ErpGID,
+    );
+
+    return pick(
+      selectedPerson?.personAMKA,
+      draftOrder.recipient_amka,
+      draftOrder.customer_amka,
+    );
+  }, [
+    draftOrder.customer_amka,
+    draftOrder.person_ErpGID,
+    draftOrder.recipient_amka,
+    listAddressesPersons,
+  ]);
 
   async function runAi(aiclient: AiClient) {
     setAiStatus("running");
