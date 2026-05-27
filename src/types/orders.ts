@@ -50,7 +50,9 @@ export type Order = {
   recipient_tel: string;
   recipient_mobile?: string;
   recipient_mobile2?: string;
-  recipient_ErpGID: string;
+  recipient_ErpGID: string | null;
+  recipient_ErpContact_PersonGID?: string | null;
+  recipient_ErpContact_AddressGID?: string | null;
   recipient_Notes: string;
   doctor_amka: string;
   doctor_name: string;

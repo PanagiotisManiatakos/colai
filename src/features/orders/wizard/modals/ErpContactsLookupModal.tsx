@@ -97,8 +97,20 @@ export default function ErpContactsLookupModal({
 
     // Overwrite recipient form fields with selected contact values
     dispatch(
-      setDraftProperty({ key: "recipient_ErpGID", value: c.person_ErpGID }),
+      setDraftProperty({
+        key: "recipient_ErpContact_PersonGID",
+        value: c.person_ErpGID,
+      }),
     );
+    dispatch(
+      setDraftProperty({
+        key: "recipient_ErpContact_AddressGID",
+        value: addr?.address_ErpGID ?? null,
+      }),
+    );
+    dispatch(setDraftProperty({ key: "recipient_ErpGID", value: null }));
+    dispatch(setDraftProperty({ key: "person_ErpGID", value: null }));
+    dispatch(setDraftProperty({ key: "address_ErpGID", value: null }));
     dispatch(
       setDraftProperty({ key: "recipient_name", value: c.personName ?? "" }),
     );

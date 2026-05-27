@@ -137,7 +137,7 @@ export default function Touchdown({
           <textarea
             className="form-control"
             name="sellerComments"
-            rows={6}
+            rows={2}
             value={data.sellerComments ?? ""}
             onChange={(e) =>
               dispatch(
