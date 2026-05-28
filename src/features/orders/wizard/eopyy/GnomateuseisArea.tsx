@@ -255,7 +255,9 @@ export default function GnomateuseisArea({
       </div>
       <div className="app-card mt-1 overflow-hidden p-4">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
-          <div className="fw-semibold">Άλλα αρχεία</div>
+          <div className="fw-semibold">
+            Άλλα αρχεία (δεν αφορούν γνωμάτευση)
+          </div>
 
           <div className="d-flex align-items-center gap-2">
             <FileUploadButton

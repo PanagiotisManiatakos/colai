@@ -11,6 +11,8 @@ import {
   setDraftFiles,
   setDraftProperty,
   setDraftYlika,
+  setCustomerProsEbs,
+  setCustomerSelectedFromList,
   setLastOrderInfoCustomerErpGID,
   submitDraftAsync,
 } from "@/store/orders/ordersSlice";
@@ -24,6 +26,8 @@ import {
   normalizeZeroOne,
   syncShipToOtherAddressFlags,
 } from "@/lib/applyLastOrderData";
+import { shouldShowSynainesiStep } from "@/lib/customerProsEbs";
+import { isConsentScoreTooLow } from "@/lib/consentUpload";
 import { getAiRunErrorMessage, type AiClient } from "@/lib/utils/ai";
 import OrderCustomerArea from "./OrderCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
@@ -114,8 +118,20 @@ export default function OrderEoppyWizard() {
   const listAddressesPersons = useAppSelector(
     (s) => s.orders.draft.list_AddressesPersons,
   );
-  const showSynainesiPanel =
-    !draftOrder.customer_ErpGID || !lastOrderInfoCustomerErpGID;
+  const customerProsEbsFlag = useAppSelector(
+    (s) => s.orders.draft.customerProsEbs,
+  );
+  const showSynainesiPanel = shouldShowSynainesiStep(
+    {
+      customerProsEbs: customerProsEbsFlag,
+      lastOrderInfoCustomerErpGID,
+    },
+    draftOrder,
+  );
+  const synaineseisResults = useAppSelector(
+    (s) => s.orders.draft.synaineseisResults,
+  );
+  const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
   const shouldShowAiMaterials = useAppSelector((s) => s.orders.draft.ai_ylika);
   const maxPosoKostousGiaSymmetoxi = useAppSelector(
     (s) => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi,
@@ -130,7 +146,7 @@ export default function OrderEoppyWizard() {
   const stepDefs: StepDef[] = [
     {
       key: "gnomateuseis",
-      label: "Γνωματεύσεις",
+      label: "Γνωμάτευση",
       render: () => (
         <GnomateuseisArea
           aiMessage={aiMessage}
@@ -389,10 +405,15 @@ export default function OrderEoppyWizard() {
         );
       }
 
-      const showSynainesiPanel =
-        !draftOrder.customer_ErpGID || !lastOrderInfoCustomerErpGID;
+      const validateSynainesiPanel = shouldShowSynainesiStep(
+        {
+          customerProsEbs: customerProsEbsFlag,
+          lastOrderInfoCustomerErpGID,
+        },
+        draftOrder,
+      );
       if (
-        !showSynainesiPanel &&
+        !validateSynainesiPanel &&
         (draftOrder.has_other_recipient != 1 ||
           draftOrder.recipient_from_erp_lookup == 1) &&
         draftOrder.shouldUpdateRecipientInfos == 1 &&
@@ -408,6 +429,7 @@ export default function OrderEoppyWizard() {
       }
 
       if (
+        validateSynainesiPanel &&
         (!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "") &&
         hasConsentFormFiles.length == 0
       ) {
@@ -431,7 +453,13 @@ export default function OrderEoppyWizard() {
     }
 
     return issues;
-  }, [draftOrder, hasConsentFormFiles, hasFiles, lastOrderInfoCustomerErpGID]);
+  }, [
+    customerProsEbsFlag,
+    draftOrder,
+    hasConsentFormFiles,
+    hasFiles,
+    lastOrderInfoCustomerErpGID,
+  ]);
 
   const touchdownIssues = React.useMemo(() => {
     if (currentKey !== "touchdown") return [];
@@ -532,6 +560,8 @@ export default function OrderEoppyWizard() {
         dispatch(setDraftYlika([]));
         dispatch(setAIMaterials([]));
         dispatch(setLastOrderInfoCustomerErpGID(undefined));
+        dispatch(setCustomerProsEbs(undefined));
+        dispatch(setCustomerSelectedFromList(undefined));
         dispatch(clearDraftAddressesList());
 
         dispatch(setDraftProperty({ key: "aiCalculated", value: true }));
@@ -787,7 +817,7 @@ export default function OrderEoppyWizard() {
             }),
           );
         data.jsonDoc.customer_erpid != null &&
-          String(data.jsonDoc.customer_erpid).trim() !== ""
+        String(data.jsonDoc.customer_erpid).trim() !== ""
           ? dispatch(
               setDraftProperty({
                 key: "customer_ErpGID",
@@ -800,6 +830,14 @@ export default function OrderEoppyWizard() {
                 value: null,
               }),
             );
+        const personErpIdRaw = data.jsonDoc.person_erpid;
+        const personErpId =
+          personErpIdRaw != null && String(personErpIdRaw).trim() !== ""
+            ? String(personErpIdRaw).trim()
+            : null;
+        dispatch(setDraftProperty({ key: "person_erpid", value: personErpId }));
+        dispatch(setCustomerProsEbs(hasLastOrderInfo && personErpId == null));
+        dispatch(setCustomerSelectedFromList(false));
         //DOCTOR
         const doctor = data.jsonDoc.iatros;
         if (doctor) {
@@ -1109,6 +1147,11 @@ export default function OrderEoppyWizard() {
               type="button"
               className="btn btn-primary flex-fill"
               onClick={goNext}
+              disabled={
+                currentKey === "synenaiseis" &&
+                consentScoreTooLow &&
+                hasConsentFormFiles.length > 0
+              }
             >
               Επόμενο
               <i className="bi bi-chevron-right ms-2" />
@@ -1121,7 +1164,8 @@ export default function OrderEoppyWizard() {
               disabled={
                 submitState.loading ||
                 hasValidationIssues ||
-                aiStatus === "running"
+                aiStatus === "running" ||
+                consentScoreTooLow
               }
               className="btn btn-success flex-fill"
               onClick={onSaveClick}

@@ -15,6 +15,10 @@ import { FormSelect } from "react-bootstrap";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
 import OrderField from "@/components/ui/OrderField";
 import OtpInput from "@/components/ui/OTPInput";
+import {
+  isCustomerProsEbs,
+  isCustomerSelectedFromList,
+} from "@/lib/customerProsEbs";
 
 type Props = {
   errors?: Record<string, string | boolean>;
@@ -24,20 +28,32 @@ type Props = {
 
 function CustomerNameLabel() {
   const data = useAppSelector((s) => s.orders.draft.order);
+  const draftMeta = useAppSelector((s) => ({
+    customerProsEbs: s.orders.draft.customerProsEbs,
+    customerSelectedFromList: s.orders.draft.customerSelectedFromList,
+  }));
+  const isProsEbs = isCustomerProsEbs(draftMeta);
+  const selectedFromList = isCustomerSelectedFromList(draftMeta);
   const isExistingCustomer = !!String(data.customer_ErpGID ?? "").trim();
 
-  if (!data.aiCalculated) {
+  if (!data.aiCalculated && !isProsEbs && !selectedFromList) {
     return <>Ονοματεπώνυμο</>;
   }
 
   return (
     <span className="d-inline-flex align-items-center flex-wrap gap-2">
       Ονοματεπώνυμο
-      <span
-        className={`badge ${isExistingCustomer ? "text-bg-success" : "text-bg-danger"}`}
-      >
-        {isExistingCustomer ? "Υφιστάμενος" : "Νέος"}
-      </span>
+      {selectedFromList ? (
+        <span className="badge text-bg-success">Υφιστάμενος</span>
+      ) : isProsEbs ? (
+        <span className="badge text-bg-success">Νέος/Προς EBS</span>
+      ) : (
+        <span
+          className={`badge ${isExistingCustomer ? "text-bg-success" : "text-bg-danger"}`}
+        >
+          {isExistingCustomer ? "Υφιστάμενος" : "Νέος"}
+        </span>
+      )}
     </span>
   );
 }
