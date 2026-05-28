@@ -26,6 +26,8 @@ export type Order = {
   customer_tel_otp: string;
   amka_origin: string;
   customer_ErpGID: string;
+  /** Person ERP id from run-ai jsonDoc.person_erpid (null = pending EBS link). */
+  person_erpid?: string | null;
   person_ErpGID: string | null;
   address_ErpGID: string | null;
   shipTo_other_address: number; // 0/1

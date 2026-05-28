@@ -32,7 +32,8 @@ function uploadWithProgress(
       else reject({ status: xhr.status, data: json, text });
     };
 
-    xhr.onerror = () => reject({ status: 0, data: null, text: "Network error" });
+    xhr.onerror = () =>
+      reject({ status: 0, data: null, text: "Network error" });
     xhr.send(fd);
   });
 }
@@ -87,7 +88,10 @@ export default function FileUploadButton({
   const galleryInputRef = React.useRef<HTMLInputElement | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement | null>(null);
   const [showSourcePicker, setShowSourcePicker] = React.useState(false);
-  const useSourcePicker = React.useMemo(() => shouldUseUploadSourcePicker(), []);
+  const useSourcePicker = React.useMemo(
+    () => shouldUseUploadSourcePicker(),
+    [],
+  );
 
   async function handlePick(file: File) {
     if (!orderUid) return;
@@ -98,9 +102,13 @@ export default function FileUploadButton({
 
     setUploading({
       name: file.name,
-      fileSize: `${(parseFloat(String(file.size) ?? "0") / 1024 / 1024).toFixed(2)} MB`,
+      fileSize: file.size,
       fileType: file.type || "",
     });
+
+    if (document_category === "consent_form") {
+      dispatchResultsToRedux?.(null);
+    }
 
     try {
       const fd = new FormData();
@@ -121,8 +129,7 @@ export default function FileUploadButton({
       if (document_category == "consent_form") {
         dispatchResultsToRedux &&
           dispatchResultsToRedux({
-            score: data?.dataobject?.score,
-            infos_list: data?.dataobject?.infos_list,
+            form_score: data?.dataobject?.form_score,
           });
       }
 

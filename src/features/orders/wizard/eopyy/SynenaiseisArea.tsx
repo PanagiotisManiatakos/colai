@@ -9,7 +9,14 @@ import {
 } from "@/store/orders/ordersSlice";
 import FileUploadButton from "./FileUploadButton";
 import { OrderFile } from "@/types/orders";
-import { Alert, Row } from "react-bootstrap";
+import {
+  getConsentFileCategory,
+  getConsentFormScore,
+  isConsentScoreHigh,
+  isConsentScoreTooLow,
+  isConsentScoreWarning,
+} from "@/lib/consentUpload";
+import { Alert } from "react-bootstrap";
 
 type UploadStatus = "idle" | "uploading" | "error";
 
@@ -23,34 +30,34 @@ function isPdf(name: string, mimeType?: string) {
   return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
-function hasAnyValue(obj: Record<string, any>): boolean {
-  return Object.values(obj).some((v) => v !== null && v !== "");
-}
-
 export default function SynenaiseisArea() {
   const dispatch = useAppDispatch();
 
-  const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
-  const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
+  const files = useAppSelector((s) => s.orders?.draft?.files) ?? [];
+  const orderUid = useAppSelector((s) => s.orders?.draft?.order?.uid);
   const synaineseisResults = useAppSelector(
-    (s: any) => s.orders?.draft?.synaineseisResults,
+    (s) => s.orders?.draft?.synaineseisResults,
   );
 
   const [status, setStatus] = React.useState<UploadStatus>("idle");
   const [progress, setProgress] = React.useState<number>(0);
-
   const [message, setMessage] = React.useState<string | null>(null);
-
   const [uploading, setUploading] = React.useState<UploadingInfo | null>(null);
+
+  const consentFiles = files.filter(
+    (f) => getConsentFileCategory(f) === "consent_form",
+  );
+  const hasFiles = consentFiles.length > 0;
+  const formScore = getConsentFormScore(synaineseisResults);
+  const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
+  const consentScoreWarning = isConsentScoreWarning(synaineseisResults);
+  const consentScoreHigh = isConsentScoreHigh(synaineseisResults);
 
   React.useEffect(() => {
     dispatch(setDraftProperty({ key: "type", value: "eopyy" }));
   }, [dispatch]);
 
   const isUploadingNow = status === "uploading";
-  const hasFiles = files.some(
-    (o: any) => o?.document_category === "consent_form",
-  );
 
   return (
     <div className="app-card p-3">
@@ -62,19 +69,17 @@ export default function SynenaiseisArea() {
             ariaLabel="Προσθήκη"
             disabled={isUploadingNow}
             accept="application/pdf,image/*"
-            dispatchFileToRedux={(d: any) =>
+            dispatchFileToRedux={(d: OrderFile) =>
               dispatch(setDraftSyntagiUploaded(d))
             }
-            dispatchResultsToRedux={(d: any) =>
-              dispatch(setSynaineseisResults(d))
-            }
-            position={files.length}
+            dispatchResultsToRedux={(d) => dispatch(setSynaineseisResults(d))}
+            position={0}
             document_category="consent_form"
-            setMessage={(s: any) => setMessage(s)}
+            setMessage={(s: string | null) => setMessage(s)}
             setProgress={(i: number) => setProgress(i)}
             orderUid={orderUid}
-            setUploading={(s: any) => setUploading(s)}
-            setStatus={(s: any) => setStatus(s)}
+            setUploading={(s: UploadingInfo | null) => setUploading(s)}
+            setStatus={(s: UploadStatus) => setStatus(s)}
             endpoint="/api/orders/file"
           >
             {isUploadingNow ? (
@@ -127,38 +132,33 @@ export default function SynenaiseisArea() {
 
       {hasFiles ? (
         <div className="d-flex flex-column gap-2">
-          {files.map((f: OrderFile) => {
+          {consentFiles.map((f: OrderFile) => {
             const name = f.name ?? f.base64filename ?? f.originalFileName;
-            const sizeMb = (
-              parseFloat(f.fileSize ?? "0") /
-              1024 /
-              1024
-            ).toFixed(2);
+            const sizeLabel = f.fileSize
+              ? String(f.fileSize).includes("MB")
+                ? String(f.fileSize)
+                : `${(parseFloat(String(f.fileSize)) / 1024 / 1024).toFixed(2)} MB`
+              : "";
             const pdf = isPdf(name ?? "", f.fileType);
-            if (f.documentCategory == "consent_form") {
-              return (
-                <div
-                  key={`${f.position}-${name}`}
-                  className="d-flex justify-content-between align-items-center rounded border p-2"
-                >
-                  <div className="d-flex align-items-start gap-2">
-                    <i
-                      className={`bi ${pdf ? "bi-filetype-pdf" : "bi-image"}`}
-                    />
-                    <div>
-                      <div className="fw-semibold">{name}</div>
-                      <div className="small text-secondary">
-                        {sizeMb ? ` ${sizeMb} MB` : ""}
-                      </div>
+
+            return (
+              <div
+                key={`consent-${name}`}
+                className="d-flex justify-content-between align-items-center rounded border p-2"
+              >
+                <div className="d-flex align-items-start gap-2">
+                  <i className={`bi ${pdf ? "bi-filetype-pdf" : "bi-image"}`} />
+                  <div>
+                    <div className="fw-semibold">{name}</div>
+                    <div className="small text-secondary">
+                      {sizeLabel ? ` ${sizeLabel}` : ""}
                     </div>
                   </div>
-
-                  <span className="badge text-bg-success">Uploaded</span>
                 </div>
-              );
-            } else {
-              return null;
-            }
+
+                <span className="badge text-bg-success">Uploaded</span>
+              </div>
+            );
           })}
         </div>
       ) : (
@@ -167,25 +167,36 @@ export default function SynenaiseisArea() {
         </div>
       )}
 
-      {synaineseisResults?.score && (
-        <>
-          <Alert
-            className="d-flex flex-column mt-2 p-3"
-            variant={
-              synaineseisResults?.score > 70
-                ? "success"
-                : synaineseisResults?.score > 50
-                  ? "waring"
-                  : "danger"
-            }
+      {formScore != null ? (
+        <div className="mt-3">
+          <div
+            className={`rounded border p-3 ${
+              consentScoreTooLow
+                ? "border-danger"
+                : consentScoreWarning
+                  ? "border-warning bg-warning-subtle"
+                  : consentScoreHigh
+                    ? "border-success bg-success-subtle"
+                    : "border-secondary"
+            }`}
           >
-            <span>Score: {synaineseisResults?.score}</span>
-            {synaineseisResults?.infos_list.map((x: String, key: number) => (
-              <span key={key}>{x}</span>
-            ))}
-          </Alert>
-        </>
-      )}
+            <div className="fs-5 fw-semibold">
+              Σκορ: <span className="fw-bold">{formScore}</span>
+            </div>
+          </div>
+
+          {consentScoreTooLow ? (
+            <div className="alert alert-danger small mt-2 mb-0 py-2">
+              Το score δεν είναι αρκετά υψηλό. Παρακαλώ ανεβάστε νέο αρχείο.
+            </div>
+          ) : consentScoreWarning ? (
+            <Alert variant="warning" className="small mt-2 mb-0 py-2">
+              Το score είναι μεσαίο. Μπορείτε να συνεχίσετε, αλλά συνιστάται να
+              ανεβάσετε νέο αρχείο.
+            </Alert>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

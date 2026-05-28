@@ -18,6 +18,7 @@ import {
   pickDefaultAddressGid,
   pickDefaultPersonRow,
 } from "@/lib/utils/customerAddresses";
+import type { SynaineseisResults } from "@/lib/consentUpload";
 
 type OrderDraftType = "eopyy" | "non_eoppy";
 
@@ -36,11 +37,12 @@ export interface DraftState {
   preselected_address_GID?: string;
   preselected_person_GID?: string;
   ai_ylika: AIMaterials[];
-  synaineseisResults: {
-    infos_list: String[];
-    score: number;
-  } | null;
+  synaineseisResults: SynaineseisResults | null;
   lastOrderInfoCustomerErpGID?: string;
+  /** Patient matched via last web order but not yet linked in EBS (search-customers / run-ai). */
+  customerProsEbs?: boolean;
+  /** Patient chosen from search-customers listCustomers (normal CRM pick). */
+  customerSelectedFromList?: boolean;
 }
 
 export interface SelectedOrderState {
@@ -324,6 +326,11 @@ function loadStateFromLocalStorage(): OrdersState | null {
         lastOrderInfoCustomerErpGID:
           parsed?.lastOrderInfoCustomerErpGID ??
           initialStateBase.draft.lastOrderInfoCustomerErpGID,
+        customerProsEbs:
+          parsed?.customerProsEbs ?? initialStateBase.draft.customerProsEbs,
+        customerSelectedFromList:
+          parsed?.customerSelectedFromList ??
+          initialStateBase.draft.customerSelectedFromList,
       },
       // optionally persist selected too, but usually not needed:
       // selected: (parsed.selected ?? initialState.selected) as any,
@@ -347,6 +354,8 @@ function persistStateToLocalStorage(state: OrdersState) {
     list_TroposApostolis: state.draft.list_TroposApostolis,
     ai_ylika: state.draft.ai_ylika,
     lastOrderInfoCustomerErpGID: state.draft.lastOrderInfoCustomerErpGID,
+    customerProsEbs: state.draft.customerProsEbs,
+    customerSelectedFromList: state.draft.customerSelectedFromList,
   };
 
   try {
@@ -387,6 +396,8 @@ const ordersSlice = createSlice({
       state.draft.ai_ylika = [] as AIMaterials[];
       state.draft.synaineseisResults = null;
       state.draft.lastOrderInfoCustomerErpGID = undefined;
+      state.draft.customerProsEbs = undefined;
+      state.draft.customerSelectedFromList = undefined;
       persistStateToLocalStorage(state);
     },
     clearDraftAddressesList(state) {
@@ -494,7 +505,7 @@ const ordersSlice = createSlice({
       state.draft.files = action.payload;
       persistStateToLocalStorage(state);
     },
-    setSynaineseisResults(state, action) {
+    setSynaineseisResults(state, action: PayloadAction<SynaineseisResults | null>) {
       state.draft.synaineseisResults = action.payload;
     },
     setLastOrderInfoCustomerErpGID(
@@ -502,6 +513,17 @@ const ordersSlice = createSlice({
       action: PayloadAction<string | undefined>,
     ) {
       state.draft.lastOrderInfoCustomerErpGID = action.payload;
+      persistStateToLocalStorage(state);
+    },
+    setCustomerProsEbs(state, action: PayloadAction<boolean | undefined>) {
+      state.draft.customerProsEbs = action.payload;
+      persistStateToLocalStorage(state);
+    },
+    setCustomerSelectedFromList(
+      state,
+      action: PayloadAction<boolean | undefined>,
+    ) {
+      state.draft.customerSelectedFromList = action.payload;
       persistStateToLocalStorage(state);
     },
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
@@ -660,6 +682,19 @@ const ordersSlice = createSlice({
     },
     setDraftSyntagiUploaded(state, action: PayloadAction<OrderFile>) {
       if (!state.draft.files) state.draft.files = [];
+      const category = String(
+        action.payload.documentCategory ??
+          action.payload.document_category ??
+          "",
+      );
+      if (category === "consent_form") {
+        state.draft.files = state.draft.files.filter(
+          (f) =>
+            String(f.documentCategory ?? f.document_category ?? "") !==
+            "consent_form",
+        );
+        action.payload.position = 0;
+      }
       state.draft.files.push(action.payload);
       persistStateToLocalStorage(state);
     },
@@ -931,6 +966,8 @@ export const {
   startDraft,
   setSynaineseisResults,
   setLastOrderInfoCustomerErpGID,
+  setCustomerProsEbs,
+  setCustomerSelectedFromList,
   resetEntireDraft,
   clearDraftAddressesList,
   deletedDraftTemplate,

@@ -5,6 +5,8 @@ import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
 import {
   loadCustomerAddressesAsync,
+  setCustomerProsEbs,
+  setCustomerSelectedFromList,
   setDraftProperty,
   setLastOrderInfoCustomerErpGID,
 } from "@/store/orders/ordersSlice";
@@ -17,6 +19,7 @@ import {
   extractShipToOtherAddress,
   syncShipToOtherAddressFlags,
 } from "@/lib/applyLastOrderData";
+import { formatLastCustomerWebOrderRow } from "@/lib/customerProsEbs";
 import { store } from "@/store/store";
 import AppLoader from "@/components/ui/AppLoader";
 
@@ -81,12 +84,16 @@ export default function CustomerLookupModal({
   const [applying, setApplying] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [results, setResults] = React.useState<CustomerSearchResult[]>([]);
+  const [lastCustomerWebOrder, setLastCustomerWebOrder] = React.useState<
+    Record<string, unknown> | null
+  >(null);
   const [hasSearched, setHasSearched] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
   React.useEffect(() => {
     setQ("");
     setResults([]);
+    setLastCustomerWebOrder(null);
     setError(null);
     setHasSearched(false);
     setLoading(false);
@@ -119,14 +126,21 @@ export default function CustomerLookupModal({
       );
       if (searchError) {
         setResults([]);
+        setLastCustomerWebOrder(null);
         setError(searchError);
         return;
       }
 
-      setResults(
-        Array.isArray(data.listCustomers)
-          ? (data.listCustomers as CustomerSearchResult[])
-          : [],
+      const listCustomers = Array.isArray(data.listCustomers)
+        ? (data.listCustomers as CustomerSearchResult[])
+        : [];
+      const webOrder = isNonEmptyRecord(data.lastCustomerWebOrder)
+        ? (data.lastCustomerWebOrder as Record<string, unknown>)
+        : null;
+
+      setResults(listCustomers);
+      setLastCustomerWebOrder(
+        listCustomers.length === 0 && webOrder ? webOrder : null,
       );
     } catch (e: any) {
       setError(e?.message || "Search failed");
@@ -137,6 +151,8 @@ export default function CustomerLookupModal({
 
   async function applyCustomer(c: CustomerSearchResult) {
     setApplying(true);
+    dispatch(setCustomerProsEbs(false));
+    dispatch(setCustomerSelectedFromList(true));
     let preferredPerson: string | undefined;
     let preferredAddr: string | undefined;
     let shipToFromLast: 0 | 1 | undefined;
@@ -247,6 +263,141 @@ export default function CustomerLookupModal({
     onClose();
   }
 
+  async function applyLastCustomerWebOrder(lwo: Record<string, unknown>) {
+    setApplying(true);
+    dispatch(setCustomerProsEbs(true));
+    dispatch(setCustomerSelectedFromList(false));
+    dispatch(setDraftProperty({ key: "person_erpid", value: null }));
+
+    let preferredPerson: string | undefined;
+    let preferredAddr: string | undefined;
+    let shipToFromLast: 0 | 1 | undefined;
+
+    const lwoCopy = { ...lwo };
+    preferredPerson = extractPersonErpGID(lwo);
+    preferredAddr = extractAddressErpGID(lwo);
+    shipToFromLast = extractShipToOtherAddress(lwo);
+    delete lwoCopy.person_ErpGID;
+    delete lwoCopy.address_ErpGID;
+    delete lwoCopy.preselected_person_GID;
+    delete lwoCopy.preselected_address_GID;
+    applyLastOrderData(lwoCopy, dispatch, true);
+
+    const customerGid = String(lwo.customer_ErpGID ?? "").trim();
+    const customerName = String(lwo.customer_name ?? "").trim();
+    const customerAmka = String(lwo.customer_amka ?? "").trim();
+    const customerAddress = String(lwo.customer_address ?? "").trim();
+
+    if (customerGid) {
+      dispatch(setDraftProperty({ key: "customer_ErpGID", value: customerGid }));
+    }
+    if (customerName) {
+      dispatch(setDraftProperty({ key: "customer_name", value: customerName }));
+    }
+    if (customerAmka) {
+      dispatch(setDraftProperty({ key: "customer_amka", value: customerAmka }));
+    }
+    if (customerAddress) {
+      dispatch(
+        setDraftProperty({ key: "customer_address", value: customerAddress }),
+      );
+    }
+    if (lwo.customer_city != null && String(lwo.customer_city).trim() !== "") {
+      dispatch(
+        setDraftProperty({
+          key: "customer_city",
+          value: String(lwo.customer_city),
+        }),
+      );
+    }
+    if (lwo.customer_tk != null && String(lwo.customer_tk).trim() !== "") {
+      dispatch(
+        setDraftProperty({ key: "customer_tk", value: String(lwo.customer_tk) }),
+      );
+    }
+    if (lwo.customer_tel != null && String(lwo.customer_tel).trim() !== "") {
+      dispatch(
+        setDraftProperty({ key: "customer_tel", value: String(lwo.customer_tel) }),
+      );
+    }
+    if (
+      lwo.customer_mobile != null &&
+      String(lwo.customer_mobile).trim() !== ""
+    ) {
+      dispatch(
+        setDraftProperty({
+          key: "customer_mobile",
+          value: String(lwo.customer_mobile),
+        }),
+      );
+    }
+    if (
+      lwo.customer_passport != null &&
+      String(lwo.customer_passport).trim() !== ""
+    ) {
+      dispatch(
+        setDraftProperty({
+          key: "customer_passport",
+          value: String(lwo.customer_passport),
+        }),
+      );
+    }
+
+    try {
+      if (customerGid && customerAmka) {
+        await dispatch(
+          loadCustomerAddressesAsync({
+            customer_ErpGID: customerGid,
+            customer_name: customerName,
+            customer_amka: customerAmka,
+            customer_address: customerAddress,
+            preferredPersonErpGID: preferredPerson,
+            preferredAddressErpGID: preferredAddr,
+          }),
+        ).unwrap();
+
+        if (shipToFromLast === 1) {
+          syncShipToOtherAddressFlags(dispatch, 1);
+          applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
+          const prePerson = store.getState().orders.draft.preselected_person_GID;
+          if (
+            !store.getState().orders.draft.order.person_ErpGID?.trim() &&
+            prePerson
+          ) {
+            dispatch(
+              setDraftProperty({ key: "person_ErpGID", value: prePerson }),
+            );
+          }
+        } else {
+          dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
+          dispatch(
+            setDraftProperty({ key: "shipToOtherAddressBool", value: false }),
+          );
+          dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
+          dispatch(
+            setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
+          );
+        }
+      }
+    } catch {
+      if (shipToFromLast === 1) {
+        syncShipToOtherAddressFlags(dispatch, 1);
+        applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
+      }
+    } finally {
+      setApplying(false);
+    }
+
+    if (customerGid) {
+      dispatch(setLastOrderInfoCustomerErpGID(customerGid));
+    }
+    onClose();
+  }
+
+  const lastWebOrderRow = lastCustomerWebOrder
+    ? formatLastCustomerWebOrderRow(lastCustomerWebOrder)
+    : null;
+
   return (
     <Modal
       dialogClassName="modal-grow-scroll"
@@ -310,6 +461,28 @@ export default function CustomerLookupModal({
                   </div>
                 </button>
               ))}
+            </div>
+          ) : lastWebOrderRow ? (
+            <div className="list-group">
+              <button
+                type="button"
+                className="list-group-item list-group-item-action"
+                onClick={() =>
+                  void applyLastCustomerWebOrder(lastCustomerWebOrder!)
+                }
+                disabled={applying}
+              >
+                <div className="d-flex align-items-center flex-wrap gap-2">
+                  <div className="fw-semibold">{lastWebOrderRow.name}</div>
+                  <span className="badge text-bg-success">Νέος/Προς EBS</span>
+                </div>
+                <div className="small text-secondary">
+                  AMKA: {lastWebOrderRow.amka}
+                </div>
+                <div className="small text-secondary">
+                  Διέυθυνση: {lastWebOrderRow.addressLine}
+                </div>
+              </button>
             </div>
           ) : hasSearched && !error ? (
             <div className="text-secondary small py-3 text-center">
