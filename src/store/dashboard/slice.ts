@@ -2,6 +2,8 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
 import type { DashboardData, WcStoixoiMina } from "@/types/dashboard";
 import type { Order } from "@/types/orders";
+import type { GetDashboardSuccess } from "@/types/api/responses";
+import { parseProxyJson } from "@/lib/api/client";
 
 export type DashboardState = DashboardData & {
     loading: boolean;
@@ -38,7 +40,11 @@ const initialState: DashboardState = {
     lastFetchedAt: 0,
 };
 
-export const fetchDashboardData = createAsyncThunk<any, void, { state: RootState }>(
+export const fetchDashboardData = createAsyncThunk<
+  GetDashboardSuccess,
+  void,
+  { state: RootState }
+>(
     "dashboard/fetchDashboardData",
     async () => {
         const res = await fetch(`/api/dashboard`, {
@@ -49,11 +55,10 @@ export const fetchDashboardData = createAsyncThunk<any, void, { state: RootState
             },
         });
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data?.ok) {
-            throw new Error(data?.message || "Failed to load dashboard");
-        }
-        return data;
+        return parseProxyJson<GetDashboardSuccess>(
+          res,
+          "Failed to load dashboard",
+        );
     }
 );
 

@@ -1,3 +1,5 @@
+import type { SaleOrder_CheckItem } from "./api/schemas";
+
 export type Order = {
   id: number;
   uid: string;
@@ -180,7 +182,7 @@ export type OrderFile = {
   fileSize?: string;
   documentCategory?: string;
   extractedText?: string;
-  dateIn?: any;
+  dateIn?: unknown;
   sellerComments?: string;
   adminComments?: string;
   useInAI?: number;
@@ -236,10 +238,10 @@ export type OrderListOfAddressPersons = {
   personName: string;
   personAMKA?: string;
   personVatNumber?: string;
-  /** From search-address / addresses API (e.g. ID card / passport code). */
   personIDCode?: string;
   personPassport?: string;
   personMobile?: string;
+  personMobile1?: string;
   addresses: OrderAddress[];
   isCustomer: boolean;
 };
@@ -251,3 +253,5 @@ export type OrderAddress = {
   tk: string;
   isAddressPreselected?: boolean;
 };
+
+export type { SaleOrder_CheckItem };

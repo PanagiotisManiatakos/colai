@@ -6,13 +6,9 @@ import { useEffect } from "react";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
 import OrderField from "@/components/ui/OrderField";
 import OrderSwitchField from "@/components/ui/OrdeSwitchField";
+import type { SymmetoxiAreaProps } from "./componentProps";
 
-type Props = {
-  errors?: Record<string, string | boolean>;
-  clearError?: (field: string) => void;
-};
-
-const SymmetoxiArea = ({ errors, clearError }: Props) => {
+const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
   const data = useAppSelector((s) => s.orders.draft.order);
   const dispatch = useAppDispatch();
   const discountReasons = useAppSelector(

@@ -5,21 +5,10 @@ import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
+import type { DoctorSearchResult, SearchDoctorsSuccess } from "@/types/api/responses";
+import { parseProxyJson } from "@/lib/api/client";
 
-export type DoctorLookupModal = {
-  code?: string;
-  codE2: number;
-  doctoR_CODE?: string;
-  doctoR_NAME?: string;
-  greeklisH_DOCT_NAME?: number;
-  speC_ID?: string;
-  eidikotita?: string;
-  domI_ID?: string;
-  domi?: string;
-  gid?: string;
-  doctoR_AMKA?: string;
-  doctoR_AFM?: string;
-};
+export type DoctorLookupModal = DoctorSearchResult;
 
 export default function DoctorLookupModal({
   show,
@@ -58,13 +47,9 @@ export default function DoctorLookupModal({
           headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
         },
       );
-      const data = await res.json().catch(() => ({}));
+      const data = await parseProxyJson<SearchDoctorsSuccess>(res, "Search failed");
 
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.message || "Search failed");
-      }
-
-      setResults((data.listDoctors ?? []) as DoctorLookupModal[]);
+      setResults(data.listDoctors ?? []);
     } catch (e: any) {
       setError(e?.message || "Search failed");
     } finally {

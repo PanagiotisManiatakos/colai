@@ -1,6 +1,7 @@
 import type { AppDispatch } from "@/store/store";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import type { Order } from "@/types/orders";
+import { hasText } from "@/lib/utils/string";
 
 const KEY_MAP: Record<string, keyof Order> = {
   customer_Notes: "customer_notes",
@@ -61,7 +62,7 @@ export function pickOrderFieldFromRecords(
     if (!src || typeof src !== "object" || Array.isArray(src)) continue;
     for (const k of keys) {
       const v = src[k];
-      if (v !== null && v !== undefined && String(v).trim() !== "") return v;
+      if (hasText(v)) return v;
     }
   }
   return undefined;
@@ -201,10 +202,7 @@ export function applyLastErpOrderData(
     const normalized = ZERO_ONE_FIELDS.has(orderKey) ? normalizeZeroOne(v) : v;
     dispatch(setDraftProperty({ key: orderKey, value: normalized }));
   }
-  if (
-    erp.suggestedDoctorGID != null &&
-    String(erp.suggestedDoctorGID).trim() !== ""
-  ) {
+  if (hasText(erp.suggestedDoctorGID)) {
     dispatch(setDraftProperty({ key: "has_suggested_doctor", value: 2 }));
   }
 }

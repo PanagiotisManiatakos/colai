@@ -1,5 +1,16 @@
 import type { DraftState } from "@/store/orders/ordersSlice";
-import type { Order } from "@/types/orders";
+
+export function isCompletelyNewCustomer(
+  draft: Pick<DraftState, "customerIsCompletelyNew">,
+): boolean {
+  return draft.customerIsCompletelyNew === true;
+}
+
+export function shouldShowSynainesiStep(
+  draft: Pick<DraftState, "customerIsCompletelyNew">,
+): boolean {
+  return isCompletelyNewCustomer(draft);
+}
 
 export function isCustomerProsEbs(
   draft: Pick<DraftState, "customerProsEbs">,
@@ -11,22 +22,6 @@ export function isCustomerSelectedFromList(
   draft: Pick<DraftState, "customerSelectedFromList">,
 ): boolean {
   return draft.customerSelectedFromList === true;
-}
-
-export function shouldShowSynainesiStep(
-  draft: Pick<DraftState, "customerProsEbs" | "lastOrderInfoCustomerErpGID">,
-  order: Pick<Order, "customer_ErpGID" | "person_erpid" | "aiCalculated">,
-): boolean {
-  if (isCustomerProsEbs(draft)) return false;
-
-  if (order.aiCalculated) {
-    return !String(order.person_erpid ?? "").trim();
-  }
-
-  return (
-    !String(order.customer_ErpGID ?? "").trim() ||
-    !String(draft.lastOrderInfoCustomerErpGID ?? "").trim()
-  );
 }
 
 export function formatLastCustomerWebOrderRow(lwo: Record<string, unknown>) {

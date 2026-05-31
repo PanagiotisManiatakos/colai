@@ -2,22 +2,7 @@
 
 import React from "react";
 import { Modal } from "react-bootstrap";
-
-type Props = {
-  label: string;
-  value: string;
-  onChange: (next: string) => void;
-
-  name?: string;
-  hint?: string;
-  placeholder?: string;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-  disabled?: boolean;
-  autoFocus?: boolean;
-
-  scanButtonAriaLabel?: string;
-  modalTitle?: string;
-};
+import type { BarcodeFieldProps } from "./componentProps";
 
 export default function BarcodeField({
   label,
@@ -32,7 +17,7 @@ export default function BarcodeField({
 
   scanButtonAriaLabel = "Scan barcode",
   modalTitle = "Σάρωση Barcode",
-}: Props) {
+}: BarcodeFieldProps) {
   const [show, setShow] = React.useState(false);
   const [starting, setStarting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);

@@ -1,5 +1,8 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
+import type { GetStaticDataSuccess } from "@/types/api/responses";
+import type { SelectListItem } from "@/types/api/common";
+import { parseProxyJson } from "@/lib/api/client";
 
 const LS_KEY = "staticData";
 
@@ -21,9 +24,7 @@ export interface StaticDatatState {
     list_DocumentTypes: StaticDataList[];
 }
 
-type StaticDataList = {
-    disabled: boolean;
-    selected: boolean;
+type StaticDataList = SelectListItem & {
     text: string;
     value: string;
     group: StaticDataGroup
@@ -35,7 +36,11 @@ type StaticDataGroup = {
 }
 
 
-export const fetchStaticData = createAsyncThunk<any, void, { state: RootState }>(
+export const fetchStaticData = createAsyncThunk<
+  GetStaticDataSuccess,
+  void,
+  { state: RootState }
+>(
     "staticData/fetchStaticData",
     async () => {
         const res = await fetch(`/api/staticData`, {
@@ -46,11 +51,7 @@ export const fetchStaticData = createAsyncThunk<any, void, { state: RootState }>
             }
         });
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data?.ok) {
-            throw new Error(data?.message || "Failed to load orders");
-        }
-        return data;
+        return parseProxyJson<GetStaticDataSuccess>(res, "Failed to load static data");
     },
 );
 
@@ -126,21 +127,21 @@ const staticDataSlice = createSlice({
             const payload = action.payload;
             if (payload.statusCode == 200 && payload.ok) {
                 state.staticDataLastFetched = Date.now();
-                state.list_GroupEoppy = payload.list_GroupEoppy;
-                state.list_OtherRecipientReason = payload.list_OtherRecipientReason;
-                state.list_OtherRecipientRelationship = payload.list_OtherRecipientRelationship;
-                state.list_ShipMethod = payload.list_ShipMethod;
-                state.list_DiscountReasons = payload.list_DiscountReasons;
-                state.list_KatigoriesParoxis = payload.list_KatigoriesParoxis;
-                state.list_Order_Statuses = payload.list_Order_Statuses;
-                state.list_Discount_Statuses = payload.list_Discount_Statuses;
-                state.list_Order_Types = payload.list_Order_Types;
-                state.list_Order_EidosEgkrisis = payload.list_Order_EidosEgkrisis;
-                state.list_Order_PriceList = payload.list_Order_PriceList;
-                state.list_DocumentTypes = payload.list_DocumentTypes;
+                state.list_GroupEoppy = (payload.list_GroupEoppy ?? []) as StaticDataList[];
+                state.list_OtherRecipientReason = (payload.list_OtherRecipientReason ?? []) as StaticDataList[];
+                state.list_OtherRecipientRelationship = (payload.list_OtherRecipientRelationship ?? []) as StaticDataList[];
+                state.list_ShipMethod = (payload.list_ShipMethod ?? []) as StaticDataList[];
+                state.list_DiscountReasons = (payload.list_DiscountReasons ?? []) as StaticDataList[];
+                state.list_KatigoriesParoxis = (payload.list_KatigoriesParoxis ?? []) as StaticDataList[];
+                state.list_Order_Statuses = (payload.list_Order_Statuses ?? []) as StaticDataList[];
+                state.list_Discount_Statuses = (payload.list_Discount_Statuses ?? []) as StaticDataList[];
+                state.list_Order_Types = (payload.list_Order_Types ?? []) as StaticDataList[];
+                state.list_Order_EidosEgkrisis = (payload.list_Order_EidosEgkrisis ?? []) as StaticDataList[];
+                state.list_Order_PriceList = (payload.list_Order_PriceList ?? []) as StaticDataList[];
+                state.list_DocumentTypes = (payload.list_DocumentTypes ?? []) as StaticDataList[];
                 persistStateToLocalStorage(state);
             } else {
-                state.error = payload.message
+                state.error = payload.message ?? null
             }
         }
         );

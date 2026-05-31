@@ -11,15 +11,8 @@ import { OrderFile } from "@/types/orders";
 import RunAiButton from "./RunAIButton";
 import { SiGooglegemini } from "react-icons/si";
 import Image from "next/image";
-
-type UploadStatus = "idle" | "uploading" | "error";
-type AiStatus = "idle" | "running" | "done" | "error";
-
-type UploadingInfo = {
-  name: string;
-  fileSize: number;
-  fileType: string;
-};
+import type { GnomateuseisAreaProps } from "./componentProps";
+import type { UploadStatus, UploadingInfo } from "./wizard/types";
 
 function isPdf(name: string, mimeType?: string) {
   return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
@@ -57,8 +50,6 @@ const fileInfoWrapStyle: React.CSSProperties = {
   flex: "1 1 0%",
 };
 
-type AiClient = "Claude" | "Gemini";
-
 const MAX_RECIPE_FILES = 2;
 
 export default function GnomateuseisArea({
@@ -67,13 +58,7 @@ export default function GnomateuseisArea({
   aiRunningClient,
   aiDisabledClients = [],
   onRunAiWithClient,
-}: {
-  aiMessage: string | null;
-  aiStatus: AiStatus;
-  aiRunningClient: AiClient | null;
-  aiDisabledClients?: AiClient[];
-  onRunAiWithClient: (aiclient: AiClient) => void;
-}) {
+}: GnomateuseisAreaProps) {
   const dispatch = useAppDispatch();
 
   const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];

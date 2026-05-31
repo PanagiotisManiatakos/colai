@@ -1,5 +1,7 @@
 export type AiClient = "Claude" | "Gemini";
 
+export type AiStatus = "idle" | "running" | "done" | "error";
+
 export function getAiRunErrorMessage(
   e: { name?: string; message?: string },
   aiclient: AiClient,

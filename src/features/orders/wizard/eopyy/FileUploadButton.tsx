@@ -3,12 +3,14 @@
 import React from "react";
 import { Capacitor } from "@capacitor/core";
 import { Modal } from "react-bootstrap";
+import type { FileUploadSuccess } from "@/types/api/responses";
+import type { FileUploadButtonProps } from "./componentProps";
 
 function uploadWithProgress(
   fd: FormData,
   endpoint: string,
   onProgress?: (pct: number) => void,
-): Promise<any> {
+): Promise<FileUploadSuccess> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", endpoint);
@@ -22,9 +24,9 @@ function uploadWithProgress(
 
     xhr.onload = () => {
       const text = xhr.responseText || "";
-      let json: any = {};
+      let json = {} as FileUploadSuccess;
       try {
-        json = text ? JSON.parse(text) : {};
+        json = text ? (JSON.parse(text) as FileUploadSuccess) : ({} as FileUploadSuccess);
       } catch {
         /* ignore */
       }
@@ -46,25 +48,6 @@ function shouldUseUploadSourcePicker(): boolean {
   return false;
 }
 
-type Props = {
-  orderUid: string;
-  accept?: string;
-  multiple?: boolean;
-  disabled?: boolean;
-  ariaLabel?: string;
-  className?: string;
-  children?: React.ReactNode;
-  position: number;
-  endpoint: string;
-  document_category?: string;
-  setStatus: (f: any) => void;
-  setMessage: (f: any) => void;
-  setProgress: (f: number) => void;
-  setUploading: (f: any) => void;
-  dispatchFileToRedux: (f: any) => void;
-  dispatchResultsToRedux?: (f: any) => void;
-};
-
 export default function FileUploadButton({
   orderUid,
   accept = "application/pdf,image/*",
@@ -82,7 +65,7 @@ export default function FileUploadButton({
   setUploading,
   dispatchFileToRedux,
   dispatchResultsToRedux,
-}: Props) {
+}: FileUploadButtonProps) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const cameraInputRef = React.useRef<HTMLInputElement | null>(null);
   const galleryInputRef = React.useRef<HTMLInputElement | null>(null);

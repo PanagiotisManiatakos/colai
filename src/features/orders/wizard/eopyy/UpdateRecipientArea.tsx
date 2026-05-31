@@ -1,6 +1,12 @@
 import OrderField from "@/components/ui/OrderField";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
+import {
+  hasText,
+  isBlank,
+  pickFirstNonBlankString,
+  trimmedString,
+} from "@/lib/utils/string";
 import React from "react";
 
 export default function UpdateRecipientArea() {
@@ -15,24 +21,10 @@ export default function UpdateRecipientArea() {
       null,
     [listAddressesPersons, data.person_ErpGID],
   );
-  const pickPersonString = React.useCallback(
-    (preferredValue?: string | null, ...fallbackValues: unknown[]) => {
-      if (preferredValue != null && String(preferredValue).trim() !== "") {
-        return String(preferredValue);
-      }
-      for (const fallback of fallbackValues) {
-        if (fallback != null && String(fallback).trim() !== "") {
-          return String(fallback);
-        }
-      }
-      return "";
-    },
-    [],
-  );
   const isSamePersonAndCustomerAmka =
-    String(data.customer_amka ?? "").trim() !== "" &&
-    String(data.customer_amka ?? "").trim() ===
-      String(selectedPerson?.personAMKA ?? "").trim();
+    hasText(data.customer_amka) &&
+    trimmedString(data.customer_amka) ===
+      trimmedString(selectedPerson?.personAMKA);
 
   /** Lookup-selected recipient may match customer AMKA but still needs ΑΦΜ on this step. */
   const showAfmField =
@@ -40,35 +32,42 @@ export default function UpdateRecipientArea() {
 
   const initialValues = React.useMemo(
     () => ({
-      amka: pickPersonString(
+      amka: pickFirstNonBlankString(
         selectedPerson?.personAMKA,
         data.recipient_amka,
         data.customer_amka,
       ),
-      afm: pickPersonString(
+      afm: pickFirstNonBlankString(
         selectedPerson?.personVatNumber,
         data.recipient_afm,
         data.customer_afm,
       ),
-      passport: pickPersonString(
+      passport: pickFirstNonBlankString(
         selectedPerson?.personIDCode,
         selectedPerson?.personPassport,
         data.recipient_passport,
         data.customer_passport,
       ),
-      // Κινητό: prefill from addresses when API returns it (same source as personIDCode); until then empty.
-      mobile: "",
+      mobile: pickFirstNonBlankString(
+        selectedPerson?.personMobile1,
+        selectedPerson?.personMobile,
+        data.recipient_mobile,
+        data.customer_mobile,
+      ),
     }),
     [
       data.customer_afm,
       data.customer_amka,
+      data.customer_mobile,
       data.customer_passport,
       data.recipient_afm,
       data.recipient_amka,
+      data.recipient_mobile,
       data.recipient_passport,
-      pickPersonString,
       selectedPerson?.personAMKA,
       selectedPerson?.personIDCode,
+      selectedPerson?.personMobile,
+      selectedPerson?.personMobile1,
       selectedPerson?.personPassport,
       selectedPerson?.personVatNumber,
     ],
@@ -77,26 +76,20 @@ export default function UpdateRecipientArea() {
   /** After Αποθήκευση, overrides live on the draft order; remount must rehydrate from those, not only CRM/person defaults. */
   const seedValues = React.useMemo(() => {
     if (data.shouldUpdateRecipientInfos != 1) return initialValues;
-    const afmFromDraft =
-      data.updateRecipient_afm != null &&
-      String(data.updateRecipient_afm).trim() !== ""
-        ? String(data.updateRecipient_afm)
-        : initialValues.afm;
-    const passportFromDraft =
-      data.updateRecipient_passport !== undefined &&
-      data.updateRecipient_passport !== null
-        ? String(data.updateRecipient_passport)
-        : initialValues.passport;
-    const mobileFromDraft =
-      data.updateRecipient_mobile != null &&
-      String(data.updateRecipient_mobile).trim() !== ""
-        ? String(data.updateRecipient_mobile)
-        : "";
     return {
       amka: initialValues.amka,
-      afm: afmFromDraft,
-      passport: passportFromDraft,
-      mobile: mobileFromDraft,
+      afm: pickFirstNonBlankString(
+        data.updateRecipient_afm,
+        initialValues.afm,
+      ),
+      passport: pickFirstNonBlankString(
+        data.updateRecipient_passport,
+        initialValues.passport,
+      ),
+      mobile: pickFirstNonBlankString(
+        data.updateRecipient_mobile,
+        initialValues.mobile,
+      ),
     };
   }, [
     data.shouldUpdateRecipientInfos,
@@ -167,7 +160,7 @@ export default function UpdateRecipientArea() {
     dispatch(
       setDraftProperty({
         key: "updateRecipient_mobile",
-        value: mobileValue.trim() === "" ? null : mobileValue,
+        value: isBlank(mobileValue) ? null : mobileValue.trim(),
       }),
     );
     dispatch(setDraftProperty({ key: "updateRecipient_address", value: null }));
@@ -189,16 +182,17 @@ export default function UpdateRecipientArea() {
     return () => window.clearTimeout(timer);
   }, [isSaveFeedbackActive]);
 
+  const recipientTitleSuffix = pickFirstNonBlankString(
+    selectedPerson?.personName,
+    data.recipient_name,
+  );
+
   return (
     <div className="app-card p-3">
       <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
         <div className="fw-semibold">
           Επικαιροποίηση στοιχείων παραλήπτη
-          {selectedPerson?.personName
-            ? ` - ${selectedPerson.personName}`
-            : String(data.recipient_name ?? "").trim() !== ""
-              ? ` - ${String(data.recipient_name).trim()}`
-              : ""}
+          {recipientTitleSuffix ? ` - ${recipientTitleSuffix}` : ""}
         </div>
       </div>
 

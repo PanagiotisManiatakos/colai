@@ -1,16 +1,10 @@
 "use client";
 
-import React from "react";
+import { hasText } from "@/lib/utils/string";
 import { Button, Modal } from "react-bootstrap";
 import { useAppSelector } from "@/store/hooks";
 import SavedRecipientFields from "../eopyy/SavedRecipientFields";
-
-type Props = {
-  show: boolean;
-  onConfirmNewRecipient: () => void;
-  onSelectExisting: () => void;
-  onCancel: () => void;
-};
+import type { NewRecipientConfirmModalProps } from "./types";
 
 function ChoiceCard({
   icon,
@@ -51,10 +45,9 @@ export default function NewRecipientConfirmModal({
   onConfirmNewRecipient,
   onSelectExisting,
   onCancel,
-}: Props) {
+}: NewRecipientConfirmModalProps) {
   const data = useAppSelector((s) => s.orders.draft.order);
-  const hasExistingSelection =
-    !!data.person_ErpGID && String(data.person_ErpGID).trim() !== "";
+  const hasExistingSelection = hasText(data.person_ErpGID);
 
   return (
     <Modal

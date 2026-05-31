@@ -1,6 +1,6 @@
-export type SynaineseisResults = {
-  form_score?: number;
-};
+import type { ConsentUploadDataObject } from "@/types/api/common";
+
+export type SynaineseisResults = ConsentUploadDataObject;
 
 export function getConsentFormScore(
   results: SynaineseisResults | null | undefined,

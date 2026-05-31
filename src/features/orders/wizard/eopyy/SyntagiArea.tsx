@@ -62,207 +62,215 @@ const SyntagiArea = () => {
 
   return (
     <div className="app-card p-3">
-      <div
-        style={{ height: 51 }}
-        className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2"
-      >
-        <div className="fw-semibold">Συνταγή - Περιστατικό</div>
-      </div>
-
-      <BarcodeField
-        label="Barcode"
-        value={data.barcode ?? ""}
-        onChange={(v) =>
-          dispatch(setDraftProperty({ key: "barcode", value: v }))
-        }
-        name="barcode"
-      />
-      <div className="row g-2">
-        <div className="col-6">
-          <Field label="Ημ/νία συνταγης">
-            <input
-              className="form-control"
-              inputMode="numeric"
-              name="dateOfSyntagi"
-              value={data.dateOfSyntagi ?? ""}
-              onChange={(e) => handleDateInput("dateOfSyntagi", e.target.value)}
-            />
-          </Field>
-        </div>
-      </div>
-
-      <div className="row g-2">
-        <div className="col-6">
-          <Field label="Ισχύς από">
-            <input
-              className="form-control"
-              inputMode="numeric"
-              name="dateIsxyeiApo"
-              value={data.dateIsxyeiApo ?? ""}
-              onChange={(e) => handleDateInput("dateIsxyeiApo", e.target.value)}
-            />
-          </Field>
-        </div>
-        <div className="col-6">
-          <Field label="Έως">
-            <input
-              className="form-control"
-              inputMode="numeric"
-              name="dateIsxyeiEos"
-              value={data.dateIsxyeiEos ?? ""}
-              onChange={(e) => handleDateInput("dateIsxyeiEos", e.target.value)}
-            />
-          </Field>
-        </div>
-      </div>
-
-      <Field label="Κατηγορία παροχής">
-        <FormSelect
-          name="katigoriaParoxis"
-          value={data.katigoriaParoxis ?? ""}
-          onChange={(e) => {
-            const selected = e.target.selectedOptions[0];
-
-            const value = e.target.value || "";
-            const plafonAmount = selected.dataset.attributePlafon;
-            const plafonGiftAmount = selected.dataset.attributeGift;
-
-            dispatch(setDraftProperty({ key: "katigoriaParoxis", value }));
-            dispatch(
-              setDraftProperty({
-                key: "maxPosoKostousGiaSymmetoxi",
-                value: plafonAmount ? Number(plafonAmount) : null,
-              }),
-            );
-            dispatch(
-              setDraftProperty({
-                key: "plafonGiftAmount",
-                value: plafonGiftAmount ? Number(plafonGiftAmount) : null,
-              }),
-            );
-          }}
+        <div
+          style={{ height: 51 }}
+          className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2"
         >
-          <option value=""></option>
-          {katigoriesParoxis.map((x) => {
-            return (
-              <option
-                key={x.value}
-                value={x.value}
-                data-attribute-plafon={x.plafonAmount}
-                data-attribute-gift={x.plafonGiftAmount}
-              >
-                {x.text}
-              </option>
-            );
-          })}
-        </FormSelect>
-      </Field>
+          <div className="fw-semibold">Συνταγή - Περιστατικό</div>
+        </div>
 
-      <Field label="Είδος">
-        <FormSelect
-          name="eidos_Egkrisis"
-          value={data.eidos_Egkrisis != null ? String(data.eidos_Egkrisis) : ""}
-          onChange={(e) =>
-            dispatch(
-              setDraftProperty({
-                key: "eidos_Egkrisis",
-                value: e.target.value,
-              }),
-            )
+        <BarcodeField
+          label="Barcode"
+          value={data.barcode ?? ""}
+          onChange={(v) =>
+            dispatch(setDraftProperty({ key: "barcode", value: v }))
           }
-        >
-          <option value=""></option>
-          {eidiEgrisis.map((x) => {
-            return (
-              <option key={x.value} value={x.value}>
-                {x.text}
-              </option>
-            );
-          })}
-        </FormSelect>
-        {/* <input
+          name="barcode"
+        />
+        <div className="row g-2">
+          <div className="col-6">
+            <Field label="Ημ/νία συνταγης">
+              <input
+                className="form-control"
+                inputMode="numeric"
+                name="dateOfSyntagi"
+                value={data.dateOfSyntagi ?? ""}
+                onChange={(e) =>
+                  handleDateInput("dateOfSyntagi", e.target.value)
+                }
+              />
+            </Field>
+          </div>
+        </div>
+
+        <div className="row g-2">
+          <div className="col-6">
+            <Field label="Ισχύς από">
+              <input
+                className="form-control"
+                inputMode="numeric"
+                name="dateIsxyeiApo"
+                value={data.dateIsxyeiApo ?? ""}
+                onChange={(e) =>
+                  handleDateInput("dateIsxyeiApo", e.target.value)
+                }
+              />
+            </Field>
+          </div>
+          <div className="col-6">
+            <Field label="Έως">
+              <input
+                className="form-control"
+                inputMode="numeric"
+                name="dateIsxyeiEos"
+                value={data.dateIsxyeiEos ?? ""}
+                onChange={(e) =>
+                  handleDateInput("dateIsxyeiEos", e.target.value)
+                }
+              />
+            </Field>
+          </div>
+        </div>
+
+        <Field label="Κατηγορία παροχής">
+          <FormSelect
+            name="katigoriaParoxis"
+            value={data.katigoriaParoxis ?? ""}
+            onChange={(e) => {
+              const selected = e.target.selectedOptions[0];
+
+              const value = e.target.value || "";
+              const plafonAmount = selected.dataset.attributePlafon;
+              const plafonGiftAmount = selected.dataset.attributeGift;
+
+              dispatch(setDraftProperty({ key: "katigoriaParoxis", value }));
+              dispatch(
+                setDraftProperty({
+                  key: "maxPosoKostousGiaSymmetoxi",
+                  value: plafonAmount ? Number(plafonAmount) : null,
+                }),
+              );
+              dispatch(
+                setDraftProperty({
+                  key: "plafonGiftAmount",
+                  value: plafonGiftAmount ? Number(plafonGiftAmount) : null,
+                }),
+              );
+            }}
+          >
+            <option value=""></option>
+            {katigoriesParoxis.map((x) => {
+              return (
+                <option
+                  key={x.value}
+                  value={x.value}
+                  data-attribute-plafon={x.plafonAmount}
+                  data-attribute-gift={x.plafonGiftAmount}
+                >
+                  {x.text}
+                </option>
+              );
+            })}
+          </FormSelect>
+        </Field>
+
+        <Field label="Είδος">
+          <FormSelect
+            name="eidos_Egkrisis"
+            value={
+              data.eidos_Egkrisis != null ? String(data.eidos_Egkrisis) : ""
+            }
+            onChange={(e) =>
+              dispatch(
+                setDraftProperty({
+                  key: "eidos_Egkrisis",
+                  value: e.target.value,
+                }),
+              )
+            }
+          >
+            <option value=""></option>
+            {eidiEgrisis.map((x) => {
+              return (
+                <option key={x.value} value={x.value}>
+                  {x.text}
+                </option>
+              );
+            })}
+          </FormSelect>
+          {/* <input
                     className="form-control"
                     value={data.eidos_Egkrisis ?? ""}
                     onChange={(e) => dispatch(setDraftProperty({ key: "eidos_Egkrisis", value: e.target.value }))}
                 /> */}
-      </Field>
-      <div className="row g-0">
-        <div className="col-3">
-          <Field label="Κωδ.">
-            <input
-              className="form-control"
-              name="eoppy_Diagnosi_Code"
-              style={{ borderRadius: "14px 0px 0px 14px" }}
-              value={data.eoppy_Diagnosi_Code ?? ""}
-              onChange={(e) =>
-                dispatch(
-                  setDraftProperty({
-                    key: "eoppy_Diagnosi_Code",
-                    value: e.target.value,
-                  }),
-                )
-              }
-            />
-          </Field>
+        </Field>
+        <div className="row g-0">
+          <div className="col-3">
+            <Field label="Κωδ.">
+              <input
+                className="form-control"
+                name="eoppy_Diagnosi_Code"
+                style={{ borderRadius: "14px 0px 0px 14px" }}
+                value={data.eoppy_Diagnosi_Code ?? ""}
+                onChange={(e) =>
+                  dispatch(
+                    setDraftProperty({
+                      key: "eoppy_Diagnosi_Code",
+                      value: e.target.value,
+                    }),
+                  )
+                }
+              />
+            </Field>
+          </div>
+          <div className="col-9">
+            <Field label="Περιγραφή διάγνωσης">
+              <input
+                className="form-control"
+                name="eoppy_Diagnosi_Name"
+                style={{ borderRadius: "0px 14px 14px 0px" }}
+                value={data.eoppy_Diagnosi_Name ?? ""}
+                onChange={(e) =>
+                  dispatch(
+                    setDraftProperty({
+                      key: "eoppy_Diagnosi_Name",
+                      value: e.target.value,
+                    }),
+                  )
+                }
+              />
+            </Field>
+          </div>
         </div>
-        <div className="col-9">
-          <Field label="Περιγραφή διάγνωσης">
-            <input
-              className="form-control"
-              name="eoppy_Diagnosi_Name"
-              style={{ borderRadius: "0px 14px 14px 0px" }}
-              value={data.eoppy_Diagnosi_Name ?? ""}
-              onChange={(e) =>
-                dispatch(
-                  setDraftProperty({
-                    key: "eoppy_Diagnosi_Name",
-                    value: e.target.value,
-                  }),
-                )
-              }
-            />
-          </Field>
+        <div className="row g-0">
+          <div className="col-3">
+            <Field label="Κωδ.">
+              <input
+                className="form-control"
+                name="eoppy_Diagnosi2_Code"
+                style={{ borderRadius: "14px 0px 0px 14px" }}
+                value={data.eoppy_Diagnosi2_Code ?? ""}
+                onChange={(e) =>
+                  dispatch(
+                    setDraftProperty({
+                      key: "eoppy_Diagnosi2_Code",
+                      value: e.target.value,
+                    }),
+                  )
+                }
+              />
+            </Field>
+          </div>
+          <div className="col-9">
+            <Field label="Περιγραφή διάγνωσης 2">
+              <input
+                className="form-control"
+                name="eoppy_Diagnosi2_Name"
+                style={{ borderRadius: "0px 14px 14px 0px" }}
+                value={data.eoppy_Diagnosi2_Name ?? ""}
+                onChange={(e) =>
+                  dispatch(
+                    setDraftProperty({
+                      key: "eoppy_Diagnosi2_Name",
+                      value: e.target.value,
+                    }),
+                  )
+                }
+              />
+            </Field>
+          </div>
         </div>
-      </div>
-      <div className="row g-0">
-        <div className="col-3">
-          <Field label="Κωδ.">
-            <input
-              className="form-control"
-              name="eoppy_Diagnosi2_Code"
-              style={{ borderRadius: "14px 0px 0px 14px" }}
-              value={data.eoppy_Diagnosi2_Code ?? ""}
-              onChange={(e) =>
-                dispatch(
-                  setDraftProperty({
-                    key: "eoppy_Diagnosi2_Code",
-                    value: e.target.value,
-                  }),
-                )
-              }
-            />
-          </Field>
-        </div>
-        <div className="col-9">
-          <Field label="Περιγραφή διάγνωσης 2">
-            <input
-              className="form-control"
-              name="eoppy_Diagnosi2_Name"
-              style={{ borderRadius: "0px 14px 14px 0px" }}
-              value={data.eoppy_Diagnosi2_Name ?? ""}
-              onChange={(e) =>
-                dispatch(
-                  setDraftProperty({
-                    key: "eoppy_Diagnosi2_Name",
-                    value: e.target.value,
-                  }),
-                )
-              }
-            />
-          </Field>
-        </div>
-      </div>
-      {/* <div className="row g-2">
+        {/* <div className="row g-2">
                 <div className="col-6">
                     <Field label="Βάρος">
                         <input

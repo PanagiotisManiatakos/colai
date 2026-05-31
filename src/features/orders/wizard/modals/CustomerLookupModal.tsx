@@ -3,73 +3,16 @@
 import React from "react";
 import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
-import {
-  loadCustomerAddressesAsync,
-  setCustomerProsEbs,
-  setCustomerSelectedFromList,
-  setDraftProperty,
-  setLastOrderInfoCustomerErpGID,
-} from "@/store/orders/ordersSlice";
-import {
-  applyLastErpOrderData,
-  applyLastOrderData,
-  applyPersonErpGIDFromLastOrder,
-  extractAddressErpGID,
-  extractPersonErpGID,
-  extractShipToOtherAddress,
-  syncShipToOtherAddressFlags,
-} from "@/lib/applyLastOrderData";
-import { formatLastCustomerWebOrderRow } from "@/lib/customerProsEbs";
-import { store } from "@/store/store";
+import { formatLastCustomerWebOrderRow } from "@/lib/customerUtils";
+import type { CustomerSearchResult } from "@/types/api/responses";
 import AppLoader from "@/components/ui/AppLoader";
+import {
+  applyCustomerFromSearch,
+  applyLastCustomerWebOrderFromSearch,
+  searchCustomersByQuery,
+} from "./customerSearchActions";
 
-export type CustomerSearchResult = {
-  telephone1: any;
-  peS_TEL_1: any;
-  taytothta: any;
-  explain?: string;
-  iS_CERTIFIED_PHONE: number;
-  pE_ActivityCode?: string;
-  pE_Code?: string;
-  pE_DEAD_ALIVE?: number;
-  pE_NAME?: string;
-  PE_REMARKS?: string;
-  pE_TaxRegNum?: string;
-  peS_Address1?: string;
-  peS_Area?: string;
-  peS_CityCode?: string;
-  peS_Country?: string;
-  peS_FPOSTALCODE?: string;
-  peS_FSiteGID?: string;
-  peS_KindSite?: number;
-  peS_STATUS?: number;
-  tR_Code?: string;
-  tR_GID?: string;
-  tR_Name?: string;
-  tR_REMARKS?: string;
-  tR_StringField5?: string;
-  tR_fPersonCodeGID?: string;
-};
-
-function isNonEmptyRecord(v: unknown): v is Record<string, unknown> {
-  return (
-    v !== null &&
-    typeof v === "object" &&
-    !Array.isArray(v) &&
-    Object.keys(v as object).length > 0
-  );
-}
-
-function getCustomerSearchErrorMessage(data: Record<string, unknown>): string | null {
-  if (data.isSuccess !== false) return null;
-
-  const message = data.message;
-  if (typeof message === "string" && message.trim()) {
-    return message.trim();
-  }
-
-  return "Η αναζήτηση απέτυχε.";
-}
+export type { CustomerSearchResult };
 
 export default function CustomerLookupModal({
   show,
@@ -84,9 +27,10 @@ export default function CustomerLookupModal({
   const [applying, setApplying] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [results, setResults] = React.useState<CustomerSearchResult[]>([]);
-  const [lastCustomerWebOrder, setLastCustomerWebOrder] = React.useState<
-    Record<string, unknown> | null
-  >(null);
+  const [lastCustomerWebOrder, setLastCustomerWebOrder] = React.useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [hasSearched, setHasSearched] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement | null>(null);
 
@@ -103,47 +47,16 @@ export default function CustomerLookupModal({
   async function search() {
     inputRef.current?.blur();
     const query = q.trim();
+    if (query.length < 2) return;
 
     setLoading(true);
     setError(null);
     setHasSearched(true);
     try {
-      const res = await fetch(
-        `/api/customers?q=${encodeURIComponent(query)}&_ts=${Date.now()}`,
-        {
-          cache: "no-store",
-          headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
-        },
-      );
-      const data = await res.json().catch(() => ({}));
-
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.message || "Search failed");
-      }
-
-      const searchError = getCustomerSearchErrorMessage(
-        data as Record<string, unknown>,
-      );
-      if (searchError) {
-        setResults([]);
-        setLastCustomerWebOrder(null);
-        setError(searchError);
-        return;
-      }
-
-      const listCustomers = Array.isArray(data.listCustomers)
-        ? (data.listCustomers as CustomerSearchResult[])
-        : [];
-      const webOrder = isNonEmptyRecord(data.lastCustomerWebOrder)
-        ? (data.lastCustomerWebOrder as Record<string, unknown>)
-        : null;
-
-      setResults(listCustomers);
-      setLastCustomerWebOrder(
-        listCustomers.length === 0 && webOrder ? webOrder : null,
-      );
-    } catch (e: any) {
-      setError(e?.message || "Search failed");
+      const outcome = await searchCustomersByQuery(query);
+      setResults(outcome.results);
+      setLastCustomerWebOrder(outcome.lastCustomerWebOrder);
+      setError(outcome.error);
     } finally {
       setLoading(false);
     }
@@ -151,247 +64,22 @@ export default function CustomerLookupModal({
 
   async function applyCustomer(c: CustomerSearchResult) {
     setApplying(true);
-    dispatch(setCustomerProsEbs(false));
-    dispatch(setCustomerSelectedFromList(true));
-    let preferredPerson: string | undefined;
-    let preferredAddr: string | undefined;
-    let shipToFromLast: 0 | 1 | undefined;
     try {
-      const res = await fetch("/api/load-last-customer-order-info", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customer_gid: c.tR_GID,
-          customer_amka: c.tR_StringField5 ?? "",
-        }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data?.ok) {
-        const sc = data.statusCode as number | undefined;
-        const statusOk = sc === undefined || sc === 0 || sc === 200;
-        if (statusOk) {
-          const lwo = data.last_web_order;
-          const leo = data.last_erp_order;
-          if (isNonEmptyRecord(lwo)) {
-            const lwoRec = lwo as Record<string, unknown>;
-            const lwoCopy = { ...lwoRec };
-            const lwoPerson = extractPersonErpGID(lwoRec);
-            const lwoAddr = extractAddressErpGID(lwoRec);
-            shipToFromLast = extractShipToOtherAddress(lwoRec);
-            delete lwoCopy.person_ErpGID;
-            delete lwoCopy.address_ErpGID;
-            delete lwoCopy.preselected_person_GID;
-            delete lwoCopy.preselected_address_GID;
-            applyLastOrderData(lwoCopy, dispatch, true);
-            preferredPerson = lwoPerson;
-            preferredAddr = lwoAddr;
-          } else if (isNonEmptyRecord(leo)) {
-            applyLastErpOrderData(leo, dispatch);
-            preferredPerson =
-              String(leo.deliveryPersonGID ?? "").trim() || undefined;
-            preferredAddr =
-              String(leo.deliveryAddressGID ?? "").trim() || undefined;
-          }
-        }
-      }
-    } catch {
-      // Continue with selected row only
+      await applyCustomerFromSearch(dispatch, c);
+      onClose();
     } finally {
       setApplying(false);
     }
-
-    dispatch(setDraftProperty({ key: "customer_ErpGID", value: c.tR_GID }));
-    dispatch(setDraftProperty({ key: "customer_name", value: c.pE_NAME }));
-    dispatch(
-      setDraftProperty({ key: "customer_amka", value: c.tR_StringField5 }),
-    );
-    dispatch(
-      setDraftProperty({ key: "customer_address", value: c.peS_Address1 }),
-    );
-    dispatch(setDraftProperty({ key: "customer_city", value: c.peS_CityCode }));
-    dispatch(
-      setDraftProperty({ key: "customer_tk", value: c.peS_FPOSTALCODE }),
-    );
-    dispatch(setDraftProperty({ key: "customer_tel", value: c.telephone1 }));
-    dispatch(setDraftProperty({ key: "customer_mobile", value: c.peS_TEL_1 }));
-    dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
-    dispatch(setDraftProperty({ key: "customer_email", value: "" }));
-    dispatch(
-      setDraftProperty({ key: "customer_passport", value: c.taytothta }),
-    );
-    try {
-      await dispatch(
-        loadCustomerAddressesAsync({
-          customer_ErpGID: c.tR_GID,
-          customer_name: c.pE_NAME,
-          customer_amka: c.tR_StringField5,
-          customer_address: c.peS_Address1,
-          preferredPersonErpGID: preferredPerson,
-          preferredAddressErpGID: preferredAddr,
-        }),
-      ).unwrap();
-
-      if (shipToFromLast === 1) {
-        syncShipToOtherAddressFlags(dispatch, 1);
-        applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
-        const prePerson = store.getState().orders.draft.preselected_person_GID;
-        if (
-          !store.getState().orders.draft.order.person_ErpGID?.trim() &&
-          prePerson
-        ) {
-          dispatch(
-            setDraftProperty({ key: "person_ErpGID", value: prePerson }),
-          );
-        }
-      } else {
-        dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
-        dispatch(
-          setDraftProperty({ key: "shipToOtherAddressBool", value: false }),
-        );
-        dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
-        dispatch(
-          setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
-        );
-      }
-    } catch {
-      if (shipToFromLast === 1) {
-        syncShipToOtherAddressFlags(dispatch, 1);
-        applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
-      }
-    }
-    dispatch(setLastOrderInfoCustomerErpGID(c.tR_GID));
-    onClose();
   }
 
   async function applyLastCustomerWebOrder(lwo: Record<string, unknown>) {
     setApplying(true);
-    dispatch(setCustomerProsEbs(true));
-    dispatch(setCustomerSelectedFromList(false));
-    dispatch(setDraftProperty({ key: "person_erpid", value: null }));
-
-    let preferredPerson: string | undefined;
-    let preferredAddr: string | undefined;
-    let shipToFromLast: 0 | 1 | undefined;
-
-    const lwoCopy = { ...lwo };
-    preferredPerson = extractPersonErpGID(lwo);
-    preferredAddr = extractAddressErpGID(lwo);
-    shipToFromLast = extractShipToOtherAddress(lwo);
-    delete lwoCopy.person_ErpGID;
-    delete lwoCopy.address_ErpGID;
-    delete lwoCopy.preselected_person_GID;
-    delete lwoCopy.preselected_address_GID;
-    applyLastOrderData(lwoCopy, dispatch, true);
-
-    const customerGid = String(lwo.customer_ErpGID ?? "").trim();
-    const customerName = String(lwo.customer_name ?? "").trim();
-    const customerAmka = String(lwo.customer_amka ?? "").trim();
-    const customerAddress = String(lwo.customer_address ?? "").trim();
-
-    if (customerGid) {
-      dispatch(setDraftProperty({ key: "customer_ErpGID", value: customerGid }));
-    }
-    if (customerName) {
-      dispatch(setDraftProperty({ key: "customer_name", value: customerName }));
-    }
-    if (customerAmka) {
-      dispatch(setDraftProperty({ key: "customer_amka", value: customerAmka }));
-    }
-    if (customerAddress) {
-      dispatch(
-        setDraftProperty({ key: "customer_address", value: customerAddress }),
-      );
-    }
-    if (lwo.customer_city != null && String(lwo.customer_city).trim() !== "") {
-      dispatch(
-        setDraftProperty({
-          key: "customer_city",
-          value: String(lwo.customer_city),
-        }),
-      );
-    }
-    if (lwo.customer_tk != null && String(lwo.customer_tk).trim() !== "") {
-      dispatch(
-        setDraftProperty({ key: "customer_tk", value: String(lwo.customer_tk) }),
-      );
-    }
-    if (lwo.customer_tel != null && String(lwo.customer_tel).trim() !== "") {
-      dispatch(
-        setDraftProperty({ key: "customer_tel", value: String(lwo.customer_tel) }),
-      );
-    }
-    if (
-      lwo.customer_mobile != null &&
-      String(lwo.customer_mobile).trim() !== ""
-    ) {
-      dispatch(
-        setDraftProperty({
-          key: "customer_mobile",
-          value: String(lwo.customer_mobile),
-        }),
-      );
-    }
-    if (
-      lwo.customer_passport != null &&
-      String(lwo.customer_passport).trim() !== ""
-    ) {
-      dispatch(
-        setDraftProperty({
-          key: "customer_passport",
-          value: String(lwo.customer_passport),
-        }),
-      );
-    }
-
     try {
-      if (customerGid && customerAmka) {
-        await dispatch(
-          loadCustomerAddressesAsync({
-            customer_ErpGID: customerGid,
-            customer_name: customerName,
-            customer_amka: customerAmka,
-            customer_address: customerAddress,
-            preferredPersonErpGID: preferredPerson,
-            preferredAddressErpGID: preferredAddr,
-          }),
-        ).unwrap();
-
-        if (shipToFromLast === 1) {
-          syncShipToOtherAddressFlags(dispatch, 1);
-          applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
-          const prePerson = store.getState().orders.draft.preselected_person_GID;
-          if (
-            !store.getState().orders.draft.order.person_ErpGID?.trim() &&
-            prePerson
-          ) {
-            dispatch(
-              setDraftProperty({ key: "person_ErpGID", value: prePerson }),
-            );
-          }
-        } else {
-          dispatch(setDraftProperty({ key: "shipTo_other_address", value: 0 }));
-          dispatch(
-            setDraftProperty({ key: "shipToOtherAddressBool", value: false }),
-          );
-          dispatch(setDraftProperty({ key: "has_other_recipient", value: 0 }));
-          dispatch(
-            setDraftProperty({ key: "recipient_from_erp_lookup", value: null }),
-          );
-        }
-      }
-    } catch {
-      if (shipToFromLast === 1) {
-        syncShipToOtherAddressFlags(dispatch, 1);
-        applyPersonErpGIDFromLastOrder(dispatch, preferredPerson);
-      }
+      await applyLastCustomerWebOrderFromSearch(dispatch, lwo);
+      onClose();
     } finally {
       setApplying(false);
     }
-
-    if (customerGid) {
-      dispatch(setLastOrderInfoCustomerErpGID(customerGid));
-    }
-    onClose();
   }
 
   const lastWebOrderRow = lastCustomerWebOrder

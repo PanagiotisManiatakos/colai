@@ -6,25 +6,17 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import React from "react";
 import { Alert } from "react-bootstrap";
 import OrderField from "@/components/ui/OrderField";
-
-type WizardIssueLike = {
-  step: string;
-  field: string;
-  message: string | boolean;
-  error: string | null;
-};
-
-type Props = {
-  issues?: WizardIssueLike[];
-  onGoToIssue?: (it: WizardIssueLike) => void;
-  stepLabels?: Record<string, string>;
-};
+import type { TouchdownProps } from "./componentProps";
+import {
+  formatWizardStepLabel,
+  prepareTouchdownIssues,
+} from "./wizard/sortWizardIssues";
 
 export default function Touchdown({
   issues = [],
   onGoToIssue,
-  stepLabels,
-}: Props) {
+  stepOrder,
+}: TouchdownProps) {
   const data = useAppSelector((s) => s.orders.draft.order);
   const dispatch = useAppDispatch();
   const submitState = useAppSelector((s) => s.orders.draft.submitState);
@@ -35,14 +27,10 @@ export default function Touchdown({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const uniqueIssues = React.useMemo(() => {
-    const seen = new Set<string>();
-    return issues.filter((x) => {
-      if (seen.has(x.field)) return false;
-      seen.add(x.field);
-      return true;
-    });
-  }, [issues]);
+  const sortedIssues = React.useMemo(() => {
+    if (!stepOrder || stepOrder.size === 0) return issues;
+    return prepareTouchdownIssues(issues, stepOrder);
+  }, [issues, stepOrder]);
 
   return (
     <>
@@ -69,7 +57,7 @@ export default function Touchdown({
         </div>
       </div>
 
-      {uniqueIssues.length > 0 && (
+      {sortedIssues.length > 0 && (
         <div className="app-card border-danger-subtle mb-2 border p-3">
           <div className="d-flex align-items-start gap-3">
             <div
@@ -82,7 +70,7 @@ export default function Touchdown({
             <div className="d-flex align-items-center justify-content-between gap-2">
               <div className="fw-semibold">Ελλείψεις πριν την αποθήκευση</div>
               <span className="badge text-bg-danger">
-                {uniqueIssues.length}
+                {sortedIssues.length}
               </span>
             </div>
           </div>
@@ -93,15 +81,16 @@ export default function Touchdown({
             </div>
 
             <div className="d-flex flex-column mt-3 gap-2">
-              {uniqueIssues.map((it, idx) => {
-                const stepPrefix = stepLabels?.[it.step]
-                  ? `${stepLabels[it.step]} `
-                  : "";
+              {sortedIssues.map((it, idx) => {
+                const stepPrefix =
+                  stepOrder && stepOrder.size > 0
+                    ? formatWizardStepLabel(it.step, stepOrder)
+                    : it.step;
                 const text = it.error;
 
                 return (
                   <button
-                    key={idx}
+                    key={`${it.step}-${it.field}-${idx}`}
                     type="button"
                     onClick={() => onGoToIssue?.(it)}
                     className="btn w-100 border text-start"

@@ -4,6 +4,7 @@ import {
 } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import CustomerLookupModal from "../modals/CustomerLookupModal";
+import CustomerAmkaGate from "./CustomerAmkaGate";
 import ErpContactsLookupModal from "../modals/ErpContactsLookupModal";
 import NewRecipientConfirmModal from "../modals/NewRecipientConfirmModal";
 import SavedRecipientFields, {
@@ -16,30 +17,23 @@ import FormErrorsContext from "@/components/ui/FormErrorContect";
 import OrderField from "@/components/ui/OrderField";
 import OtpInput from "@/components/ui/OTPInput";
 import {
+  isCompletelyNewCustomer,
   isCustomerProsEbs,
   isCustomerSelectedFromList,
-} from "@/lib/customerProsEbs";
-
-type Props = {
-  errors?: Record<string, string | boolean>;
-  clearError?: (field: string) => void;
-  consentStepShown?: boolean;
-};
+} from "@/lib/customerUtils";
+import type { OrderCustomerAreaProps } from "./componentProps";
 
 function CustomerNameLabel() {
   const data = useAppSelector((s) => s.orders.draft.order);
   const draftMeta = useAppSelector((s) => ({
     customerProsEbs: s.orders.draft.customerProsEbs,
     customerSelectedFromList: s.orders.draft.customerSelectedFromList,
+    customerIsCompletelyNew: s.orders.draft.customerIsCompletelyNew,
   }));
   const isProsEbs = isCustomerProsEbs(draftMeta);
   const selectedFromList = isCustomerSelectedFromList(draftMeta);
+  const completelyNew = isCompletelyNewCustomer(draftMeta);
   const isExistingCustomer = !!String(data.customer_ErpGID ?? "").trim();
-
-  if (!data.aiCalculated && !isProsEbs && !selectedFromList) {
-    return <>Ονοματεπώνυμο</>;
-  }
-
   return (
     <span className="d-inline-flex align-items-center flex-wrap gap-2">
       Ονοματεπώνυμο
@@ -47,6 +41,8 @@ function CustomerNameLabel() {
         <span className="badge text-bg-success">Υφιστάμενος</span>
       ) : isProsEbs ? (
         <span className="badge text-bg-success">Νέος/Προς EBS</span>
+      ) : completelyNew ? (
+        <span className="badge text-bg-danger">Νέος</span>
       ) : (
         <span
           className={`badge ${isExistingCustomer ? "text-bg-success" : "text-bg-danger"}`}
@@ -62,7 +58,7 @@ export default function OrderCustomerArea({
   errors,
   clearError,
   consentStepShown = true,
-}: Props) {
+}: OrderCustomerAreaProps) {
   const data = useAppSelector((s) => s.orders.draft.order);
   const dispatch = useAppDispatch();
   const [showLookup, setShowLookup] = React.useState(false);
@@ -88,6 +84,11 @@ export default function OrderCustomerArea({
   const preselected_address_GID = useAppSelector(
     (s) => s.orders.draft.preselected_address_GID,
   );
+  const aiCalculated = useAppSelector((s) => s.orders.draft.order.aiCalculated);
+  const customerAmkaGateCompleted = useAppSelector(
+    (s) => s.orders.draft.customerAmkaGateCompleted,
+  );
+  const showAmkaGate = !aiCalculated && customerAmkaGateCompleted !== true;
 
   const savedRecipientSelectionRef = React.useRef<{
     person_ErpGID: string | null;
@@ -160,20 +161,6 @@ export default function OrderCustomerArea({
 
   React.useEffect(() => {
     if (!selectedAddress) return;
-    const addressObj = selectedAddress as Record<string, any>;
-    const pickPersonString = (
-      preferredValue?: string | null,
-      ...fallbackKeys: string[]
-    ) => {
-      if (preferredValue != null && String(preferredValue).trim() !== "") {
-        return String(preferredValue);
-      }
-      for (const key of fallbackKeys) {
-        const raw = addressObj[key];
-        if (raw != null && String(raw).trim() !== "") return String(raw);
-      }
-      return "";
-    };
 
     dispatch(
       setDraftProperty({
@@ -208,7 +195,6 @@ export default function OrderCustomerArea({
   };
 
   const handleSearchClick = () => {
-    // open search modal / navigate to search page
     setShowLookup(true);
   };
 
@@ -218,7 +204,6 @@ export default function OrderCustomerArea({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** After refresh: if address list is empty but draft has customer from localStorage, load addresses for «Θα παραδοθεί σε». */
   React.useEffect(() => {
     const gid = data.customer_ErpGID?.toString().trim();
     const amka = data.customer_amka?.trim();
@@ -239,6 +224,10 @@ export default function OrderCustomerArea({
     data.customer_address,
     listAddressesPersons.length,
   ]);
+  if (showAmkaGate) {
+    return <CustomerAmkaGate />;
+  }
+
   return (
     <div className="app-card p-3">
       <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
@@ -359,7 +348,7 @@ export default function OrderCustomerArea({
             </OrderField>
           </div>
           <div className="col-6">
-            <OrderField label="Ημ/νία Γέννησης" hint="π.χ. 31/12/1990">
+            <OrderField label="Ημ/νία γέννησης" hint="π.χ. 31/12/1990">
               <input
                 className="form-control"
                 name="customer_dob"
