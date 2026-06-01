@@ -178,6 +178,7 @@ export const submitDraftAsync = createAsyncThunk<
     order.payFullOrDiscount == 2 &&
     Number.isFinite(parsedFinalAmount) &&
     parsedFinalAmount === 0;
+  const zeroParticipationConfirmed = order.eopyyVerifyNoParticipation == 1;
 
   const payload = {
     order: {
@@ -187,9 +188,11 @@ export const submitDraftAsync = createAsyncThunk<
       dateIsxyeiEos: formatStringToISODDateTime(order.dateIsxyeiEos),
       posoDiscounted: parseFloat(String(order.posoDiscounted)),
       posoSymmetoxis: parseFloat(String(order.posoSymmetoxis)),
-      hasConfirmedMidenikiPliromi: canShowMidenikiToggle
-        ? Boolean(order.hasConfirmedMidenikiPliromi)
-        : null,
+      hasConfirmedMidenikiPliromi: zeroParticipationConfirmed
+        ? true
+        : canShowMidenikiToggle
+          ? Boolean(order.hasConfirmedMidenikiPliromi)
+          : null,
       appVersion: process.env.NEXT_PUBLIC_APP_VERSION,
     },
     ylika: draft.ylika,

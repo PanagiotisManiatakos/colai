@@ -37,6 +37,18 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
     finalAmount === 0;
 
   useEffect(() => {
+    if (data.eopyyVerifyNoParticipation == 1) {
+      if (data.hasConfirmedMidenikiPliromi !== true) {
+        dispatch(
+          setDraftProperty({
+            key: "hasConfirmedMidenikiPliromi",
+            value: true,
+          }),
+        );
+      }
+      return;
+    }
+
     if (!isFinalAmountZero && data.hasConfirmedMidenikiPliromi != null) {
       dispatch(
         setDraftProperty({
@@ -45,9 +57,16 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
         }),
       );
     }
-  }, [data.hasConfirmedMidenikiPliromi, dispatch, isFinalAmountZero]);
+  }, [
+    data.eopyyVerifyNoParticipation,
+    data.hasConfirmedMidenikiPliromi,
+    dispatch,
+    isFinalAmountZero,
+  ]);
 
   useEffect(() => {
+    if (data.eopyyVerifyNoParticipation == 1) return;
+
     if (isFinalAmountZero && data.hasConfirmedMidenikiPliromi == null) {
       dispatch(
         setDraftProperty({
@@ -56,7 +75,12 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
         }),
       );
     }
-  }, [data.hasConfirmedMidenikiPliromi, dispatch, isFinalAmountZero]);
+  }, [
+    data.eopyyVerifyNoParticipation,
+    data.hasConfirmedMidenikiPliromi,
+    dispatch,
+    isFinalAmountZero,
+  ]);
 
   return (
     <div className="app-card p-3">
@@ -286,6 +310,12 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                 setDraftProperty({
                   key: "eopyyVerifyNoParticipation",
                   value: checked ? 1 : 0,
+                }),
+              );
+              dispatch(
+                setDraftProperty({
+                  key: "hasConfirmedMidenikiPliromi",
+                  value: checked ? true : null,
                 }),
               );
               !data.eidos_Egkrisis &&
