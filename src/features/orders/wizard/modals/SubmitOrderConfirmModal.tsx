@@ -2,17 +2,7 @@
 
 import React from "react";
 import { Alert, Button, Modal } from "react-bootstrap";
-
-type Props = {
-  show: boolean;
-  loading?: boolean;
-  error?: string | null;
-  otp?: string | null;
-  amka?: string | null;
-  barcode?: string | null;
-  onClose: () => void;
-  onConfirm: () => void;
-};
+import type { SubmitOrderConfirmModalProps } from "./types";
 
 function SummaryRow({
   label,
@@ -38,9 +28,11 @@ export default function SubmitOrderConfirmModal({
   otp,
   amka,
   barcode,
+  customerIsCompletelyNew = false,
+  suggestedDoctorName,
   onClose,
   onConfirm,
-}: Props) {
+}: SubmitOrderConfirmModalProps) {
   return (
     <Modal
       show={show}
@@ -78,8 +70,7 @@ export default function SubmitOrderConfirmModal({
               Είστε σίγουροι ότι θέλετε να υποβάλετε την παραγγελία;
             </div>
             <div className="text-secondary small">
-              Βεβαιωθείτε ότι όλα τα πεδία της παραγγελίας έχουν συμπληρωθεί
-              σωστά.
+              Βεβαιωθείτε ότι όλα τα πεδία έχουν συμπληρωθεί σωστά.
             </div>
           </div>
         </div>
@@ -88,6 +79,9 @@ export default function SubmitOrderConfirmModal({
           <SummaryRow label="OTP" value={otp} />
           <SummaryRow label="ΑΜΚΑ παραλήπτη" value={amka} />
           <SummaryRow label="Barcode" value={barcode} />
+          {customerIsCompletelyNew ? (
+            <SummaryRow label="Συστήνων ιατρός" value={suggestedDoctorName} />
+          ) : null}
         </div>
 
         {error ? (

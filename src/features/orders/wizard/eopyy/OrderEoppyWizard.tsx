@@ -3,81 +3,35 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import {
-  clearDraftAddressesList,
-  fetchOrders,
-  loadCustomerAddressesAsync,
-  setAIMaterials,
-  setDraftFiles,
-  setDraftProperty,
-  setDraftYlika,
-  setCustomerProsEbs,
-  setCustomerSelectedFromList,
-  setLastOrderInfoCustomerErpGID,
-  submitDraftAsync,
-} from "@/store/orders/ordersSlice";
-import { store } from "@/store/store";
-import {
-  applyLastOrderData,
-  applyPersonErpGIDFromLastOrder,
-  extractAddressErpGID,
-  extractPersonErpGID,
-  extractShipToOtherAddress,
-  normalizeZeroOne,
-  syncShipToOtherAddressFlags,
-} from "@/lib/applyLastOrderData";
-import { shouldShowSynainesiStep } from "@/lib/customerProsEbs";
+import { fetchOrders, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { shouldShowSynainesiStep } from "@/lib/customerUtils";
 import { isConsentScoreTooLow } from "@/lib/consentUpload";
-import { getAiRunErrorMessage, type AiClient } from "@/lib/utils/ai";
-import OrderCustomerArea from "./OrderCustomerArea";
-import OrderDoctorArea from "./OrderDoctorArea";
-import MaterialsArea from "./MaterialsArea";
-import Touchdown from "./Touchdown";
-import GnomateuseisArea from "./GnomateuseisArea";
-import SyntagiArea from "./SyntagiArea";
-import SymmetoxiArea from "./SymmetoxiArea";
-import SynenaiseisArea from "./SynenaiseisArea";
-import { useRouter } from "next/navigation";
-import AIMaterials from "./AIMaterials";
-import { AIMaterials as AIMaterialsType, OrderYlika } from "@/types/orders";
-import YpervasiPlafonArea from "./YpervasiPlafonArea";
-import UpdateRecipientArea from "./UpdateRecipientArea";
+import {
+  getAiRunErrorMessage,
+  type AiClient,
+  type AiStatus,
+} from "@/lib/utils/ai";
 import SubmitOrderConfirmModal from "../modals/SubmitOrderConfirmModal";
-
-type AiStatus = "idle" | "running" | "done" | "error";
-type WizardIssue = {
-  step: StepKey;
-  field: string;
-  message: string | boolean;
-  error: string | null;
-};
-
-const isBlank = (v: any) => v == null || String(v).trim() === "";
-const onlyDigits = (s: string) => s.replace(/\D/g, "");
-
-type StepKey =
-  | "gnomateuseis"
-  | "customer"
-  | "updateRecipient"
-  | "doctor"
-  | "aiMaterials"
-  | "materials"
-  | "syntagi"
-  | "ypervasiPlafon"
-  | "symmetoxi"
-  | "synenaiseis"
-  | "touchdown";
-
-type StepDef = {
-  key: StepKey;
-  label: string;
-  show?: boolean; // condition
-  render: () => React.ReactNode;
-};
-
-function hasAnyValue(obj: Record<string, any>): boolean {
-  return Object.values(obj).some((v) => v !== null && v !== "");
-}
+import { useRouter } from "next/navigation";
+import { buildStepDefs } from "./wizard/buildStepDefs";
+import { getSubmitConfirmAmka, getSubmitConfirmSuggestedDoctorName } from "./wizard/submitConfirmAmka";
+import type { StepDef, StepKey, WizardIssue } from "./wizard/types";
+import { validateEoppyOrder as validateEoppyOrderDraft } from "./wizard/validateEoppyOrder";
+import {
+  getDraftAmkaFieldErrors,
+  hasDraftAmkaErrors,
+} from "./wizard/amkaValidation";
+import {
+  hasCustomerFieldErrors,
+  isCustomerTouchdownOnlyField,
+} from "./wizard/customerFieldValidation";
+import { focusWizardField } from "./wizard/wizardUtils";
+import { runEoppyAi } from "./wizard/runEoppyAi";
+import {
+  buildStepOrderMap,
+  prepareTouchdownIssues,
+} from "./wizard/sortWizardIssues";
+import type { StepOrderEntry } from "./componentProps";
 
 export default function OrderEoppyWizard() {
   const dispatch = useAppDispatch();
@@ -95,146 +49,54 @@ export default function OrderEoppyWizard() {
   const [showSubmitConfirm, setShowSubmitConfirm] = React.useState(false);
 
   const draftOrder = useAppSelector((s) => s.orders.draft.order);
-  const files = useAppSelector((s: any) => s.orders?.draft?.files) ?? [];
-  const hasFiles = files.some((o: any) => o?.documentCategory === "recipe");
+  const files = useAppSelector((s) => s.orders?.draft?.files) ?? [];
+  const hasFiles = files.some((o) => o?.documentCategory === "recipe");
   const recipeFileCount = files.filter(
-    (o: any) => o?.documentCategory === "recipe",
+    (o) => o?.documentCategory === "recipe",
   ).length;
 
   React.useEffect(() => {
     setAiDisabledClients([]);
   }, [recipeFileCount]);
+
   const hasConsentFormFiles = files.some(
-    (o: any) => o?.documentCategory === "consent_form",
+    (o) => o?.documentCategory === "consent_form",
   );
-  const orderUid = useAppSelector((s: any) => s.orders?.draft?.order?.uid);
+  const orderUid = useAppSelector((s) => s.orders?.draft?.order?.uid);
   const group_EOPPY_id = useAppSelector(
-    (s: any) => s.orders?.draft?.order?.group_EOPPY_id,
+    (s) => s.orders?.draft?.order?.group_EOPPY_id,
   );
   const submitState = useAppSelector((s) => s.orders.draft.submitState);
-  const lastOrderInfoCustomerErpGID = useAppSelector(
-    (s) => s.orders.draft.lastOrderInfoCustomerErpGID,
-  );
   const listAddressesPersons = useAppSelector(
     (s) => s.orders.draft.list_AddressesPersons,
   );
-  const customerProsEbsFlag = useAppSelector(
-    (s) => s.orders.draft.customerProsEbs,
+  const customerIsCompletelyNew = useAppSelector(
+    (s) => s.orders.draft.customerIsCompletelyNew,
   );
-  const showSynainesiPanel = shouldShowSynainesiStep(
-    {
-      customerProsEbs: customerProsEbsFlag,
-      lastOrderInfoCustomerErpGID,
-    },
-    draftOrder,
-  );
+  const showSynainesiPanel = shouldShowSynainesiStep({
+    customerIsCompletelyNew,
+  });
   const synaineseisResults = useAppSelector(
     (s) => s.orders.draft.synaineseisResults,
   );
   const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
-  const shouldShowAiMaterials = useAppSelector((s) => s.orders.draft.ai_ylika);
+  const aiMaterials = useAppSelector((s) => s.orders.draft.ai_ylika);
   const maxPosoKostousGiaSymmetoxi = useAppSelector(
     (s) => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi,
   );
   const kostos = useAppSelector((s) => s.orders?.draft?.order?.kostos);
   const ypervasiPlafon = (kostos ?? 0) - (maxPosoKostousGiaSymmetoxi ?? 0);
   const eidosEgkrisis = draftOrder.eidos_Egkrisis;
-
   const shouldShowWarningPlafon =
     ypervasiPlafon > 6 && Number(eidosEgkrisis) === 1;
 
-  const stepDefs: StepDef[] = [
-    {
-      key: "gnomateuseis",
-      label: "Γνωμάτευση",
-      render: () => (
-        <GnomateuseisArea
-          aiMessage={aiMessage}
-          aiStatus={aiStatus}
-          aiRunningClient={aiRunningClient}
-          aiDisabledClients={aiDisabledClients}
-          onRunAiWithClient={runAi}
-        />
-      ),
-    },
-    {
-      key: "customer",
-      label: "Ασθενής",
-      render: () => (
-        <OrderCustomerArea
-          errors={errorsByField}
-          clearError={clearError}
-          consentStepShown={showSynainesiPanel}
-        />
-      ),
-    },
-    {
-      key: "updateRecipient",
-      label: "Επικαιροποίηση",
-      show:
-        !showSynainesiPanel &&
-        (draftOrder.has_other_recipient != 1 ||
-          draftOrder.recipient_from_erp_lookup == 1),
-      render: () => <UpdateRecipientArea />,
-    },
-    { key: "doctor", label: "Ιατρός", render: () => <OrderDoctorArea /> },
-    {
-      key: "syntagi",
-      label: "\u03A3\u03C5\u03BD\u03C4\u03B1\u03B3\u03AE",
-      render: () => <SyntagiArea />,
-    },
-    {
-      key: "aiMaterials",
-      label: "ΑΙ επιλογές",
-      show: shouldShowAiMaterials.length > 0,
-      render: () => <AIMaterials />,
-    },
-    { key: "materials", label: "Υλικά", render: () => <MaterialsArea /> },
-    {
-      key: "ypervasiPlafon",
-      label: "Υπέρβαση πλαφόν",
-      show: shouldShowWarningPlafon,
-      render: () => <YpervasiPlafonArea />,
-    },
-    {
-      key: "symmetoxi",
-      label: "Συμμετοχή",
-      render: () => (
-        <SymmetoxiArea errors={errorsByField} clearError={clearError} />
-      ),
-    },
-    {
-      key: "synenaiseis",
-      label: "Συναίνεση",
-      show: showSynainesiPanel,
-      render: () => <SynenaiseisArea />,
-    },
-    {
-      key: "touchdown",
-      label: "Touchdown",
-      render: () => (
-        <Touchdown
-          issues={touchdownIssues}
-          stepLabels={
-            Object.fromEntries(stepDefs.map((s) => [s.key, s.label])) as Record<
-              string,
-              string
-            >
-          }
-          onGoToIssue={(it) => {
-            goToStepByKey(it.step as StepKey);
-            focusField(it.field);
-          }}
-        />
-      ),
-    },
-  ];
+  const effectiveStepsRef = React.useRef<StepDef[]>([]);
+  const stepOrderRef = React.useRef<Map<StepKey, StepOrderEntry>>(new Map());
 
-  const effectiveSteps = stepDefs.filter((s) => s.show !== false);
-
-  const labels = effectiveSteps.map((s) => s.label);
-  const maxStep = effectiveSteps.length - 1;
-  const current = effectiveSteps[step];
+  const goToStepByKey = React.useCallback((key: StepKey) => {
+    const idx = effectiveStepsRef.current.findIndex((s) => s.key === key);
+    if (idx >= 0) setStep(idx);
+  }, []);
 
   const clearError = React.useCallback((field: string) => {
     setIssues((prev) => prev.filter((x) => x.field !== field));
@@ -246,23 +108,118 @@ export default function OrderEoppyWizard() {
     return m;
   }, [issues]);
 
-  function goToStepByKey(key: StepKey) {
-    const idx = effectiveSteps.findIndex((s) => s.key === key);
-    if (idx >= 0) setStep(idx);
-  }
+  const amkaErrorsByField = React.useMemo(
+    () => getDraftAmkaFieldErrors(draftOrder),
+    [draftOrder],
+  );
 
-  function focusField(fieldName: string) {
-    window.setTimeout(() => {
-      const esc = (window as any).CSS?.escape
-        ? (window as any).CSS.escape(fieldName)
-        : fieldName;
-      const el = document.querySelector(
-        `[name="${esc}"]`,
-      ) as HTMLElement | null;
-      el?.scrollIntoView({ block: "center", behavior: "smooth" });
-      (el as any)?.focus?.();
-    }, 60);
-  }
+  const fieldErrorsByField = React.useMemo(() => {
+    const m: Record<string, string | boolean> = { ...amkaErrorsByField };
+    for (const [field, message] of Object.entries(errorsByField)) {
+      if (!isCustomerTouchdownOnlyField(field)) {
+        m[field] = message;
+      }
+    }
+    return m;
+  }, [amkaErrorsByField, errorsByField]);
+
+  const hasAmkaErrors = React.useMemo(
+    () => hasDraftAmkaErrors(draftOrder),
+    [draftOrder],
+  );
+
+  const hasEmptyCustomerFields = React.useMemo(
+    () => hasCustomerFieldErrors(draftOrder),
+    [draftOrder],
+  );
+
+  const runValidation = React.useCallback(
+    () =>
+      validateEoppyOrderDraft({
+        draftOrder,
+        customerIsCompletelyNew,
+        hasFiles,
+        hasConsentFormFiles,
+      }),
+    [customerIsCompletelyNew, draftOrder, hasConsentFormFiles, hasFiles],
+  );
+
+  const runAi = React.useCallback(
+    async (aiclient: AiClient) => {
+      setAiStatus("running");
+      setAiRunningClient(aiclient);
+      setAiMessage(null);
+
+      const controller = new AbortController();
+      const pendingTimeoutMs = 60_000;
+      const t = window.setTimeout(() => controller.abort(), pendingTimeoutMs);
+
+      try {
+        await runEoppyAi({
+          dispatch,
+          orderUid,
+          groupEoppyId: group_EOPPY_id,
+          aiclient,
+          signal: controller.signal,
+        });
+        setAiStatus("done");
+        setStep(1);
+      } catch (e: unknown) {
+        setAiStatus("error");
+        setAiMessage(
+          getAiRunErrorMessage(
+            e as { name?: string; message?: string },
+            aiclient,
+          ),
+        );
+        setAiDisabledClients((prev) =>
+          prev.includes(aiclient) ? prev : [...prev, aiclient],
+        );
+      } finally {
+        setAiRunningClient(null);
+        window.clearTimeout(t);
+      }
+    },
+    [dispatch, group_EOPPY_id, orderUid],
+  );
+
+  const currentKey = effectiveStepsRef.current[step]?.key;
+
+  const touchdownIssues = React.useMemo(() => {
+    if (currentKey !== "touchdown") return [];
+    return runValidation();
+  }, [currentKey, runValidation]);
+
+  const hasValidationIssues = React.useMemo(
+    () => runValidation().length > 0,
+    [runValidation],
+  );
+
+  const stepDefs = buildStepDefs({
+    aiMessage,
+    aiStatus,
+    aiRunningClient,
+    aiDisabledClients,
+    onRunAiWithClient: runAi,
+    errorsByField: fieldErrorsByField,
+    clearError,
+    showSynainesiPanel,
+    draftOrder,
+    customerIsCompletelyNew,
+    shouldShowAiMaterials: aiMaterials.length > 0,
+    shouldShowWarningPlafon,
+    touchdownIssues,
+    goToStepByKey,
+    stepOrder: stepOrderRef.current,
+  });
+
+  const effectiveSteps = stepDefs.filter((s) => s.show !== false);
+  effectiveStepsRef.current = effectiveSteps;
+  stepOrderRef.current = buildStepOrderMap(effectiveSteps);
+
+  const labels = effectiveSteps.map((s) => s.label);
+  const maxStep = effectiveSteps.length - 1;
+  const current = effectiveSteps[step];
 
   React.useEffect(() => {
     setStep((s) => Math.min(s, Math.max(0, effectiveSteps.length - 1)));
@@ -274,211 +231,15 @@ export default function OrderEoppyWizard() {
   function goPrev() {
     setStep((s) => Math.max(s - 1, 0));
   }
-  const currentKey = effectiveSteps[step]?.key;
-
-  const validateEoppyOrder = React.useCallback((): WizardIssue[] => {
-    const issues: WizardIssue[] = [];
-    const add = (
-      step: StepKey,
-      field: string,
-      message: string | boolean,
-      error: string | null = null,
-      when: boolean,
-    ) => {
-      if (when) issues.push({ step, field, message, error });
-    };
-
-    if (draftOrder.isTempSave != 1) {
-      add(
-        "gnomateuseis",
-        "recipe_file_required",
-        true,
-        "Ανεβάστε τουλάχιστον ένα αρχείο γνωμάτευσης",
-        !hasFiles,
-      );
-
-      const otp = onlyDigits(draftOrder.customer_tel_otp ?? "");
-      add(
-        "customer",
-        "customer_tel_otp",
-        "Συμπληρώστε ΟΤP (6 ψηφία)",
-        "Συμπληρώστε ΟΤP (6 ψηφία)",
-        otp.length !== 6,
-      );
-
-      if (draftOrder.has_other_recipient == 1) {
-        add(
-          "customer",
-          "recipient_reason_id",
-          true,
-          "Συμπληρώστε αιτία παραλαβής",
-          isBlank(draftOrder.recipient_reason_id),
-        );
-        add(
-          "customer",
-          "recipient_relation_id",
-          true,
-          "Συμπληρώστε τη σχέση με τον παραλήπτη",
-          isBlank(draftOrder.recipient_relation_id),
-        );
-        add(
-          "customer",
-          "recipient_name",
-          true,
-          "Συμπληρώστε το όνομα παραλήπτη",
-          isBlank(draftOrder.recipient_name),
-        );
-
-        const rAmka = onlyDigits(draftOrder.recipient_amka ?? "");
-        add(
-          "customer",
-          "recipient_amka",
-          "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).",
-          "Συμπληρώστε ΑΜΚΑ παραλήπτη (11 ψηφία).",
-          rAmka.length !== 11,
-        );
-        add(
-          "customer",
-          "recipient_afm",
-          true,
-          "ΑΦΜ παραλήπτη",
-          isBlank(draftOrder.recipient_afm),
-        );
-        add(
-          "customer",
-          "recipient_mobile",
-          true,
-          "Κινητό παραλήπτη",
-          isBlank(draftOrder.recipient_mobile),
-        );
-        add(
-          "customer",
-          "recipient_passport",
-          true,
-          "ΑΔΤ/Αριθμό διαβατηρίου παραλήπτη",
-          isBlank(draftOrder.recipient_passport),
-        );
-        add(
-          "customer",
-          "recipient_address",
-          true,
-          "Διεύθυνση παραλήπτη",
-          isBlank(draftOrder.recipient_address),
-        );
-        add(
-          "customer",
-          "recipient_city",
-          true,
-          "Πόλη παραλήπτη",
-          isBlank(draftOrder.recipient_city),
-        );
-        add(
-          "customer",
-          "recipient_tk",
-          true,
-          "ΤΚ παραλήπτη",
-          isBlank(draftOrder.recipient_tk),
-        );
-      }
-
-      if (draftOrder.shipTo_other_address == 1) {
-        add(
-          "customer",
-          "customer_other_address",
-          true,
-          "Διεύθυνση παραδοσης",
-          isBlank(draftOrder.customer_other_address),
-        );
-        add(
-          "customer",
-          "customer_other_city",
-          true,
-          "Πόλη παραδοσης",
-          isBlank(draftOrder.customer_other_city),
-        );
-        add(
-          "customer",
-          "customer_other_tk",
-          true,
-          "ΤΚ παραδοσης",
-          isBlank(draftOrder.customer_other_tk),
-        );
-      }
-
-      const validateSynainesiPanel = shouldShowSynainesiStep(
-        {
-          customerProsEbs: customerProsEbsFlag,
-          lastOrderInfoCustomerErpGID,
-        },
-        draftOrder,
-      );
-      if (
-        !validateSynainesiPanel &&
-        (draftOrder.has_other_recipient != 1 ||
-          draftOrder.recipient_from_erp_lookup == 1) &&
-        draftOrder.shouldUpdateRecipientInfos == 1 &&
-        isBlank(draftOrder.updateRecipient_passport)
-      ) {
-        add(
-          "updateRecipient",
-          "updateRecipient_passport",
-          "Συμπληρώστε ΑΤ/Διαβατήριο (επικαιροποίηση στοιχείων)",
-          "Συμπληρώστε ΑΤ/Διαβατήριο (επικαιροποίηση στοιχείων)",
-          true,
-        );
-      }
-
-      if (
-        validateSynainesiPanel &&
-        (!draftOrder.customer_ErpGID || draftOrder.customer_ErpGID == "") &&
-        hasConsentFormFiles.length == 0
-      ) {
-        add(
-          "synenaiseis",
-          "",
-          true,
-          "Νέος πελάτης, δεν έχεις ανεβάσει συναίνεση",
-          isBlank(draftOrder.customer_other_address),
-        );
-      }
-
-      add(
-        "symmetoxi",
-        "eopyyVerifyNoParticipation",
-        true,
-        "Μηδενική συμμετοχή",
-        draftOrder.eopyyVerifyNoParticipation != 1 &&
-          !(draftOrder.posoSymmetoxis > 0),
-      );
-    }
-
-    return issues;
-  }, [
-    customerProsEbsFlag,
-    draftOrder,
-    hasConsentFormFiles,
-    hasFiles,
-    lastOrderInfoCustomerErpGID,
-  ]);
-
-  const touchdownIssues = React.useMemo(() => {
-    if (currentKey !== "touchdown") return [];
-    return validateEoppyOrder();
-  }, [currentKey, validateEoppyOrder]);
-  const hasValidationIssues = React.useMemo(
-    () => validateEoppyOrder().length > 0,
-    [validateEoppyOrder],
-  );
 
   function onSaveClick() {
-    const found = validateEoppyOrder();
+    const found = prepareTouchdownIssues(runValidation(), stepOrderRef.current);
 
     if (found.length > 0) {
       setIssues(found);
-
       const first = found[0];
       goToStepByKey(first.step);
-      focusField(first.field);
+      focusWizardField(first.field);
       return;
     }
 
@@ -496,630 +257,24 @@ export default function OrderEoppyWizard() {
       } else {
         console.log(result);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
     }
   }
 
-  const submitConfirmAmka = React.useMemo(() => {
-    const pick = (...values: unknown[]) => {
-      for (const value of values) {
-        if (value != null && String(value).trim() !== "") {
-          return String(value).trim();
-        }
-      }
-      return "";
-    };
+  const submitConfirmAmka = React.useMemo(
+    () => getSubmitConfirmAmka(draftOrder, listAddressesPersons),
+    [draftOrder, listAddressesPersons],
+  );
 
-    const selectedPerson = listAddressesPersons.find(
-      (p) => p.person_ErpGID == draftOrder.person_ErpGID,
-    );
+  const submitConfirmSuggestedDoctorName = React.useMemo(
+    () => getSubmitConfirmSuggestedDoctorName(draftOrder),
+    [draftOrder],
+  );
 
-    return pick(
-      selectedPerson?.personAMKA,
-      draftOrder.recipient_amka,
-      draftOrder.customer_amka,
-    );
-  }, [
-    draftOrder.customer_amka,
-    draftOrder.person_ErpGID,
-    draftOrder.recipient_amka,
-    listAddressesPersons,
-  ]);
-
-  async function runAi(aiclient: AiClient) {
-    setAiStatus("running");
-    setAiRunningClient(aiclient);
-    setAiMessage(null);
-
-    const controller = new AbortController();
-    const pendingTimeoutMs = 60_000;
-    const t = window.setTimeout(() => controller.abort(), pendingTimeoutMs);
-
-    try {
-      const res = await fetch("/api/orders/runai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          order_uid: orderUid,
-          catid: group_EOPPY_id,
-          aiclient,
-        }),
-        signal: controller.signal,
-      });
-
-      const response = await res.json().catch(() => ({}));
-      if (!res.ok || response?.ok === false || response?.result === false) {
-        throw new Error(
-          response?.message ||
-            "Το αίτημα ΑΙ δεν ήταν επιτυχές. Εισάγετε τα στοιχεία χειροκίνητα ή προσπαθήστε αργότερα.",
-        );
-      }
-      const data = response.data;
-      if (data.isSuccess) {
-        dispatch(setDraftYlika([]));
-        dispatch(setAIMaterials([]));
-        dispatch(setLastOrderInfoCustomerErpGID(undefined));
-        dispatch(setCustomerProsEbs(undefined));
-        dispatch(setCustomerSelectedFromList(undefined));
-        dispatch(clearDraftAddressesList());
-
-        dispatch(setDraftProperty({ key: "aiCalculated", value: true }));
-        dispatch(
-          setDraftProperty({ key: "hasAnoia", value: data.jsonDoc.hasAnoia }),
-        );
-
-        const lastWebOrderRaw =
-          data.jsonDoc?.last_web_order &&
-          typeof data.jsonDoc.last_web_order === "object" &&
-          !Array.isArray(data.jsonDoc.last_web_order)
-            ? (data.jsonDoc.last_web_order as Record<string, unknown>)
-            : undefined;
-
-        if (lastWebOrderRaw) {
-          applyLastOrderData(lastWebOrderRaw, dispatch);
-        }
-
-        const lastOrderInfo = data.jsonDoc?.last_order_info;
-        const hasLastOrderInfo =
-          lastOrderInfo &&
-          typeof lastOrderInfo === "object" &&
-          !Array.isArray(lastOrderInfo) &&
-          Object.keys(lastOrderInfo).length > 0;
-
-        let customerAddressesLoaded = false;
-
-        if (hasLastOrderInfo) {
-          const raw = lastOrderInfo as Record<string, unknown>;
-          const orderObj =
-            raw?.order &&
-            typeof raw.order === "object" &&
-            !Array.isArray(raw.order)
-              ? (raw.order as Record<string, unknown>)
-              : raw?.data &&
-                  typeof raw.data === "object" &&
-                  !Array.isArray(raw.data)
-                ? (raw.data as Record<string, unknown>)
-                : raw;
-
-          dispatch(
-            setLastOrderInfoCustomerErpGID(
-              (orderObj.customer_ErpGID ?? raw.customer_ErpGID) as string,
-            ),
-          );
-          applyLastOrderData(orderObj, dispatch);
-          if (Array.isArray(orderObj?.items ?? orderObj?.ylika)) {
-            dispatch(setDraftYlika((orderObj.items ?? orderObj.ylika) as any));
-          }
-          if (Array.isArray(orderObj?.ai_ylika)) {
-            dispatch(setAIMaterials(orderObj.ai_ylika as any));
-          }
-          if (Array.isArray(raw?.files ?? orderObj?.files)) {
-            dispatch(setDraftFiles((raw.files ?? orderObj.files) as any));
-          }
-          const pick = (...keys: string[]) =>
-            keys.reduce(
-              (v: unknown, k) => v ?? raw[k] ?? orderObj[k],
-              undefined as unknown,
-            );
-          const hasOther = pick(
-            "has_other_recipient",
-            "hasOtherRecipient",
-            "Has_Other_Recipient",
-          );
-          if (hasOther !== undefined && hasOther !== null)
-            dispatch(
-              setDraftProperty({
-                key: "has_other_recipient",
-                value: normalizeZeroOne(hasOther),
-              }),
-            );
-          const shipOther = pick(
-            "shipTo_other_address",
-            "shipToOtherAddress",
-            "ShipTo_Other_Address",
-          );
-          if (shipOther !== undefined && shipOther !== null)
-            dispatch(
-              setDraftProperty({
-                key: "shipTo_other_address",
-                value: normalizeZeroOne(shipOther),
-              }),
-            );
-          const delSun = pick("deliverySunday", "delivery_sunday");
-          if (delSun !== undefined && delSun !== null)
-            dispatch(
-              setDraftProperty({
-                key: "deliverySunday",
-                value: normalizeZeroOne(delSun),
-              }),
-            );
-          const delMorn = pick("deliveryMorning", "delivery_morning");
-          if (delMorn !== undefined && delMorn !== null)
-            dispatch(
-              setDraftProperty({
-                key: "deliveryMorning",
-                value: normalizeZeroOne(delMorn),
-              }),
-            );
-
-          const shipToFromLastOrder = extractShipToOtherAddress(
-            orderObj,
-            raw,
-            lastWebOrderRaw,
-          );
-          const personFromLastOrder = extractPersonErpGID(
-            orderObj,
-            raw,
-            lastWebOrderRaw,
-          );
-          const addressFromLastOrder = extractAddressErpGID(
-            orderObj,
-            raw,
-            lastWebOrderRaw,
-          );
-
-          const lastOrderAmka = String(
-            orderObj.customer_amka ?? raw.customer_amka ?? "",
-          ).trim();
-          const lastGid = String(
-            orderObj.customer_ErpGID ?? raw.customer_ErpGID ?? "",
-          ).trim();
-          if (lastOrderAmka && lastGid) {
-            try {
-              await dispatch(
-                loadCustomerAddressesAsync({
-                  customer_ErpGID: lastGid,
-                  customer_name:
-                    orderObj.customer_name != null
-                      ? String(orderObj.customer_name)
-                      : undefined,
-                  customer_address:
-                    orderObj.customer_address != null
-                      ? String(orderObj.customer_address)
-                      : undefined,
-                  customer_amka: lastOrderAmka,
-                  preferredPersonErpGID: personFromLastOrder,
-                  preferredAddressErpGID: addressFromLastOrder,
-                }),
-              ).unwrap();
-              customerAddressesLoaded = true;
-
-              if (shipToFromLastOrder === 1) {
-                syncShipToOtherAddressFlags(dispatch, 1);
-                applyPersonErpGIDFromLastOrder(dispatch, personFromLastOrder);
-                const prePerson =
-                  store.getState().orders.draft.preselected_person_GID;
-                if (
-                  !store.getState().orders.draft.order.person_ErpGID?.trim() &&
-                  prePerson
-                ) {
-                  dispatch(
-                    setDraftProperty({
-                      key: "person_ErpGID",
-                      value: prePerson,
-                    }),
-                  );
-                }
-              } else {
-                dispatch(
-                  setDraftProperty({ key: "shipTo_other_address", value: 0 }),
-                );
-                dispatch(
-                  setDraftProperty({ key: "has_other_recipient", value: 0 }),
-                );
-              }
-            } catch {
-              if (shipToFromLastOrder === 1) {
-                syncShipToOtherAddressFlags(dispatch, 1);
-                applyPersonErpGIDFromLastOrder(dispatch, personFromLastOrder);
-              }
-            }
-          }
-        }
-
-        // Overlay with jsonDoc (document extraction)
-        data.jsonDoc.amka_eksetazomenou &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_amka",
-              value: data.jsonDoc.amka_eksetazomenou,
-            }),
-          );
-        data.jsonDoc.onomateponymo_eksetazomenou &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_name",
-              value: data.jsonDoc.onomateponymo_eksetazomenou,
-            }),
-          );
-        data.jsonDoc.diefthinsi_eksetazomenou &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_address",
-              value: data.jsonDoc.diefthinsi_eksetazomenou,
-            }),
-          );
-        data.jsonDoc.poli_eksetazomenou &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_city",
-              value: data.jsonDoc.poli_eksetazomenou,
-            }),
-          );
-        data.jsonDoc.tk_eksetazomenou &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_tk",
-              value: data.jsonDoc.tk_eksetazomenou,
-            }),
-          );
-        data.jsonDoc.tilefono_eksetazomenou &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_tel",
-              value: data.jsonDoc.tilefono_eksetazomenou,
-            }),
-          );
-        if (
-          data.jsonDoc.customer_tel != null &&
-          String(data.jsonDoc.customer_tel).trim() !== ""
-        ) {
-          const mobile = store.getState().orders.draft.order.customer_mobile;
-          if (!String(mobile ?? "").trim()) {
-            dispatch(
-              setDraftProperty({
-                key: "customer_mobile",
-                value: String(data.jsonDoc.customer_tel).trim(),
-              }),
-            );
-          }
-        }
-        data.jsonDoc.email_eksetazomenou &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_email",
-              value: data.jsonDoc.email_eksetazomenou,
-            }),
-          );
-        data.jsonDoc.imerominia_gennisis &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_dob",
-              value: data.jsonDoc.imerominia_gennisis,
-            }),
-          );
-        data.jsonDoc.otp &&
-          dispatch(
-            setDraftProperty({
-              key: "customer_tel_otp",
-              value: data.jsonDoc.otp,
-            }),
-          );
-        data.jsonDoc.customer_erpid != null &&
-        String(data.jsonDoc.customer_erpid).trim() !== ""
-          ? dispatch(
-              setDraftProperty({
-                key: "customer_ErpGID",
-                value: String(data.jsonDoc.customer_erpid),
-              }),
-            )
-          : dispatch(
-              setDraftProperty({
-                key: "customer_ErpGID",
-                value: null,
-              }),
-            );
-        const personErpIdRaw = data.jsonDoc.person_erpid;
-        const personErpId =
-          personErpIdRaw != null && String(personErpIdRaw).trim() !== ""
-            ? String(personErpIdRaw).trim()
-            : null;
-        dispatch(setDraftProperty({ key: "person_erpid", value: personErpId }));
-        dispatch(setCustomerProsEbs(hasLastOrderInfo && personErpId == null));
-        dispatch(setCustomerSelectedFromList(false));
-        //DOCTOR
-        const doctor = data.jsonDoc.iatros;
-        if (doctor) {
-          doctor.amka_iatrou &&
-            dispatch(
-              setDraftProperty({
-                key: "doctor_amka",
-                value: doctor.amka_iatrou,
-              }),
-            );
-          doctor.onomateponymo_iatrou &&
-            dispatch(
-              setDraftProperty({
-                key: "doctor_name",
-                value: doctor.onomateponymo_iatrou,
-              }),
-            );
-          doctor.afm_iatrou &&
-            dispatch(
-              setDraftProperty({ key: "doctor_afm", value: doctor.afm_iatrou }),
-            );
-          doctor.doctor_erpid &&
-            dispatch(
-              setDraftProperty({
-                key: "doctor_ErpGID",
-                value: doctor.doctor_erpid,
-              }),
-            );
-          doctor.typos_domis &&
-            dispatch(
-              setDraftProperty({
-                key: "doctor_DomiTypos",
-                value: doctor.typos_domis,
-              }),
-            );
-          doctor.ygeionomiki_domi &&
-            dispatch(
-              setDraftProperty({
-                key: "doctor_Domi",
-                value: doctor.ygeionomiki_domi,
-              }),
-            );
-        }
-        //SUGGESTED DOCTOR
-        const suggestedDoctor = data.jsonDoc.systinon_iatros;
-        const hasSuggestedDoctor = suggestedDoctor
-          ? hasAnyValue(suggestedDoctor)
-          : null;
-        hasSuggestedDoctor &&
-          dispatch(
-            setDraftProperty({
-              key: "hasOtherSystinonIatroBool",
-              value: hasSuggestedDoctor,
-            }),
-          );
-        hasSuggestedDoctor &&
-          dispatch(
-            setDraftProperty({
-              key: "has_suggested_doctor",
-              value: hasSuggestedDoctor ? 2 : 0,
-            }),
-          );
-        if (hasSuggestedDoctor) {
-          suggestedDoctor.amka_iatrou &&
-            dispatch(
-              setDraftProperty({
-                key: "doctorSuggested_amka",
-                value: suggestedDoctor.amka_iatrou,
-              }),
-            );
-          suggestedDoctor.onomateponymo_iatrou &&
-            dispatch(
-              setDraftProperty({
-                key: "doctorSuggested_name",
-                value: suggestedDoctor.onomateponymo_iatrou,
-              }),
-            );
-          suggestedDoctor.afm_iatrou &&
-            dispatch(
-              setDraftProperty({
-                key: "doctorSuggested_afm",
-                value: suggestedDoctor.afm_iatrou,
-              }),
-            );
-          suggestedDoctor.doctor_erpid &&
-            dispatch(
-              setDraftProperty({
-                key: "doctorSuggested_ErpGID",
-                value: suggestedDoctor.doctor_erpid,
-              }),
-            );
-        }
-        //GNOMATEVSI
-        const gnomatevsi = data.jsonDoc.gnomateusi;
-        if (gnomatevsi) {
-          data.jsonDoc.barcode &&
-            dispatch(
-              setDraftProperty({ key: "barcode", value: data.jsonDoc.barcode }),
-            );
-          gnomatevsi.imerominia_gnomateusis &&
-            dispatch(
-              setDraftProperty({
-                key: "dateOfSyntagi",
-                value: gnomatevsi.imerominia_gnomateusis,
-              }),
-            );
-          gnomatevsi.diarkeia_isxyos_apo &&
-            dispatch(
-              setDraftProperty({
-                key: "dateIsxyeiApo",
-                value: gnomatevsi.diarkeia_isxyos_apo,
-              }),
-            );
-          gnomatevsi.diarkeia_isxyos_eos &&
-            dispatch(
-              setDraftProperty({
-                key: "dateIsxyeiEos",
-                value: gnomatevsi.diarkeia_isxyos_eos,
-              }),
-            );
-          gnomatevsi.katigoria_paroxis &&
-            dispatch(
-              setDraftProperty({
-                key: "katigoriaParoxis",
-                value: gnomatevsi.katigoria_paroxis,
-              }),
-            );
-          gnomatevsi.eidos_egkrisis &&
-            dispatch(
-              setDraftProperty({
-                key: "eidos_Egkrisis",
-                value: gnomatevsi.eidos_egkrisis,
-              }),
-            );
-          dispatch(
-            setDraftProperty({
-              key: "symmPercentage",
-              value: gnomatevsi.symmetoxi_percentage,
-            }),
-          );
-          dispatch(
-            setDraftProperty({ key: "symm", value: gnomatevsi.symmetoxi }),
-          );
-          gnomatevsi.symmetoxi_percentage == 0 &&
-            dispatch(
-              setDraftProperty({ key: "eopyyVerifyNoParticipation", value: 0 }),
-            );
-
-          gnomatevsi.diagnosi1_gid &&
-            dispatch(
-              setDraftProperty({
-                key: "diagnosi1_GID",
-                value: gnomatevsi.diagnosi1_gid,
-              }),
-            );
-          gnomatevsi.kodikos_diagnosis &&
-            dispatch(
-              setDraftProperty({
-                key: "eoppy_Diagnosi_Code",
-                value: gnomatevsi.kodikos_diagnosis,
-              }),
-            );
-          gnomatevsi.perigrafi_diagnosis &&
-            dispatch(
-              setDraftProperty({
-                key: "eoppy_Diagnosi_Name",
-                value: gnomatevsi.perigrafi_diagnosis,
-              }),
-            );
-          gnomatevsi.diagnosi2_gid &&
-            dispatch(
-              setDraftProperty({
-                key: "diagnosi2_GID",
-                value: gnomatevsi.diagnosi2_gid,
-              }),
-            );
-          gnomatevsi.kodikos_diagnosis2 &&
-            dispatch(
-              setDraftProperty({
-                key: "eoppy_Diagnosi2_Code",
-                value: gnomatevsi.kodikos_diagnosis2,
-              }),
-            );
-          gnomatevsi.perigrafi_diagnosis2 &&
-            dispatch(
-              setDraftProperty({
-                key: "eoppy_Diagnosi2_Name",
-                value: gnomatevsi.perigrafi_diagnosis2,
-              }),
-            );
-          dispatch(
-            setDraftProperty({
-              key: "maxPosoKostousGiaSymmetoxi",
-              value: gnomatevsi.max_poso_symmetoxis,
-            }),
-          );
-          gnomatevsi.max_poso_symmetoxis > 0 &&
-            (await dispatch(
-              setDraftProperty({ key: "plafonGiftAmount", value: 6 }),
-            ));
-        }
-        const aiMaterials = data.jsonDoc.ylika;
-        if (Array.isArray(aiMaterials) && aiMaterials.length > 0) {
-          const uniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter(
-            (x: AIMaterialsType) =>
-              x.erp_products?.length && x.erp_products?.length == 1,
-          );
-          const nonUniqueAiMaterials: AIMaterialsType[] = aiMaterials.filter(
-            (x: AIMaterialsType) =>
-              x.erp_products?.length != 1 || !x.erp_products,
-          );
-
-          const o = store.getState().orders.draft.order;
-          const fromAi: OrderYlika[] = uniqueAiMaterials.map((m) => ({
-            id: o.id,
-            uid: o.uid,
-            orderId: o.id,
-            orderUID: o.uid,
-            erpGid: m.erp_products[0].erp_gid || "",
-            aiMatchedErpGid: m.erp_products[0].erp_gid || "",
-            erpCode: m.erp_products[0].erp_code || "",
-            erpName: m.erp_products[0].erp_name || "",
-            erp_Price: m.erp_products[0].erp_price || 0,
-            erp_EoppyPrice: m.erp_products[0].erp_eoppyprice || 0,
-            qty: parseFloat(m.synoliki_posotita_eidous),
-            eoppy_CleanName: m.clean_name,
-            eoppy_Code: m.kodikos_ylikou,
-            eoppy_Diagnosi_Code: m.kodikos_diagnosis,
-            eoppy_Diagnosi_Name: m.perigrafi_diagnosis,
-            eoppy_Diagnosi2_Code: m.kodikos_diagnosis2,
-            eoppy_Diagnosi2_Name: m.perigrafi_diagnosis2,
-            eoppy_DiarkiaTherapias: String(m.diarkeia_therapeias_se_mines),
-            eoppy_SlugName: m.slug_name,
-            eoppy_SynPosotita: String(m.synoliki_posotita_eidous),
-            eoppy_AnatomPerioxi: m.anatomiki_perioxi,
-            eoppy_Symmetoxi: m.symmetoxi,
-            eoppy_Sxolia: m.sxolia,
-            aiMatchedBy: m.matched_by,
-            fuzzyMatched: m.fuzzy_matched,
-          }));
-          const ylikaBeforeAi = store.getState().orders.draft.ylika;
-          dispatch(setDraftYlika([...ylikaBeforeAi, ...fromAi]));
-          dispatch(setAIMaterials(nonUniqueAiMaterials));
-        }
-
-        if (!customerAddressesLoaded) {
-          const o = store.getState().orders.draft.order;
-          const gid = String(o.customer_ErpGID ?? "").trim();
-          const amka = String(o.customer_amka ?? "").trim();
-          if (gid && amka) {
-            try {
-              await dispatch(
-                loadCustomerAddressesAsync({
-                  customer_ErpGID: gid,
-                  customer_name: o.customer_name,
-                  customer_address: o.customer_address,
-                  customer_amka: amka,
-                }),
-              ).unwrap();
-            } catch {
-              // Address list is optional if search-address fails
-            }
-          }
-        }
-      }
-
-      setAiStatus("done");
-      setStep(1);
-    } catch (e: any) {
-      setAiStatus("error");
-      setAiMessage(getAiRunErrorMessage(e, aiclient));
-      setAiDisabledClients((prev) =>
-        prev.includes(aiclient) ? prev : [...prev, aiclient],
-      );
-    } finally {
-      setAiRunningClient(null);
-      window.clearTimeout(t);
-    }
-  }
-  console.log(draftOrder);
   const showWizardNav = step > 0;
-
+  const activeStepKey = effectiveSteps[step]?.key;
+  console.log(draftOrder);
   return (
     <div
       className={`order-wizard d-flex flex-column gap-2${showWizardNav ? "order-wizard--has-nav" : ""}`}
@@ -1148,9 +303,9 @@ export default function OrderEoppyWizard() {
               className="btn btn-primary flex-fill"
               onClick={goNext}
               disabled={
-                currentKey === "synenaiseis" &&
+                activeStepKey === "synenaiseis" &&
                 consentScoreTooLow &&
-                hasConsentFormFiles.length > 0
+                hasConsentFormFiles
               }
             >
               Επόμενο
@@ -1164,6 +319,8 @@ export default function OrderEoppyWizard() {
               disabled={
                 submitState.loading ||
                 hasValidationIssues ||
+                hasAmkaErrors ||
+                hasEmptyCustomerFields ||
                 aiStatus === "running" ||
                 consentScoreTooLow
               }
@@ -1184,6 +341,8 @@ export default function OrderEoppyWizard() {
         otp={draftOrder.customer_tel_otp}
         amka={submitConfirmAmka}
         barcode={draftOrder.barcode}
+        customerIsCompletelyNew={customerIsCompletelyNew === true}
+        suggestedDoctorName={submitConfirmSuggestedDoctorName}
         onClose={() => {
           if (!submitState.loading) setShowSubmitConfirm(false);
         }}

@@ -7,6 +7,10 @@ import type { AppDispatch } from "@/store/store";
 import { OrderListOfAddressPersons } from "@/types/orders";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
+import type {
+  RecipientSelection,
+  ResolveSavedRecipientSelectionInput,
+} from "./wizard/types";
 
 const OTHER_RECIPIENT_FIELD_KEYS = [
   "recipient_reason_id",
@@ -43,11 +47,6 @@ export function clearOtherRecipientFields(dispatch: AppDispatch) {
   }
 }
 
-type RecipientSelection = {
-  person_ErpGID: string | null;
-  address_ErpGID: string | null;
-};
-
 export function resolveSavedRecipientSelection(
   listAddressesPersons: OrderListOfAddressPersons[],
   {
@@ -55,12 +54,7 @@ export function resolveSavedRecipientSelection(
     addressErpGID,
     preselectedPerson,
     preselectedAddress,
-  }: {
-    personErpGID?: string | null;
-    addressErpGID?: string | null;
-    preselectedPerson?: string | null;
-    preselectedAddress?: string | null;
-  },
+  }: ResolveSavedRecipientSelectionInput,
 ): RecipientSelection {
   const personInList = (pid?: string | null) =>
     !!pid && listAddressesPersons.some((p) => p.person_ErpGID == pid);

@@ -153,7 +153,7 @@ export default function OrderRetailCustomerArea() {
           </Field>
         </div>
         <div className="col-6">
-          <Field label="Ημ/νία Γέννησης" hint="π.χ. 31/12/1990">
+          <Field label="Ημ/νία γέννησης" hint="π.χ. 31/12/1990">
             <input
               className="form-control"
               name="customer_dob"

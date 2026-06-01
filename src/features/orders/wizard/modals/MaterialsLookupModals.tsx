@@ -5,16 +5,13 @@ import { Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { addDraftYliko, setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
+import type {
+  ProductSearchResult,
+  SearchProductsSuccess,
+} from "@/types/api/responses";
+import { parseProxyJson } from "@/lib/api/client";
 
-export type MaterialsLookupModal = {
-    erp_code?: string;
-    erp_eoppyprice: number;
-    erp_gid?: string;
-    erp_name?: string;
-    erp_price?: number;
-    fuzzy_matched?: number;
-    matched_by?: string;
-};
+export type MaterialsLookupModal = ProductSearchResult;
 
 export default function MaterialsLookupModal({
     show,
@@ -49,13 +46,12 @@ export default function MaterialsLookupModal({
                 cache: "no-store",
                 headers: { "Cache-Control": "no-cache", "Pragma": "no-cache" },
             });
-            const data = await res.json().catch(() => ({}));
+            const data = await parseProxyJson<SearchProductsSuccess>(
+              res,
+              "Search failed",
+            );
 
-            if (!res.ok || !data?.ok) {
-                throw new Error(data?.message || "Search failed");
-            }
-
-            setResults((data.items ?? []) as MaterialsLookupModal[]);
+            setResults(data.items ?? []);
         } catch (e: any) {
             setError(e?.message || "Search failed");
         } finally {
@@ -75,9 +71,9 @@ export default function MaterialsLookupModal({
             erp_Price: c.erp_price || 0,
             erp_EoppyPrice: c.erp_eoppyprice || 0,
             qty: 1,
-            fuzzyMatched: c.fuzzy_matched,
-            aiMatchedBy: c.matched_by,
-            aiMatchedErpGid: c.erp_gid,
+            fuzzyMatched: c.fuzzy_matched ?? undefined,
+            aiMatchedBy: c.matched_by ?? undefined,
+            aiMatchedErpGid: c.erp_gid ?? undefined,
         }));
 
         onClose();

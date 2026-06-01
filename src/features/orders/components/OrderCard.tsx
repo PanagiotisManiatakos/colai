@@ -22,7 +22,7 @@ export default function OrderCard({
 }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
-  const userInfo = useAppSelector((s) => s.auth.userInfos)
+  const userInfo = useAppSelector((s) => s.auth.userInfos);
   const list_order_types = useAppSelector((s) => s.staticData.list_Order_Types);
   const list_group_eoppy = useAppSelector((s) => s.staticData.list_GroupEoppy);
 
@@ -127,7 +127,9 @@ export default function OrderCard({
   async function confirmDelete() {
     try {
       setDeleting(true);
-      await dispatch(deleteOrderAsync({ orderId: order.id, orderUID: order.uid }));
+      await dispatch(
+        deleteOrderAsync({ orderId: order.id, orderUID: order.uid }),
+      );
 
       setShowConfirm(false);
       setX(0);
@@ -148,14 +150,26 @@ export default function OrderCard({
     startRef.current.swiping = false;
   }
 
-  const reveal = canSwipeDelete ? Math.min(1, Math.max(0, -x / ACTION_WIDTH)) : 0;
+  const reveal = canSwipeDelete
+    ? Math.min(1, Math.max(0, -x / ACTION_WIDTH))
+    : 0;
 
-  const typeText = list_order_types?.find((t) => t.value == order.type)?.text ?? "";
-  const groupText = list_group_eoppy?.find((g) => g.value == String(order.group_EOPPY_id))?.text ?? "";
+  const typeText =
+    list_order_types?.find((t) => t.value == order.type)?.text ?? "";
+  const groupText =
+    list_group_eoppy?.find((g) => g.value == String(order.group_EOPPY_id))
+      ?.text ?? "";
 
-  const doctorLabel = order.has_suggested_doctor == 2 ? "Συστήνων ιατρός" : "Ιατρός";
-  const doctorName = order.has_suggested_doctor == 2 ? order.doctorSuggested_name : order.doctor_name;
-  const doctorAmka = order.has_suggested_doctor == 2 ? order.doctorSuggested_amka : order.doctor_amka;
+  const doctorLabel =
+    order.has_suggested_doctor == 2 ? "Συστήνων ιατρός" : "Ιατρός";
+  const doctorName =
+    order.has_suggested_doctor == 2
+      ? order.doctorSuggested_name
+      : order.doctor_name;
+  const doctorAmka =
+    order.has_suggested_doctor == 2
+      ? order.doctorSuggested_amka
+      : order.doctor_amka;
 
   const chipStyle: React.CSSProperties = {
     display: "inline-flex",
@@ -187,7 +201,9 @@ export default function OrderCard({
   const headerStyle: React.CSSProperties = {
     padding: "14px 14px 12px",
     // background: open ? "rgba(var(--bs-secondary-rgb), .06)" : "var(--bs-body-bg)",
-    borderBottom: open ? "1px solid var(--bs-border-color-translucent)" : "1px solid transparent",
+    borderBottom: open
+      ? "1px solid var(--bs-border-color-translucent)"
+      : "1px solid transparent",
   };
 
   return (
@@ -210,7 +226,9 @@ export default function OrderCard({
               opacity: reveal,
               transform: `translateX(${(1 - reveal) * 12}px)`,
               pointerEvents: reveal > 0.02 ? "auto" : "none",
-              transition: dragging ? "none" : "opacity 140ms ease, transform 140ms ease",
+              transition: dragging
+                ? "none"
+                : "opacity 140ms ease, transform 140ms ease",
             }}
           >
             <button
@@ -244,7 +262,9 @@ export default function OrderCard({
           <details
             className="app-card"
             style={cardStyle}
-            onToggle={(e) => setOpen((e.currentTarget as HTMLDetailsElement).open)}
+            onToggle={(e) =>
+              setOpen((e.currentTarget as HTMLDetailsElement).open)
+            }
           >
             <summary
               className="d-flex align-items-start justify-content-between gap-3"
@@ -258,14 +278,16 @@ export default function OrderCard({
               onPointerUpCapture={blockClickIfSwiping}
             >
               <div style={{ minWidth: 0 }}>
-                <div className="d-flex flex-wrap align-items-center gap-2">
+                <div className="d-flex align-items-center flex-wrap gap-2">
                   <span style={{ ...chipStyle, ...softPrimaryStyle }}>
                     <i className="bi bi-hash" />
                     <span className="fw-semibold">{order.id}</span>
                   </span>
 
                   {typeText ? <span style={chipStyle}>{typeText}</span> : null}
-                  {groupText ? <span style={chipStyle}>{groupText}</span> : null}
+                  {groupText ? (
+                    <span style={chipStyle}>{groupText}</span>
+                  ) : null}
                 </div>
 
                 <div
@@ -294,7 +316,9 @@ export default function OrderCard({
                   }}
                   title={doctorName}
                 >
-                  {order.has_suggested_doctor == 2 ? `${order.doctorSuggested_name ?? ""}` : `${order.doctor_name ?? ""}`}
+                  {order.has_suggested_doctor == 2
+                    ? `${order.doctorSuggested_name ?? ""}`
+                    : `${order.doctor_name ?? ""}`}
                 </div>
               </div>
 
@@ -302,7 +326,7 @@ export default function OrderCard({
                 <StatusBadge status={order.statusId} />
 
                 <div
-                  className="mt-2 fw-semibold"
+                  className="fw-semibold mt-2"
                   style={{
                     fontSize: 15,
                     letterSpacing: 0.2,
@@ -341,15 +365,21 @@ export default function OrderCard({
               <div className="row g-3">
                 <div className="col-4">
                   <div className="small text-secondary">Ημ/νία Συνταγής</div>
-                  <div className="fw-medium">{formatUIDate(order.dateOfSyntagi)}</div>
+                  <div className="fw-medium">
+                    {formatUIDate(order.dateOfSyntagi)}
+                  </div>
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Αξία συνταγής</div>
-                  <div className="fw-medium">{formatCurrencyGR(order.kostos)} €</div>
+                  <div className="fw-medium">
+                    {formatCurrencyGR(order.kostos)} €
+                  </div>
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Συμμετοχή</div>
-                  <div className="fw-medium">{formatCurrencyGR(order.posoSymmetoxis)} €</div>
+                  <div className="fw-medium">
+                    {formatCurrencyGR(order.posoSymmetoxis)} €
+                  </div>
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">ΑΜΚΑ Πελάτη</div>
@@ -359,11 +389,15 @@ export default function OrderCard({
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Έκπτωση</div>
-                  <div className="fw-medium">{formatCurrencyGR(order.calculatedDiscPercent)} %</div>
+                  <div className="fw-medium">
+                    {formatCurrencyGR(order.calculatedDiscPercent)} %
+                  </div>
                 </div>
                 <div className="col-4">
                   <div className="small text-secondary">Πληρωτέο</div>
-                  <div className="fw-medium">{formatCurrencyGR(order.posoDiscounted)} €</div>
+                  <div className="fw-medium">
+                    {formatCurrencyGR(order.posoDiscounted)} €
+                  </div>
                 </div>
 
                 <div className="col-12">
@@ -386,7 +420,11 @@ export default function OrderCard({
                   <button
                     type="button"
                     className="btn btn-outline-secondary flex-fill"
-                    onClick={() => router.push(`/orders/${order.id}/${order.type}/edit?uid=${order.uid}`)}
+                    onClick={() =>
+                      router.push(
+                        `/orders/${order.id}/${order.type}/edit?uid=${order.uid}`,
+                      )
+                    }
                     style={{
                       borderRadius: 14,
                       padding: "10px 12px",
@@ -431,7 +469,9 @@ export default function OrderCard({
             background: "rgba(var(--bs-danger-rgb), .04)",
           }}
         >
-          <Modal.Title className="fw-semibold">Επιβεβαίωση διαγραφής</Modal.Title>
+          <Modal.Title className="fw-semibold">
+            Επιβεβαίωση διαγραφής
+          </Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
@@ -450,21 +490,40 @@ export default function OrderCard({
 
             <div style={{ minWidth: 0 }}>
               <div className="fw-semibold mb-1">
-                Είστε σίγουροι πως θέλετε να διαγράψετε την παραγγελία #{order.id};
+                Είστε σίγουροι πως θέλετε να διαγράψετε την παραγγελία #
+                {order.id};
               </div>
-              <div className="text-secondary small">Η ενέργεια αυτή δεν μπορεί να αναιρεθεί.</div>
+              <div className="text-secondary small">
+                Η ενέργεια αυτή δεν μπορεί να αναιρεθεί.
+              </div>
             </div>
           </div>
         </Modal.Body>
 
-        <Modal.Footer style={{ borderTop: "1px solid var(--bs-border-color-translucent)" }}>
-          <Button variant="outline-secondary" onClick={closeModal} disabled={deleting} style={{ borderRadius: 12 }}>
+        <Modal.Footer
+          style={{ borderTop: "1px solid var(--bs-border-color-translucent)" }}
+        >
+          <Button
+            variant="outline-secondary"
+            onClick={closeModal}
+            disabled={deleting}
+            style={{ borderRadius: 12 }}
+          >
             Ακύρωση
           </Button>
-          <Button variant="danger" onClick={confirmDelete} disabled={deleting} style={{ borderRadius: 12 }}>
+          <Button
+            variant="danger"
+            onClick={confirmDelete}
+            disabled={deleting}
+            style={{ borderRadius: 12 }}
+          >
             {deleting ? (
               <>
-                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />
+                <span
+                  className="spinner-border spinner-border-sm me-2"
+                  role="status"
+                  aria-hidden="true"
+                />
                 Διαγραφή…
               </>
             ) : (

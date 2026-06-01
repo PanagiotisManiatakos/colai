@@ -1,6 +1,11 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
 import { DiscountRequest } from "@/types/discoutRequest";
+import type {
+  GetDiscountRequestsSuccess,
+  ReviewDiscountRequestSuccess,
+} from "@/types/api/responses";
+import { parseProxyJson } from "@/lib/api/client";
 
 const LS_KEY = "discountRequests";
 
@@ -18,7 +23,10 @@ export interface DiscountRequestState {
   }
 }
 
-export const reviewDiscountRequest = createAsyncThunk<any, { id: number; uid: string; isapproved: number; overrideamount?: number }>(
+export const reviewDiscountRequest = createAsyncThunk<
+  ReviewDiscountRequestSuccess & { id: number; isapproved: number },
+  { id: number; uid: string; isapproved: number; overrideamount?: number }
+>(
   "discountRequests/reviewDiscountRequest",
   async ({ id, uid, isapproved, overrideamount = 0 }) => {
     const res = await fetch(`/api/discountRequests/review`, {
@@ -27,15 +35,19 @@ export const reviewDiscountRequest = createAsyncThunk<any, { id: number; uid: st
       body: JSON.stringify({ id, uid, isapproved, overrideamount }),
     });
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.message || "Failed to load orders");
-    }
+    const data = await parseProxyJson<ReviewDiscountRequestSuccess>(
+      res,
+      "Failed to review discount request",
+    );
     return { ...data, id, isapproved };
   }
 );
 
-export const fetchDiscountRequests = createAsyncThunk<any, { q?: string; force?: boolean } | void, { state: RootState }>(
+export const fetchDiscountRequests = createAsyncThunk<
+  GetDiscountRequestsSuccess,
+  { q?: string; force?: boolean } | void,
+  { state: RootState }
+>(
   "discountRequests/fetchDiscountRequests",
   async (arg) => {
     const q = typeof arg === "object" && arg?.q ? arg.q : "";
@@ -47,11 +59,10 @@ export const fetchDiscountRequests = createAsyncThunk<any, { q?: string; force?:
       }
     });
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.message || "Failed to load orders");
-    }
-    return data;
+    return parseProxyJson<GetDiscountRequestsSuccess>(
+      res,
+      "Failed to load discount requests",
+    );
   },
   {
     condition: (arg, { getState }) => {
@@ -134,11 +145,8 @@ const discountRequestsSlice = createSlice({
       const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
       if (force) state.refreshingList = false;
       else state.loadingList = false;
-      if (!payload.ok) {
-        state.error = payload.message
-      } else {
-        state.requests = payload.data.mydata
-        state.userCanMakeAction = payload.data.userCanMakeAction
+      state.requests = (payload.data.mydata ?? []) as DiscountRequest[];
+      state.userCanMakeAction = payload.data.userCanMakeAction ?? false;
 
         const q =
           typeof action.meta.arg === "object" && action.meta.arg?.q
@@ -147,7 +155,6 @@ const discountRequestsSlice = createSlice({
         state.query = q;
         state.requestsFetchedAt = Date.now();
         persistStateToLocalStorage(state);
-      }
     });
     b.addCase(fetchDiscountRequests.rejected, (state, action) => {
       const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
@@ -169,7 +176,8 @@ const discountRequestsSlice = createSlice({
           req.isDiscountApproved = action.payload.isapproved;
         }
       } else {
-        state.review.error = action.payload.message ?? action.payload.exmessage;
+        state.review.error =
+          action.payload.message ?? action.payload.exmessage ?? null;
       }
     })
     b.addCase(reviewDiscountRequest.rejected, (state, action) => {

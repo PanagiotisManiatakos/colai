@@ -5,27 +5,19 @@ import { Modal } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
+import { hasText, trimmedString } from "@/lib/utils/string";
+import type { AddressDto, ErpContact } from "@/types/api";
+import type { SearchErpContactsApiResponse } from "@/types/api/responses";
+import { parseJson } from "@/lib/api/client";
 
-export type ErpContactAddress = {
+export type ErpContactAddress = AddressDto & {
   address_ErpGID: string;
   address: string;
   city: string;
   tk: string;
-  isAddressPreselected?: boolean;
 };
 
-export type ErpContact = {
-  person_ErpGID: string;
-  personName: string;
-  personVatNumber?: string;
-  personAMKA?: string;
-  personIDCode?: string;
-  personPassport?: string;
-  addresses: ErpContactAddress[];
-  isCustomer?: boolean;
-  isPersonPreselected?: boolean;
-  textDisplay?: string;
-};
+export type { ErpContact };
 
 export default function ErpContactsLookupModal({
   show,
@@ -75,13 +67,13 @@ export default function ErpContactsLookupModal({
           headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
         },
       );
-      const data = await res.json().catch(() => ({}));
+      const data = await parseJson<SearchErpContactsApiResponse>(res);
 
       if (!res.ok || !data?.isSuccess) {
         throw new Error(data?.message || data?.errorMessage || "Search failed");
       }
 
-      setResults((data.contacts ?? []) as ErpContact[]);
+      setResults(data.contacts ?? []);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Search failed");
     } finally {
@@ -89,7 +81,7 @@ export default function ErpContactsLookupModal({
     }
   }
 
-  function applyContact(c: ErpContact, address?: ErpContactAddress) {
+  function applyContact(c: ErpContact, address?: AddressDto) {
     const addr =
       address ??
       c.addresses?.find((a) => a.isAddressPreselected) ??
@@ -123,14 +115,8 @@ export default function ErpContactsLookupModal({
         value: c.personVatNumber ?? "",
       }),
     );
-    const idTrim =
-      c.personIDCode != null && String(c.personIDCode).trim() !== ""
-        ? String(c.personIDCode).trim()
-        : "";
-    const passTrim =
-      c.personPassport != null && String(c.personPassport).trim() !== ""
-        ? String(c.personPassport).trim()
-        : "";
+    const idTrim = trimmedString(c.personIDCode);
+    const passTrim = trimmedString(c.personPassport);
     const recipientPassport = idTrim || passTrim;
     dispatch(
       setDraftProperty({
@@ -149,10 +135,10 @@ export default function ErpContactsLookupModal({
     );
     dispatch(setDraftProperty({ key: "recipient_tk", value: addr?.tk ?? "" }));
 
+    const customerAmka = trimmedString(draftOrder.customer_amka);
     const sameAmkaAsCustomer =
-      String(draftOrder.customer_amka ?? "").trim() !== "" &&
-      String(draftOrder.customer_amka ?? "").trim() ===
-        String(c.personAMKA ?? "").trim();
+      hasText(customerAmka) &&
+      customerAmka === trimmedString(c.personAMKA);
 
     dispatch(setDraftProperty({ key: "shouldUpdateRecipientInfos", value: 1 }));
     dispatch(

@@ -1,15 +1,7 @@
 "use client";
 
 import React from "react";
-
-type Props = {
-  disabled?: boolean;
-  failed?: boolean;
-  running?: boolean;
-  onClick: () => void;
-  label?: string;
-  icon?: React.ReactNode;
-};
+import type { RunAiButtonProps } from "./componentProps";
 
 export default function RunAiButton({
   disabled = false,
@@ -18,7 +10,7 @@ export default function RunAiButton({
   onClick,
   label = "Run AI",
   icon,
-}: Props) {
+}: RunAiButtonProps) {
   const isDisabled = disabled || running;
 
   return (

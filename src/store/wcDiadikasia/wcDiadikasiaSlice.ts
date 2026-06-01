@@ -1,17 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "@/store/store";
 import { wcCalendar } from "@/types/wc";
+import type { GetWcCalendarSuccess } from "@/types/api/responses";
+import type { AplatReportCustomerStatus } from "@/types/api/schemas";
+import { parseProxyJson } from "@/lib/api/client";
 
 const LS_KEY = "wc";
 
-type listStatuses = {
-    dateIn: string;
-    dateUpdated: string;
-    displayRank: number;
-    statusId: number;
-    statusUID: string;
-    title: string;
-}
+type listStatuses = AplatReportCustomerStatus;
 
 export interface WCDiadiadikasiatState {
     calendar: wcCalendar[];
@@ -28,7 +24,11 @@ export interface WCDiadiadikasiatState {
     }
 }
 
-export const fetchWCCalendar = createAsyncThunk<any, { q?: string; force?: boolean } | void, { state: RootState }>(
+export const fetchWCCalendar = createAsyncThunk<
+  GetWcCalendarSuccess,
+  { q?: string; force?: boolean } | void,
+  { state: RootState }
+>(
     "wc/fetchWCDiadikasiaCalendar",
     async (arg) => {
         const q = typeof arg === "object" && arg?.q ? arg.q : "";
@@ -40,11 +40,10 @@ export const fetchWCCalendar = createAsyncThunk<any, { q?: string; force?: boole
             }
         });
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok || !data?.ok) {
-            throw new Error(data?.message || "Failed to load orders");
-        }
-        return data;
+        return parseProxyJson<GetWcCalendarSuccess>(
+          res,
+          "Failed to load WC calendar",
+        );
     },
     {
         condition: (arg, { getState }) => {
@@ -145,7 +144,7 @@ const discountRequestsSlice = createSlice({
             }
 
             state.error = null;
-            state.calendar = Array.isArray(list) ? list : [];
+            state.calendar = Array.isArray(list) ? (list as wcCalendar[]) : [];
             state.showActions = !!payload.showActions;
             if (Array.isArray(payload.listStatuses)) {
                 state.listStatuses = payload.listStatuses;

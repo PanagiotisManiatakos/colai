@@ -1,6 +1,6 @@
 {
   "name": "colai-app-orders",
-  "version": "1.0.70",
+  "version": "1.0.71",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -22,6 +22,7 @@
     "axios": "^1.13.4",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
+    "greece-amka": "^1.0.0",
     "html5-qrcode": "^2.3.8",
     "next": "^16.1.1",
     "react": "19.0.0",
@@ -32,7 +33,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.3.1",
-  "@types/node": "^20",
+    "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

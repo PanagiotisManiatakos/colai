@@ -17,14 +17,7 @@ import {
   isConsentScoreWarning,
 } from "@/lib/consentUpload";
 import { Alert } from "react-bootstrap";
-
-type UploadStatus = "idle" | "uploading" | "error";
-
-type UploadingInfo = {
-  name: string;
-  fileSize: number;
-  fileType: string;
-};
+import type { UploadStatus, UploadingInfo } from "./wizard/types";
 
 function isPdf(name: string, mimeType?: string) {
   return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");

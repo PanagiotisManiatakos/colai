@@ -6,7 +6,17 @@ import type {
   OrderFile,
   OrderListOfAddressPersons,
   OrderYlika,
+  SaleOrder_CheckItem,
 } from "@/types/orders";
+import type {
+  DeleteOrderSuccess,
+  GetCustomerAddressesSuccess,
+  GetOrderEditSuccess,
+  GetOrdersSuccess,
+  GetOrderViewSuccess,
+  PostOrderSuccess,
+} from "@/types/api/responses";
+import { parseProxyJson } from "@/lib/api/client";
 import type {
   IDoctorFormData,
   IPatientFormData,
@@ -39,17 +49,20 @@ export interface DraftState {
   ai_ylika: AIMaterials[];
   synaineseisResults: SynaineseisResults | null;
   lastOrderInfoCustomerErpGID?: string;
-  /** Patient matched via last web order but not yet linked in EBS (search-customers / run-ai). */
   customerProsEbs?: boolean;
-  /** Patient chosen from search-customers listCustomers (normal CRM pick). */
   customerSelectedFromList?: boolean;
+  customerIsCompletelyNew?: boolean;
+  /** Set from `POST /api/load-last-customer-order-info` — `null` means no prior web order. */
+  lastWebOrderFromLoadInfo?: Record<string, unknown> | null;
+  /** Step 2 AMKA gate completed (manual flow without AI). */
+  customerAmkaGateCompleted?: boolean;
 }
 
 export interface SelectedOrderState {
   order: Order;
   ylika: OrderYlika[];
   files: OrderFile[];
-  checkErrors: any;
+  checkErrors: SaleOrder_CheckItem[] | null;
   loading: boolean;
   loadingError: string | null;
   saving: boolean;
@@ -86,10 +99,10 @@ export const fetchOrders = createAsyncThunk<
       },
     );
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.message || "Failed to load orders");
-    }
+    const data = await parseProxyJson<GetOrdersSuccess>(
+      res,
+      "Failed to load orders",
+    );
 
     return (data.orders ?? []) as Order[];
   },
@@ -115,35 +128,33 @@ export const fetchOrders = createAsyncThunk<
 );
 
 export const fetchOrderById = createAsyncThunk<
-  any,
+  GetOrderViewSuccess,
   { orderId: number; orderUID: string }
 >("orders/fetchOrderById", async ({ orderId, orderUID }) => {
   const res = await fetch(
     `/api/orders/${orderId}?_ts=${Date.now()}&uid=${orderUID}`,
     { cache: "no-store" },
   );
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.ok)
-    throw new Error(data?.message || "Failed to load order");
-  return data;
+  return parseProxyJson<GetOrderViewSuccess>(res, "Failed to load order");
 });
 
 export const deleteOrderAsync = createAsyncThunk<
-  any,
+  DeleteOrderSuccess & { orderId: number; orderUID: string },
   { orderId: number; orderUID: string }
 >("orders/deleteOrder", async ({ orderId, orderUID }) => {
   const res = await fetch(`/api/orders/${orderId}?uid=${orderUID}`, {
     method: "DELETE",
     cache: "no-store",
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.ok)
-    throw new Error(data?.message || "Failed to delete order");
+  const data = await parseProxyJson<DeleteOrderSuccess>(
+    res,
+    "Failed to delete order",
+  );
   return { ...data, orderId, orderUID };
 });
 
 export const submitDraftAsync = createAsyncThunk<
-  any,
+  PostOrderSuccess,
   void,
   { state: RootState }
 >("orders/submitDraftAsync", async (_, thunkApi) => {
@@ -191,16 +202,11 @@ export const submitDraftAsync = createAsyncThunk<
     body: JSON.stringify(payload),
   });
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.message || "Failed to submit order");
-  }
-
-  return data;
+  return parseProxyJson<PostOrderSuccess>(res, "Failed to submit order");
 });
 
 export const editDraftAsync = createAsyncThunk<
-  any,
+  GetOrderEditSuccess,
   { typeid: string; catid: number; uid?: string },
   { state: RootState }
 >("orders/editDraftAsync", async ({ typeid, catid, uid }) => {
@@ -216,12 +222,7 @@ export const editDraftAsync = createAsyncThunk<
     },
   );
 
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.ok) {
-    throw new Error(data?.message || "Failed to submit order");
-  }
-
-  return data;
+  return parseProxyJson<GetOrderEditSuccess>(res, "Failed to submit order");
 });
 
 export type LoadCustomerAddressesArgs = {
@@ -235,7 +236,7 @@ export type LoadCustomerAddressesArgs = {
 };
 
 export const loadCustomerAddressesAsync = createAsyncThunk<
-  any,
+  GetCustomerAddressesSuccess,
   LoadCustomerAddressesArgs
 >(
   "orders/loadCustomerAddressesAsync",
@@ -254,12 +255,10 @@ export const loadCustomerAddressesAsync = createAsyncThunk<
       },
     );
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data?.ok) {
-      throw new Error(data?.message || "Failed to submit order");
-    }
-
-    return data;
+    return parseProxyJson<GetCustomerAddressesSuccess>(
+      res,
+      "Failed to load addresses",
+    );
   },
 );
 
@@ -331,9 +330,16 @@ function loadStateFromLocalStorage(): OrdersState | null {
         customerSelectedFromList:
           parsed?.customerSelectedFromList ??
           initialStateBase.draft.customerSelectedFromList,
+        customerIsCompletelyNew:
+          parsed?.customerIsCompletelyNew ??
+          initialStateBase.draft.customerIsCompletelyNew,
+        lastWebOrderFromLoadInfo:
+          parsed?.lastWebOrderFromLoadInfo ??
+          initialStateBase.draft.lastWebOrderFromLoadInfo,
+        customerAmkaGateCompleted:
+          parsed?.customerAmkaGateCompleted ??
+          initialStateBase.draft.customerAmkaGateCompleted,
       },
-      // optionally persist selected too, but usually not needed:
-      // selected: (parsed.selected ?? initialState.selected) as any,
     };
   } catch {
     return null;
@@ -356,6 +362,9 @@ function persistStateToLocalStorage(state: OrdersState) {
     lastOrderInfoCustomerErpGID: state.draft.lastOrderInfoCustomerErpGID,
     customerProsEbs: state.draft.customerProsEbs,
     customerSelectedFromList: state.draft.customerSelectedFromList,
+    customerIsCompletelyNew: state.draft.customerIsCompletelyNew,
+    lastWebOrderFromLoadInfo: state.draft.lastWebOrderFromLoadInfo,
+    customerAmkaGateCompleted: state.draft.customerAmkaGateCompleted,
   };
 
   try {
@@ -398,6 +407,9 @@ const ordersSlice = createSlice({
       state.draft.lastOrderInfoCustomerErpGID = undefined;
       state.draft.customerProsEbs = undefined;
       state.draft.customerSelectedFromList = undefined;
+      state.draft.customerIsCompletelyNew = true;
+      state.draft.lastWebOrderFromLoadInfo = undefined;
+      state.draft.customerAmkaGateCompleted = undefined;
       persistStateToLocalStorage(state);
     },
     clearDraftAddressesList(state) {
@@ -505,7 +517,10 @@ const ordersSlice = createSlice({
       state.draft.files = action.payload;
       persistStateToLocalStorage(state);
     },
-    setSynaineseisResults(state, action: PayloadAction<SynaineseisResults | null>) {
+    setSynaineseisResults(
+      state,
+      action: PayloadAction<SynaineseisResults | null>,
+    ) {
       state.draft.synaineseisResults = action.payload;
     },
     setLastOrderInfoCustomerErpGID(
@@ -524,6 +539,27 @@ const ordersSlice = createSlice({
       action: PayloadAction<boolean | undefined>,
     ) {
       state.draft.customerSelectedFromList = action.payload;
+      persistStateToLocalStorage(state);
+    },
+    setCustomerIsCompletelyNew(
+      state,
+      action: PayloadAction<boolean | undefined>,
+    ) {
+      state.draft.customerIsCompletelyNew = action.payload;
+      persistStateToLocalStorage(state);
+    },
+    setLastWebOrderFromLoadInfo(
+      state,
+      action: PayloadAction<Record<string, unknown> | null | undefined>,
+    ) {
+      state.draft.lastWebOrderFromLoadInfo = action.payload;
+      persistStateToLocalStorage(state);
+    },
+    setCustomerAmkaGateCompleted(
+      state,
+      action: PayloadAction<boolean | undefined>,
+    ) {
+      state.draft.customerAmkaGateCompleted = action.payload;
       persistStateToLocalStorage(state);
     },
     addDraftYliko(state, action: PayloadAction<OrderYlika>) {
@@ -761,10 +797,10 @@ const ordersSlice = createSlice({
       if (!state.selected) state.selected = {} as SelectedOrderState;
       state.selected.loading = false;
       state.selected.loadingError = null;
-      state.selected.order = action.payload?.order;
-      state.selected.ylika = action.payload?.items;
-      state.selected.files = action.payload?.files;
-      state.selected.checkErrors = action.payload?.check_errors;
+      state.selected.order = action.payload?.order as Order;
+      state.selected.ylika = (action.payload?.items ?? []) as OrderYlika[];
+      state.selected.files = (action.payload?.files ?? []) as OrderFile[];
+      state.selected.checkErrors = action.payload?.check_errors ?? null;
     });
     b.addCase(fetchOrderById.rejected, (state, action) => {
       if (!state.selected) state.selected = {} as SelectedOrderState;
@@ -782,7 +818,7 @@ const ordersSlice = createSlice({
       if (action.payload.ok) {
         const prevOrder = state.draft.order;
         const order = action.payload.data?.order;
-        state.draft.order = order;
+        state.draft.order = order as Order;
         state.draft.order.dateOfSyntagi = formatUIDate(order.dateOfSyntagi);
         state.draft.order.dateIsxyeiApo = formatUIDate(order.dateIsxyeiApo);
         state.draft.order.dateIsxyeiEos = formatUIDate(order.dateIsxyeiEos);
@@ -827,18 +863,23 @@ const ordersSlice = createSlice({
         state.draft.list_AddressesPersons = [] as OrderListOfAddressPersons[];
         state.draft.preselected_address_GID = undefined;
         state.draft.preselected_person_GID = undefined;
-        state.draft.ylika = action.payload.data.items;
-        state.draft.files = action.payload.data.files;
+        state.draft.ylika = (action.payload.data.items ?? []) as OrderYlika[];
+        state.draft.files = (action.payload.data.files ?? []) as OrderFile[];
         state.draft.list_DiscountReasons =
-          action.payload.data.list_DiscountReasons;
+          (action.payload.data.list_DiscountReasons ??
+            []) as OrdeListOfSelections[];
         state.draft.list_KatigoriesParoxis =
-          action.payload.data.list_KatigoriesParoxis;
+          (action.payload.data.list_KatigoriesParoxis ??
+            []) as OrdeListOfSelections[];
         state.draft.list_LogosParalipti =
-          action.payload.data.list_LogosParalipti;
+          (action.payload.data.list_LogosParalipti ??
+            []) as OrdeListOfSelections[];
         state.draft.list_SygeniaParalipti =
-          action.payload.data.list_SygeniaParalipti;
+          (action.payload.data.list_SygeniaParalipti ??
+            []) as OrdeListOfSelections[];
         state.draft.list_TroposApostolis =
-          action.payload.data.list_TroposApostolis;
+          (action.payload.data.list_TroposApostolis ??
+            []) as OrdeListOfSelections[];
         state.draft.synaineseisResults = null;
         state.draft.submitState = { loading: false, error: null };
         const customerErpGID = order?.customer_ErpGID;
@@ -847,12 +888,10 @@ const ordersSlice = createSlice({
             ? customerErpGID
             : undefined;
         if (Array.isArray(action.payload.data?.ai_ylika)) {
-          state.draft.ai_ylika = action.payload.data.ai_ylika;
+          state.draft.ai_ylika = action.payload.data
+            .ai_ylika as unknown as AIMaterials[];
         }
         persistStateToLocalStorage(state);
-      } else {
-        state.draft.editState.error =
-          action.payload.message || "Failed to submit order";
       }
     });
     b.addCase(editDraftAsync.rejected, (state, action) => {
@@ -872,7 +911,7 @@ const ordersSlice = createSlice({
         state.draft.files = [] as OrderFile[];
         state.draft.ylika = [] as OrderYlika[];
       } else {
-        state.draft.submitState.error = action.payload.message;
+        state.draft.submitState.error = action.payload.message ?? null;
       }
     });
     b.addCase(submitDraftAsync.rejected, (state, action) => {
@@ -897,8 +936,8 @@ const ordersSlice = createSlice({
       state.draft.list_AddressesPersons = addresses;
       const prePerson = action.payload.preselected_person_GID;
       const preAddr = action.payload.preselected_address_GID;
-      state.draft.preselected_person_GID = prePerson;
-      state.draft.preselected_address_GID = preAddr;
+      state.draft.preselected_person_GID = prePerson ?? undefined;
+      state.draft.preselected_address_GID = preAddr ?? undefined;
 
       const metaP = action.meta.arg.preferredPersonErpGID?.trim();
       const metaA = action.meta.arg.preferredAddressErpGID?.trim();
@@ -941,7 +980,8 @@ const ordersSlice = createSlice({
 
       let preferredAddr: string | null = null;
       if (personGid) {
-        if (metaA && addressInListForPerson(personGid, metaA)) preferredAddr = metaA;
+        if (metaA && addressInListForPerson(personGid, metaA))
+          preferredAddr = metaA;
         else if (savedAddr && addressInListForPerson(personGid, savedAddr))
           preferredAddr = savedAddr;
         else if (
@@ -968,6 +1008,9 @@ export const {
   setLastOrderInfoCustomerErpGID,
   setCustomerProsEbs,
   setCustomerSelectedFromList,
+  setCustomerIsCompletelyNew,
+  setLastWebOrderFromLoadInfo,
+  setCustomerAmkaGateCompleted,
   resetEntireDraft,
   clearDraftAddressesList,
   deletedDraftTemplate,
