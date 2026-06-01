@@ -14,7 +14,10 @@ import {
 import SubmitOrderConfirmModal from "../modals/SubmitOrderConfirmModal";
 import { useRouter } from "next/navigation";
 import { buildStepDefs } from "./wizard/buildStepDefs";
-import { getSubmitConfirmAmka, getSubmitConfirmSuggestedDoctorName } from "./wizard/submitConfirmAmka";
+import {
+  getSubmitConfirmAmka,
+  getSubmitConfirmSuggestedDoctorName,
+} from "./wizard/submitConfirmAmka";
 import type { StepDef, StepKey, WizardIssue } from "./wizard/types";
 import { validateEoppyOrder as validateEoppyOrderDraft } from "./wizard/validateEoppyOrder";
 import {
