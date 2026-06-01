@@ -30,6 +30,11 @@ import type {
   OrderYlika,
 } from "@/types/orders";
 import { hasAnyValue } from "./wizardUtils";
+import {
+  findAddressPersonByAmka,
+  getCustomerPassportFromAddressPerson,
+} from "./customerAddressesUtils";
+import type { OrderListOfAddressPersons } from "@/types/orders";
 
 export async function applyRunAiResponse(
   dispatch: AppDispatch,
@@ -267,7 +272,14 @@ export async function applyRunAiResponse(
         value: jsonDoc.tilefono_eksetazomenou,
       }),
     );
-  if (hasText(jsonDoc.customer_tel)) {
+  if (!hasLastOrderInfo && hasText(jsonDoc.tilefono_eksetazomenou)) {
+    dispatch(
+      setDraftProperty({
+        key: "customer_mobile",
+        value: trimmedString(jsonDoc.tilefono_eksetazomenou),
+      }),
+    );
+  } else if (hasText(jsonDoc.customer_tel)) {
     const mobile = store.getState().orders.draft.order.customer_mobile;
     if (isBlank(mobile)) {
       dispatch(
@@ -574,7 +586,7 @@ export async function applyRunAiResponse(
     const amka = String(o.customer_amka ?? "").trim();
     if (gid && amka) {
       try {
-        await dispatch(
+        const addressResult = await dispatch(
           loadCustomerAddressesAsync({
             customer_ErpGID: gid,
             customer_name: o.customer_name,
@@ -582,6 +594,21 @@ export async function applyRunAiResponse(
             customer_amka: amka,
           }),
         ).unwrap();
+
+        if (!hasLastOrderInfo && addressResult.ok) {
+          const addresses = (addressResult.addresses ??
+            []) as OrderListOfAddressPersons[];
+          const matchedPerson = findAddressPersonByAmka(addresses, amka);
+          const passport = getCustomerPassportFromAddressPerson(matchedPerson);
+          if (passport) {
+            dispatch(
+              setDraftProperty({
+                key: "customer_passport",
+                value: passport,
+              }),
+            );
+          }
+        }
       } catch {
         // Address list is optional if search-address fails
       }
