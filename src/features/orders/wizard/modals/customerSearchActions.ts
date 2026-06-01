@@ -109,6 +109,8 @@ export async function applyCustomerFromSearch(
   let preferredPerson: string | undefined;
   let preferredAddr: string | undefined;
   let shipToFromLast: 0 | 1 | undefined;
+  let mobileFromLastWebOrder: string | undefined;
+  let telFromLastWebOrder: string | undefined;
 
   try {
     const res = await fetch("/api/load-last-customer-order-info", {
@@ -131,6 +133,12 @@ export async function applyCustomerFromSearch(
       if (isNonEmptyRecord(lwo)) {
         dispatch(setLastWebOrderFromLoadInfo(lwo));
         const lwoRec = lwo as Record<string, unknown>;
+        if (hasText(lwoRec.customer_mobile)) {
+          mobileFromLastWebOrder = String(lwoRec.customer_mobile);
+        }
+        if (hasText(lwoRec.customer_tel)) {
+          telFromLastWebOrder = String(lwoRec.customer_tel);
+        }
         const lwoCopy = { ...lwoRec };
         const lwoPerson = extractPersonErpGID(lwoRec);
         const lwoAddr = extractAddressErpGID(lwoRec);
@@ -171,8 +179,20 @@ export async function applyCustomerFromSearch(
   dispatch(
     setDraftProperty({ key: "customer_tk", value: c.peS_FPOSTALCODE }),
   );
-  dispatch(setDraftProperty({ key: "customer_tel", value: c.telephone1 }));
-  dispatch(setDraftProperty({ key: "customer_mobile", value: c.peS_TEL_1 }));
+  dispatch(
+    setDraftProperty({
+      key: "customer_tel",
+      value: hasText(telFromLastWebOrder) ? telFromLastWebOrder : (c.telephone1 ?? ""),
+    }),
+  );
+  dispatch(
+    setDraftProperty({
+      key: "customer_mobile",
+      value: hasText(mobileFromLastWebOrder)
+        ? mobileFromLastWebOrder
+        : (c.peS_TEL_1 ?? ""),
+    }),
+  );
   dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
   dispatch(setDraftProperty({ key: "customer_email", value: "" }));
   dispatch(
