@@ -5,6 +5,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import CustomerLookupModal from "../modals/CustomerLookupModal";
 import CustomerAmkaGate from "./CustomerAmkaGate";
+import { CustomerAmkaSearchPanel } from "./CustomerAmkaSearchPanel";
 import ErpContactsLookupModal from "../modals/ErpContactsLookupModal";
 import NewRecipientConfirmModal from "../modals/NewRecipientConfirmModal";
 import SavedRecipientFields, {
@@ -21,6 +22,7 @@ import {
   isCustomerProsEbs,
   isCustomerSelectedFromList,
 } from "@/lib/customerUtils";
+import { isValidAmka } from "@/lib/utils/amka";
 import type { OrderCustomerAreaProps } from "./componentProps";
 
 function CustomerNameLabel() {
@@ -89,6 +91,15 @@ export default function OrderCustomerArea({
     (s) => s.orders.draft.customerAmkaGateCompleted,
   );
   const showAmkaGate = !aiCalculated && customerAmkaGateCompleted !== true;
+  const [amkaEditedByUser, setAmkaEditedByUser] = React.useState(false);
+  const [amkaSearchOpen, setAmkaSearchOpen] = React.useState(false);
+  const amkaSearchAnchorRef = React.useRef<HTMLDivElement | null>(null);
+  const baselineCustomerAmkaRef = React.useRef<string | null>(null);
+  const showInlineAmkaSearch =
+    aiCalculated &&
+    amkaEditedByUser &&
+    amkaSearchOpen &&
+    isValidAmka(data.customer_amka ?? "");
 
   const savedRecipientSelectionRef = React.useRef<{
     person_ErpGID: string | null;
@@ -195,6 +206,9 @@ export default function OrderCustomerArea({
   };
 
   const handleSearchClick = () => {
+    if (aiCalculated && !amkaEditedByUser) {
+      baselineCustomerAmkaRef.current = data.customer_amka ?? "";
+    }
     setShowLookup(true);
   };
 
@@ -264,7 +278,14 @@ export default function OrderCustomerArea({
 
         <CustomerLookupModal
           show={showLookup}
-          onClose={() => setShowLookup(false)}
+          onClose={() => {
+            setShowLookup(false);
+            if (!amkaEditedByUser) {
+              baselineCustomerAmkaRef.current = null;
+            }
+          }}
+          resetWizardOnDifferentAmka={aiCalculated}
+          baselineCustomerAmkaRef={baselineCustomerAmkaRef}
         />
 
         <div className="mb-3">
@@ -328,36 +349,62 @@ export default function OrderCustomerArea({
           />
         </OrderField>
 
-        <div className="row g-2">
-          <div className="col-6">
-            <OrderField label="ΑΜΚΑ">
-              <input
-                className="form-control"
-                name="customer_amka"
-                inputMode="numeric"
-                value={data.customer_amka ?? ""}
-                onChange={(e) =>
-                  dispatch(
-                    setDraftProperty({
-                      key: "customer_amka",
-                      value: e.target.value,
-                    }),
-                  )
-                }
-              />
-            </OrderField>
+        <div ref={amkaSearchAnchorRef}>
+          <div className="row g-2">
+            <div className="col-6">
+              <OrderField label="ΑΜΚΑ">
+                <input
+                  className="form-control"
+                  name="customer_amka"
+                  role="combobox"
+                  inputMode="numeric"
+                  value={data.customer_amka ?? ""}
+                  aria-haspopup="listbox"
+                  aria-expanded={showInlineAmkaSearch}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (!amkaEditedByUser) {
+                      baselineCustomerAmkaRef.current = data.customer_amka ?? "";
+                    }
+                    setAmkaEditedByUser(true);
+                    setAmkaSearchOpen(isValidAmka(value));
+                    dispatch(
+                      setDraftProperty({
+                        key: "customer_amka",
+                        value,
+                      }),
+                    );
+                  }}
+                />
+              </OrderField>
+            </div>
+            <div className="col-6">
+              <OrderField label="Ημ/νία γέννησης" hint="π.χ. 31/12/1990">
+                <input
+                  className="form-control"
+                  name="customer_dob"
+                  inputMode="numeric"
+                  value={data.customer_dob ?? ""}
+                  onChange={(e) => handleDateInput(e.target.value)}
+                />
+              </OrderField>
+            </div>
           </div>
-          <div className="col-6">
-            <OrderField label="Ημ/νία γέννησης" hint="π.χ. 31/12/1990">
-              <input
-                className="form-control"
-                name="customer_dob"
-                inputMode="numeric"
-                value={data.customer_dob ?? ""}
-                onChange={(e) => handleDateInput(e.target.value)}
-              />
-            </OrderField>
-          </div>
+          {showInlineAmkaSearch ? (
+            <CustomerAmkaSearchPanel
+              amka={data.customer_amka ?? ""}
+              anchorRef={amkaSearchAnchorRef}
+              open={amkaSearchOpen}
+              resetWizardOnDifferentAmka
+              baselineCustomerAmkaRef={baselineCustomerAmkaRef}
+              onDismiss={() => setAmkaSearchOpen(false)}
+              onResolved={() => {
+                setAmkaEditedByUser(false);
+                setAmkaSearchOpen(false);
+                baselineCustomerAmkaRef.current = null;
+              }}
+            />
+          ) : null}
         </div>
 
         <div className="row g-2">

@@ -8,7 +8,6 @@ import BottomNav from "@/components/shell/BottomNav";
 import OrderDraftResetOnRouteLeave from "@/features/orders/components/OrderDraftResetOnRouteLeave";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { logoutAsync } from "@/features/auth/authSlice";
-import { resetEntireDraft } from "@/store/orders/ordersSlice";
 
 import Dropdown from "react-bootstrap/Dropdown";
 
@@ -38,7 +37,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const onLogout = async () => {
     try {
       await dispatch(logoutAsync());
-      dispatch(resetEntireDraft());
       router.replace("/login");
     } catch (e) { }
   };

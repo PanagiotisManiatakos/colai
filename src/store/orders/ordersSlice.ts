@@ -390,6 +390,15 @@ const ordersSlice = createSlice({
       state.draft.ylika = [] as OrderYlika[];
       persistStateToLocalStorage(state);
     },
+    resetOrdersListCache(state) {
+      state.orders = [];
+      state.loadingOrders = false;
+      state.refreshingOrders = false;
+      state.ordersError = null;
+      state.ordersQuery = "";
+      state.ordersFetchedAt = 0;
+      state.selected = null;
+    },
     /** Full draft reset (order, ylika, files, lists, addresses, AI materials, etc.) — e.g. when leaving the order wizard. */
     resetEntireDraft(state) {
       state.draft.editState = { loading: false, error: null };
@@ -868,21 +877,16 @@ const ordersSlice = createSlice({
         state.draft.preselected_person_GID = undefined;
         state.draft.ylika = (action.payload.data.items ?? []) as OrderYlika[];
         state.draft.files = (action.payload.data.files ?? []) as OrderFile[];
-        state.draft.list_DiscountReasons =
-          (action.payload.data.list_DiscountReasons ??
-            []) as OrdeListOfSelections[];
-        state.draft.list_KatigoriesParoxis =
-          (action.payload.data.list_KatigoriesParoxis ??
-            []) as OrdeListOfSelections[];
-        state.draft.list_LogosParalipti =
-          (action.payload.data.list_LogosParalipti ??
-            []) as OrdeListOfSelections[];
-        state.draft.list_SygeniaParalipti =
-          (action.payload.data.list_SygeniaParalipti ??
-            []) as OrdeListOfSelections[];
-        state.draft.list_TroposApostolis =
-          (action.payload.data.list_TroposApostolis ??
-            []) as OrdeListOfSelections[];
+        state.draft.list_DiscountReasons = (action.payload.data
+          .list_DiscountReasons ?? []) as OrdeListOfSelections[];
+        state.draft.list_KatigoriesParoxis = (action.payload.data
+          .list_KatigoriesParoxis ?? []) as OrdeListOfSelections[];
+        state.draft.list_LogosParalipti = (action.payload.data
+          .list_LogosParalipti ?? []) as OrdeListOfSelections[];
+        state.draft.list_SygeniaParalipti = (action.payload.data
+          .list_SygeniaParalipti ?? []) as OrdeListOfSelections[];
+        state.draft.list_TroposApostolis = (action.payload.data
+          .list_TroposApostolis ?? []) as OrdeListOfSelections[];
         state.draft.synaineseisResults = null;
         state.draft.submitState = { loading: false, error: null };
         const customerErpGID = order?.customer_ErpGID;
@@ -894,6 +898,33 @@ const ordersSlice = createSlice({
           state.draft.ai_ylika = action.payload.data
             .ai_ylika as unknown as AIMaterials[];
         }
+
+        const isExistingSavedOrder = Number(order?.id) > 0;
+        if (isExistingSavedOrder) {
+          state.draft.customerAmkaGateCompleted = true;
+
+          const customerGid = String(
+            state.draft.order.customer_ErpGID ?? order?.customer_ErpGID ?? "",
+          ).trim();
+          if (customerGid) {
+            state.draft.customerIsCompletelyNew = false;
+            state.draft.customerSelectedFromList = true;
+            state.draft.customerProsEbs = false;
+          }
+
+          const hasRecipeFiles = (action.payload.data?.files ?? []).some(
+            (f) => f?.documentCategory === "recipe",
+          );
+          const loadedOrder = order as Order;
+          if (
+            loadedOrder?.aiCalculated ||
+            loadedOrder?.statusId === 0 ||
+            hasRecipeFiles
+          ) {
+            state.draft.order.aiCalculated = true;
+          }
+        }
+
         persistStateToLocalStorage(state);
       }
     });
@@ -1015,6 +1046,7 @@ export const {
   setLastWebOrderFromLoadInfo,
   setCustomerAmkaGateCompleted,
   resetEntireDraft,
+  resetOrdersListCache,
   clearDraftAddressesList,
   deletedDraftTemplate,
   setDraftSyntagiUploaded,

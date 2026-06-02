@@ -133,7 +133,11 @@ const initialStateBase: DiscountRequestState = {
 const discountRequestsSlice = createSlice({
   name: "discountRequests",
   initialState: (loadStateFromLocalStorage() ?? initialStateBase),
-  reducers: {},
+  reducers: {
+    resetDiscountRequestsUserSession(state) {
+      Object.assign(state, initialStateBase);
+    },
+  },
   extraReducers: (b) => {
     b.addCase(fetchDiscountRequests.pending, (state, action) => {
       const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
@@ -188,4 +192,5 @@ const discountRequestsSlice = createSlice({
 });
 
 
+export const { resetDiscountRequestsUserSession } = discountRequestsSlice.actions;
 export default discountRequestsSlice.reducer;

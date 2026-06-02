@@ -20,11 +20,43 @@ import {
 import type { AppDispatch } from "@/store/store";
 import { store } from "@/store/store";
 import { hasText } from "@/lib/utils/string";
+import {
+  findAddressPersonByAmka,
+  getCustomerMobileFromAddressPerson,
+} from "../eopyy/wizard/customerAddressesUtils";
+import type { OrderListOfAddressPersons } from "@/types/orders";
 import type {
   CustomerSearchResult,
   LoadLastCustomerOrderInfoSuccess,
   SearchCustomersSuccess,
 } from "@/types/api/responses";
+import {
+  resetDraftForDifferentCustomerSelection,
+  shouldResetWizardForCustomerAmkaChange,
+} from "../eopyy/wizard/resetWizardForCustomerSelection";
+
+export type ApplyCustomerFromSearchOptions = {
+  baselineCustomerAmka?: string | null;
+  resetWizardOnDifferentAmka?: boolean;
+};
+
+function maybeResetWizardForDifferentAmka(
+  dispatch: AppDispatch,
+  baselineCustomerAmka: string | null | undefined,
+  selectedCustomerAmka: string | null | undefined,
+  resetWizardOnDifferentAmka?: boolean,
+): void {
+  if (!resetWizardOnDifferentAmka) return;
+  if (
+    !shouldResetWizardForCustomerAmkaChange(
+      baselineCustomerAmka,
+      selectedCustomerAmka,
+    )
+  ) {
+    return;
+  }
+  resetDraftForDifferentCustomerSelection(dispatch);
+}
 
 export type CustomerSearchOutcome = {
   results: CustomerSearchResult[];
@@ -101,7 +133,15 @@ export async function searchCustomersByQuery(
 export async function applyCustomerFromSearch(
   dispatch: AppDispatch,
   c: CustomerSearchResult,
+  options: ApplyCustomerFromSearchOptions = {},
 ): Promise<void> {
+  maybeResetWizardForDifferentAmka(
+    dispatch,
+    options.baselineCustomerAmka,
+    c.tR_StringField5 ?? "",
+    options.resetWizardOnDifferentAmka,
+  );
+
   dispatch(setCustomerProsEbs(false));
   dispatch(setCustomerSelectedFromList(true));
   dispatch(setCustomerIsCompletelyNew(false));
@@ -109,6 +149,8 @@ export async function applyCustomerFromSearch(
   let preferredPerson: string | undefined;
   let preferredAddr: string | undefined;
   let shipToFromLast: 0 | 1 | undefined;
+  let mobileFromLastWebOrder: string | undefined;
+  let telFromLastWebOrder: string | undefined;
 
   try {
     const res = await fetch("/api/load-last-customer-order-info", {
@@ -131,6 +173,12 @@ export async function applyCustomerFromSearch(
       if (isNonEmptyRecord(lwo)) {
         dispatch(setLastWebOrderFromLoadInfo(lwo));
         const lwoRec = lwo as Record<string, unknown>;
+        if (hasText(lwoRec.customer_mobile)) {
+          mobileFromLastWebOrder = String(lwoRec.customer_mobile);
+        }
+        if (hasText(lwoRec.customer_tel)) {
+          telFromLastWebOrder = String(lwoRec.customer_tel);
+        }
         const lwoCopy = { ...lwoRec };
         const lwoPerson = extractPersonErpGID(lwoRec);
         const lwoAddr = extractAddressErpGID(lwoRec);
@@ -171,8 +219,20 @@ export async function applyCustomerFromSearch(
   dispatch(
     setDraftProperty({ key: "customer_tk", value: c.peS_FPOSTALCODE }),
   );
-  dispatch(setDraftProperty({ key: "customer_tel", value: c.telephone1 }));
-  dispatch(setDraftProperty({ key: "customer_mobile", value: c.peS_TEL_1 }));
+  dispatch(
+    setDraftProperty({
+      key: "customer_tel",
+      value: hasText(telFromLastWebOrder) ? telFromLastWebOrder : (c.telephone1 ?? ""),
+    }),
+  );
+  dispatch(
+    setDraftProperty({
+      key: "customer_mobile",
+      value: hasText(mobileFromLastWebOrder)
+        ? mobileFromLastWebOrder
+        : (c.peS_TEL_1 ?? ""),
+    }),
+  );
   dispatch(setDraftProperty({ key: "customer_dob", value: "" }));
   dispatch(setDraftProperty({ key: "customer_email", value: "" }));
   dispatch(
@@ -180,7 +240,7 @@ export async function applyCustomerFromSearch(
   );
 
   try {
-    await dispatch(
+    const addressResult = await dispatch(
       loadCustomerAddressesAsync({
         customer_ErpGID: c.tR_GID,
         customer_name: c.pE_NAME ?? undefined,
@@ -190,6 +250,28 @@ export async function applyCustomerFromSearch(
         preferredAddressErpGID: preferredAddr,
       }),
     ).unwrap();
+
+    if (addressResult.ok) {
+      const addresses = (addressResult.addresses ??
+        []) as OrderListOfAddressPersons[];
+      const matchedPerson = findAddressPersonByAmka(
+        addresses,
+        c.tR_StringField5 ?? "",
+      );
+      const mobileFromAddresses =
+        getCustomerMobileFromAddressPerson(matchedPerson);
+      if (
+        mobileFromAddresses &&
+        !hasText(store.getState().orders.draft.order.customer_mobile)
+      ) {
+        dispatch(
+          setDraftProperty({
+            key: "customer_mobile",
+            value: mobileFromAddresses,
+          }),
+        );
+      }
+    }
 
     if (shipToFromLast === 1) {
       syncShipToOtherAddressFlags(dispatch, 1);
@@ -226,7 +308,15 @@ export async function applyCustomerFromSearch(
 export async function applyLastCustomerWebOrderFromSearch(
   dispatch: AppDispatch,
   lwo: Record<string, unknown>,
+  options: ApplyCustomerFromSearchOptions = {},
 ): Promise<void> {
+  maybeResetWizardForDifferentAmka(
+    dispatch,
+    options.baselineCustomerAmka,
+    String(lwo.customer_amka ?? ""),
+    options.resetWizardOnDifferentAmka,
+  );
+
   dispatch(setCustomerProsEbs(true));
   dispatch(setCustomerSelectedFromList(false));
   dispatch(setCustomerIsCompletelyNew(false));
@@ -361,7 +451,15 @@ export async function applyLastCustomerWebOrderFromSearch(
 export function applyCompletelyNewCustomerFromAmka(
   dispatch: AppDispatch,
   amka: string,
+  options: ApplyCustomerFromSearchOptions = {},
 ): void {
+  maybeResetWizardForDifferentAmka(
+    dispatch,
+    options.baselineCustomerAmka,
+    amka,
+    options.resetWizardOnDifferentAmka,
+  );
+
   dispatch(setCustomerProsEbs(false));
   dispatch(setCustomerSelectedFromList(false));
   dispatch(setCustomerIsCompletelyNew(true));

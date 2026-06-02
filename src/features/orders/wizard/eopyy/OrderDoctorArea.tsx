@@ -14,11 +14,7 @@ export default function OrderDoctorArea({
   const customerIsCompletelyNew = useAppSelector(
     (s) => s.orders.draft.customerIsCompletelyNew,
   );
-  const lastWebOrderFromLoadInfo = useAppSelector(
-    (s) => s.orders.draft.lastWebOrderFromLoadInfo,
-  );
-  const disableFieldsBelowTypos =
-    customerIsCompletelyNew !== true && lastWebOrderFromLoadInfo !== null;
+  const disableFieldsBelowTypos = customerIsCompletelyNew !== true;
   const dispatch = useAppDispatch();
   const [showLookup, setShowLookup] = React.useState(false);
   const [showSuggestedLookup, setShowSuggestedLookup] = React.useState(false);
@@ -234,7 +230,10 @@ export default function OrderDoctorArea({
                 <label className="form-label fw-semibold mb-0 flex-shrink-0">
                   Συστήνων ιατρός
                 </label>
-                <div className="input-group flex-grow-1" style={{ minWidth: 0 }}>
+                <div
+                  className="input-group flex-grow-1"
+                  style={{ minWidth: 0 }}
+                >
                   <input
                     type="text"
                     readOnly

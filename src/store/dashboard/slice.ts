@@ -65,7 +65,11 @@ export const fetchDashboardData = createAsyncThunk<
 const dashboardSlice = createSlice({
     name: "dashboard",
     initialState,
-    reducers: {},
+    reducers: {
+        resetDashboardUserSession(state) {
+            Object.assign(state, initialState);
+        },
+    },
     extraReducers: (b) => {
         b.addCase(fetchDashboardData.pending, (state) => {
             state.loading = true;
@@ -104,4 +108,5 @@ const dashboardSlice = createSlice({
     },
 });
 
+export const { resetDashboardUserSession } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

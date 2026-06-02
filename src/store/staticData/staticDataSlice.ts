@@ -116,7 +116,11 @@ const initialStateBase: StaticDatatState = {
 const staticDataSlice = createSlice({
     name: "staticData",
     initialState: (loadStateFromLocalStorage() ?? initialStateBase),
-    reducers: {},
+    reducers: {
+        resetStaticDataUserSession(state) {
+            Object.assign(state, initialStateBase);
+        },
+    },
     extraReducers: (b) => {
         b.addCase(fetchStaticData.pending, (state, action) => {
             state.loading = true;
@@ -154,4 +158,5 @@ const staticDataSlice = createSlice({
 });
 
 
+export const { resetStaticDataUserSession } = staticDataSlice.actions;
 export default staticDataSlice.reducer;

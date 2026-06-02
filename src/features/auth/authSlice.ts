@@ -1,4 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import { clearUserSessionOnLogout } from "@/store/clearUserSessionOnLogout";
+import type { AppDispatch } from "@/store/store";
 
 type AuthStatus = "unknown" | "authenticated" | "unauthenticated";
 
@@ -32,10 +34,18 @@ export const hydrateAuth = createAsyncThunk("auth/hydrate", async () => {
     return data as { authenticated: boolean; user?: AuthUser };
 });
 
-export const logoutAsync = createAsyncThunk("auth/logout", async () => {
+export const logoutAsync = createAsyncThunk<
+  boolean,
+  void,
+  { dispatch: AppDispatch }
+>(
+  "auth/logout",
+  async (_, { dispatch }) => {
     await fetch("/api/auth/logout", { method: "POST" });
+    clearUserSessionOnLogout(dispatch);
     return true;
-});
+  },
+);
 
 
 const LS_KEY = "auth";

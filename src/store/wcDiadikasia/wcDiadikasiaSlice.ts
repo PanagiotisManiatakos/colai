@@ -112,10 +112,14 @@ const initialStateBase: WCDiadiadikasiatState = {
     }
 };
 
-const discountRequestsSlice = createSlice({
-    name: "discountRequests",
+const wcDiadikasiaSlice = createSlice({
+    name: "wcDiadiaksia",
     initialState: (loadStateFromLocalStorage() ?? initialStateBase),
-    reducers: {},
+    reducers: {
+        resetWcDiadikasiaUserSession(state) {
+            Object.assign(state, initialStateBase);
+        },
+    },
     extraReducers: (b) => {
         b.addCase(fetchWCCalendar.pending, (state, action) => {
             const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
@@ -170,4 +174,5 @@ const discountRequestsSlice = createSlice({
 });
 
 
-export default discountRequestsSlice.reducer;
+export const { resetWcDiadikasiaUserSession } = wcDiadikasiaSlice.actions;
+export default wcDiadikasiaSlice.reducer;
