@@ -198,6 +198,8 @@ export default function OrderEoppyWizard() {
     [runValidation],
   );
 
+  const isTempSave = draftOrder.isTempSave == 1;
+
   const stepDefs = buildStepDefs({
     aiMessage,
     aiStatus,
@@ -247,6 +249,11 @@ export default function OrderEoppyWizard() {
     }
 
     setIssues([]);
+    if (isTempSave) {
+      void confirmSave();
+      return;
+    }
+
     setShowSubmitConfirm(true);
   }
 
@@ -321,11 +328,12 @@ export default function OrderEoppyWizard() {
               type="button"
               disabled={
                 submitState.loading ||
-                hasValidationIssues ||
-                hasAmkaErrors ||
-                hasEmptyCustomerFields ||
                 aiStatus === "running" ||
-                consentScoreTooLow
+                (!isTempSave &&
+                  (hasValidationIssues ||
+                    hasAmkaErrors ||
+                    hasEmptyCustomerFields ||
+                    consentScoreTooLow))
               }
               className="btn btn-success flex-fill"
               onClick={onSaveClick}

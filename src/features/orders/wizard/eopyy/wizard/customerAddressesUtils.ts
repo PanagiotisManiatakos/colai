@@ -26,3 +26,10 @@ export function getCustomerPassportFromAddressPerson(
   if (!person) return "";
   return pickFirstNonBlankString(person.personIDCode, person.personPassport);
 }
+
+export function getCustomerMobileFromAddressPerson(
+  person: OrderListOfAddressPersons | undefined,
+): string {
+  if (!person) return "";
+  return pickFirstNonBlankString(person.personMobile1, person.personMobile);
+}

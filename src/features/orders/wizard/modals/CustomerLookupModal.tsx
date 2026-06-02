@@ -17,9 +17,13 @@ export type { CustomerSearchResult };
 export default function CustomerLookupModal({
   show,
   onClose,
+  resetWizardOnDifferentAmka = false,
+  baselineCustomerAmkaRef,
 }: {
   show: boolean;
   onClose: () => void;
+  resetWizardOnDifferentAmka?: boolean;
+  baselineCustomerAmkaRef?: React.RefObject<string | null>;
 }) {
   const dispatch = useAppDispatch();
   const [q, setQ] = React.useState("");
@@ -62,10 +66,18 @@ export default function CustomerLookupModal({
     }
   }
 
+  const searchOptions = React.useCallback(
+    () => ({
+      resetWizardOnDifferentAmka,
+      baselineCustomerAmka: baselineCustomerAmkaRef?.current ?? null,
+    }),
+    [baselineCustomerAmkaRef, resetWizardOnDifferentAmka],
+  );
+
   async function applyCustomer(c: CustomerSearchResult) {
     setApplying(true);
     try {
-      await applyCustomerFromSearch(dispatch, c);
+      await applyCustomerFromSearch(dispatch, c, searchOptions());
       onClose();
     } finally {
       setApplying(false);
@@ -75,7 +87,7 @@ export default function CustomerLookupModal({
   async function applyLastCustomerWebOrder(lwo: Record<string, unknown>) {
     setApplying(true);
     try {
-      await applyLastCustomerWebOrderFromSearch(dispatch, lwo);
+      await applyLastCustomerWebOrderFromSearch(dispatch, lwo, searchOptions());
       onClose();
     } finally {
       setApplying(false);

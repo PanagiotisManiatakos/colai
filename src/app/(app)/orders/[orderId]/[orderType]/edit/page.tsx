@@ -9,6 +9,8 @@ import NotFoundView from "@/components/system/NotFoundView";
 import { editDraftAsync, loadCustomerAddressesAsync } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { store } from "@/store/store";
+import { applyCustomerFieldsFromLoadedAddresses } from "@/features/orders/wizard/eopyy/wizard/bootstrapExistingOrderEdit";
+import type { OrderListOfAddressPersons } from "@/types/orders";
 
 import OrderEoppyWizard from "@/features/orders/wizard/eopyy/OrderEoppyWizard";
 import OrderRetailWizard from "@/features/orders/wizard/retail/OrderRetailWizard";
@@ -38,14 +40,27 @@ export default function OrderWizardEditPage() {
         if (!isMounted || !result?.ok) return;
         const order = store.getState().orders.draft.order;
         const gid = order.customer_ErpGID?.toString().trim();
-        if (gid) {
+        const amka = order.customer_amka?.toString().trim();
+        if (gid && amka) {
           try {
-            await dispatch(loadCustomerAddressesAsync({
-              customer_ErpGID: order.customer_ErpGID,
-              customer_amka: order.customer_amka ?? "",
-              customer_name: order.customer_name ?? "",
-              customer_address: order.customer_address ?? "",
-            })).unwrap();
+            const addressResult = await dispatch(
+              loadCustomerAddressesAsync({
+                customer_ErpGID: order.customer_ErpGID,
+                customer_amka: order.customer_amka ?? "",
+                customer_name: order.customer_name ?? "",
+                customer_address: order.customer_address ?? "",
+                preferredPersonErpGID: order.person_ErpGID,
+                preferredAddressErpGID: order.address_ErpGID,
+              }),
+            ).unwrap();
+
+            if (addressResult.ok) {
+              applyCustomerFieldsFromLoadedAddresses(
+                dispatch,
+                (addressResult.addresses ?? []) as OrderListOfAddressPersons[],
+                amka,
+              );
+            }
           } catch {
             // Addresses fetch failure does not fail the edit flow
           }

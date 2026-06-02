@@ -9,6 +9,7 @@ import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
 import CompletionArea from "./CompletionArea";
 import { useRouter } from "next/navigation";
+import { getAmkaInlineFieldError } from "@/lib/utils/amka";
 
 const steps = ["Ασθενής", "Ιατρός", "Υλικά", "Touchdown"] as const;
 
@@ -17,7 +18,9 @@ export default function OrderRetailWizard() {
   const router = useRouter();
 
   const [step, setStep] = React.useState(0);
-  const submitState = useAppSelector((s) => s.orders.draft.submitState)
+  const submitState = useAppSelector((s) => s.orders.draft.submitState);
+  const draftOrder = useAppSelector((s) => s.orders.draft.order);
+  const hasAmkaError = Boolean(getAmkaInlineFieldError(draftOrder.customer_amka));
 
   const effectiveSteps = React.useMemo(() => {
     return [...steps];
@@ -73,12 +76,22 @@ export default function OrderRetailWizard() {
           </button>
 
           {step < maxStep ? (
-            <button type="button" className="btn btn-primary flex-fill" onClick={goNext}>
+            <button
+              type="button"
+              className="btn btn-primary flex-fill"
+              onClick={goNext}
+              disabled={step === 0 && hasAmkaError}
+            >
               Επόμενο
               <i className="bi bi-chevron-right ms-2" />
             </button>
           ) : (
-            <button type="button" disabled={submitState.loading} className="btn btn-success flex-fill" onClick={onSave}>
+            <button
+              type="button"
+              disabled={submitState.loading || hasAmkaError}
+              className="btn btn-success flex-fill"
+              onClick={onSave}
+            >
               <i className="bi bi-check2-circle me-2" />
               {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
             </button>

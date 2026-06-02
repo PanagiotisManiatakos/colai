@@ -32,6 +32,7 @@ import type {
 import { hasAnyValue } from "./wizardUtils";
 import {
   findAddressPersonByAmka,
+  getCustomerMobileFromAddressPerson,
   getCustomerPassportFromAddressPerson,
 } from "./customerAddressesUtils";
 import type { OrderListOfAddressPersons } from "@/types/orders";
@@ -50,6 +51,13 @@ export async function applyRunAiResponse(
   dispatch(setCustomerIsCompletelyNew(true));
   dispatch(setLastWebOrderFromLoadInfo(undefined));
   dispatch(clearDraftAddressesList());
+
+  const personErpIdFromJson = hasText(data.jsonDoc.person_erpid)
+    ? trimmedString(data.jsonDoc.person_erpid)
+    : null;
+  const addressErpIdFromJson = hasText(data.jsonDoc.address_erpid)
+    ? trimmedString(data.jsonDoc.address_erpid)
+    : null;
 
   dispatch(setDraftProperty({ key: "aiCalculated", value: true }));
   dispatch(
@@ -189,8 +197,10 @@ export async function applyRunAiResponse(
                 ? String(orderObj.customer_address)
                 : undefined,
             customer_amka: lastOrderAmka,
-            preferredPersonErpGID: personFromLastOrder,
-            preferredAddressErpGID: addressFromLastOrder,
+            preferredPersonErpGID:
+              personErpIdFromJson ?? personFromLastOrder,
+            preferredAddressErpGID:
+              addressErpIdFromJson ?? addressFromLastOrder,
           }),
         ).unwrap();
         customerAddressesLoaded = true;
@@ -324,9 +334,7 @@ export async function applyRunAiResponse(
           value: null,
         }),
       );
-  const personErpId = hasText(jsonDoc.person_erpid)
-    ? trimmedString(jsonDoc.person_erpid)
-    : null;
+  const personErpId = personErpIdFromJson;
   dispatch(setDraftProperty({ key: "person_erpid", value: personErpId }));
   const customerErpIdFromJson = hasText(jsonDoc.customer_erpid)
     ? trimmedString(jsonDoc.customer_erpid)
@@ -592,6 +600,8 @@ export async function applyRunAiResponse(
             customer_name: o.customer_name,
             customer_address: o.customer_address,
             customer_amka: amka,
+            preferredPersonErpGID: personErpIdFromJson,
+            preferredAddressErpGID: addressErpIdFromJson,
           }),
         ).unwrap();
 
@@ -605,6 +615,15 @@ export async function applyRunAiResponse(
               setDraftProperty({
                 key: "customer_passport",
                 value: passport,
+              }),
+            );
+          }
+          const mobile = getCustomerMobileFromAddressPerson(matchedPerson);
+          if (mobile && isBlank(store.getState().orders.draft.order.customer_mobile)) {
+            dispatch(
+              setDraftProperty({
+                key: "customer_mobile",
+                value: mobile,
               }),
             );
           }
