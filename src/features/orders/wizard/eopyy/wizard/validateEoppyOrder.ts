@@ -80,13 +80,6 @@ export function validateEoppyOrder({
       );
       add(
         "customer",
-        "recipient_passport",
-        true,
-        "ΑΔΤ/Αριθμό διαβατηρίου παραλήπτη",
-        isBlank(draftOrder.recipient_passport),
-      );
-      add(
-        "customer",
         "recipient_address",
         true,
         "Διεύθυνση παραλήπτη",
@@ -156,7 +149,7 @@ export function validateEoppyOrder({
         "synenaiseis",
         "",
         true,
-        "Νέος πελάτης, δεν έχεις ανεβάσει συναίνεση",
+        "Νέος πελάτης, δεν έχετε ανεβάσει συναίνεση",
         isBlank(draftOrder.customer_other_address),
       );
     }
