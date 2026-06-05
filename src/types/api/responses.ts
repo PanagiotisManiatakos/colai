@@ -18,6 +18,7 @@ import type {
   DiscountReq_OrderVM,
   EopyDoc_ErpMappedProduct,
   ListDiscountRequestsResp,
+  LoginResp,
   OrderEditItemResp,
   OrderPreviewVM,
   ReadEoppyDocumentAIResp,
@@ -126,14 +127,9 @@ export type GetWcOrderListResponse =
   | ApiFailure;
 
 /** `POST /api/auth/login` */
-export type LoginApiResponse =
-  | ApiSuccess<{
-      accessToken?: string;
-      expiresIn?: number;
-      userInfos?: ApiUserInfo;
-      statusCode?: number;
-    }>
-  | ApiFailure;
+export type LoginResponse = ApiSuccess<LoginResp> | ApiFailure;
+export type LoginSuccess = Extract<LoginResponse, { ok: true }>;
+export type LoginFailure = Extract<LoginResponse, { ok: false }>;
 
 /** `GET /api/auth/me` */
 export type AuthMeResponse =
@@ -162,7 +158,6 @@ export type GetDiscountRequestsSuccess = Success<GetDiscountRequestsResponse>;
 export type ReviewDiscountRequestSuccess = Success<ReviewDiscountRequestResponse>;
 export type GetWcCalendarSuccess = Success<GetWcCalendarResponse>;
 export type GetWcOrderListSuccess = Success<GetWcOrderListResponse>;
-export type LoginSuccess = Success<LoginApiResponse>;
 export type AuthMeSuccess = Success<AuthMeResponse>;
 /** Re-export commonly used schema aliases for consumers. */
 export type CustomerSearchResult = COLAI_T_CUSTOMER_PERSONAL_INFO;
