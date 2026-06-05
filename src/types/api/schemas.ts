@@ -800,14 +800,15 @@ export type FileUploadReq = {
   aiclient?: string | null;
 };
 
-export type LoginReq = {
-  username?: string | null;
-  password?: string | null;
-};
-
 export type ApiAccessSellerItem = {
   sellerCode?: string | null;
   sellerName?: string | null;
+};
+
+export type ApiAvailableAiClient = {
+  name: string;
+  code: string;
+  priority: number;
 };
 
 export type ApiUserInfo = {
@@ -826,6 +827,13 @@ export type ApiUserInfo = {
   listAccessSellers?: ApiAccessSellerItem[] | null;
 };
 
+/** AMSA `/api/login` payload. */
+export type LoginReq = {
+  username?: string | null;
+  password?: string | null;
+};
+
+/** AMSA `/api/login` response body (also returned by `/api/auth/login` with `ok: true`). */
 export type LoginResp = {
   statusCode?: number | null;
   message?: string | null;
@@ -835,4 +843,5 @@ export type LoginResp = {
   expiresIn?: number | null;
   userInfos?: ApiUserInfo | null;
   warningMessage?: string | null;
+  availableAiClients?: ApiAvailableAiClient[] | null;
 };
