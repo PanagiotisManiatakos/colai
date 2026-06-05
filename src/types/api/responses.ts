@@ -5,6 +5,7 @@ import type {
   PagingResults,
   ToastMessage,
 } from "./common";
+import type { SellerSalesWC } from "./sqlData";
 import type {
   APLAT_Sales_Order,
   AddressAndPersonDto,
@@ -119,6 +120,11 @@ export type ReviewDiscountRequestResponse =
 /** `GET /api/wc-diadikasia/calendar` */
 export type GetWcCalendarResponse = ApiSuccess<WCdiadikasiaGetDataVM> | ApiFailure;
 
+/** `GET /api/wc/order-list` */
+export type GetWcOrderListResponse =
+  | ApiSuccess<{ records: SellerSalesWC[] }>
+  | ApiFailure;
+
 /** `POST /api/auth/login` */
 export type LoginApiResponse =
   | ApiSuccess<{
@@ -155,6 +161,7 @@ export type GetStaticDataSuccess = Success<GetStaticDataResponse>;
 export type GetDiscountRequestsSuccess = Success<GetDiscountRequestsResponse>;
 export type ReviewDiscountRequestSuccess = Success<ReviewDiscountRequestResponse>;
 export type GetWcCalendarSuccess = Success<GetWcCalendarResponse>;
+export type GetWcOrderListSuccess = Success<GetWcOrderListResponse>;
 export type LoginSuccess = Success<LoginApiResponse>;
 export type AuthMeSuccess = Success<AuthMeResponse>;
 /** Re-export commonly used schema aliases for consumers. */

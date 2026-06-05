@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { clearUserSessionOnLogout } from "@/store/clearUserSessionOnLogout";
 import type { AppDispatch } from "@/store/store";
+import type { ApiAccessSellerItem } from "@/types/api/schemas";
 
 type AuthStatus = "unknown" | "authenticated" | "unauthenticated";
 
@@ -10,10 +11,14 @@ export type AuthUser = {
     lname?: string;
     userUID?: string
     userID?: number
+    area?: string;
+    team?: string;
+    sellerCode?: string;
     isSeller?: boolean;
     isManager?: boolean;
     isSuperAdmin?: boolean;
     isSalesAdmin?: boolean
+    listAccessSellers?: ApiAccessSellerItem[] | null;
 };
 
 export type AuthState = {

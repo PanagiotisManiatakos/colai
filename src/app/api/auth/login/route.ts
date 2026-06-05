@@ -1,9 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import axios from "axios";
-import { cookieName } from "@/lib/auth";
-
-const USER_COOKIE = "amsa_user";
+import { cookieName, userCookieName } from "@/lib/auth";
 
 function base64urlEncode(obj: unknown) {
     return Buffer.from(JSON.stringify(obj), "utf8").toString("base64url");
@@ -61,7 +59,7 @@ export async function POST(req: Request) {
         maxAge: expiresIn,
     });
 
-    (await jar).set(USER_COOKIE, base64urlEncode(data.userInfos), {
+    (await jar).set(userCookieName, base64urlEncode(data.userInfos), {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",

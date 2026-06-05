@@ -1,4 +1,5 @@
 export const cookieName = "session-colai";
+export const userCookieName = "amsa_user";
 
 export async function verifySession(token?: string | null) {
     // Replace with your real validation logic.
