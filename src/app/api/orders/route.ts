@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import {
+  DEFAULT_ORDER_LIST_PAGE,
+  DEFAULT_ORDER_LIST_PAGE_SIZE,
+} from "@/lib/api/orderListQuery";
 import { cookieName } from "@/lib/auth";
 
 const WEB_ORDERS_PATH = "/api/list-orders";
@@ -31,13 +35,21 @@ export async function GET(req: Request) {
         return NextResponse.json({ ok: false, message: "Missing AMSA_API_BASE_URL" }, { status: 500 });
     }
 
-    // Optional: choose which list to call via query param (mode=erp)
     const url = new URL(req.url);
-    const mode = url.searchParams.get("mode"); // "erp" or null
-    const qs = url.searchParams.toString();
+    const mode = url.searchParams.get("mode");
+    const page = url.searchParams.get("page") ?? String(DEFAULT_ORDER_LIST_PAGE);
+    const pagesize =
+      url.searchParams.get("pagesize") ??
+      String(DEFAULT_ORDER_LIST_PAGE_SIZE);
+    const search = url.searchParams.get("search")?.trim();
+
+    const backendParams = new URLSearchParams();
+    backendParams.set("page", page);
+    backendParams.set("pagesize", pagesize);
+    if (search) backendParams.set("search", search);
 
     const path = mode === "erp" ? ERP_ORDERS_PATH : WEB_ORDERS_PATH;
-    const backendUrl = `${baseUrl}${path}?pagesize=1000&page=1${qs ? `&${qs}` : ""}`;
+    const backendUrl = `${baseUrl}${path}?${backendParams.toString()}`;
 
     const res = await fetch(backendUrl, {
         method: "GET",
