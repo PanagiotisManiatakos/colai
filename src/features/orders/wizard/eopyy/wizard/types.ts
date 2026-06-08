@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { AiClient, AiStatus } from "@/lib/utils/ai";
 import type { AppDispatch } from "@/store/store";
+import type { ApiUserInfo } from "@/types/api/schemas";
 import type { Order } from "@/types/orders";
 import type { StepOrderEntry } from "../componentProps";
 
@@ -44,6 +45,8 @@ export type ValidateEoppyOrderInput = {
   customerIsCompletelyNew?: boolean;
   hasFiles: boolean;
   hasConsentFormFiles: boolean;
+  userInfos?: ApiUserInfo | null;
+  actingSellerCode?: string | null;
 };
 
 export type RunEoppyAiParams = {

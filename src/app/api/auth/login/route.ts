@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import axios from "axios";
-import { cookieName } from "@/lib/auth";
-
-const USER_COOKIE = "amsa_user";
+import { cookieName, userCookieName } from "@/lib/auth";
+import type { LoginResp } from "@/types/api/schemas";
+import type { LoginResponse } from "@/types/api/responses";
 
 function base64urlEncode(obj: unknown) {
     return Buffer.from(JSON.stringify(obj), "utf8").toString("base64url");
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
         { validateStatus: () => true, }
     );
 
-    const data = res.data;
+    const data = res.data as LoginResp;
 
     const backendStatusCode = Number(data?.statusCode);
     const token = data.accessToken;
@@ -58,16 +58,16 @@ export async function POST(req: Request) {
         secure: process.env.NODE_ENV === "production", // important for local dev
         sameSite: "lax",
         path: "/",
-        maxAge: expiresIn,
+        maxAge: expiresIn ?? undefined,
     });
 
-    (await jar).set(USER_COOKIE, base64urlEncode(data.userInfos), {
+    (await jar).set(userCookieName, base64urlEncode(data.userInfos), {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: expiresIn,
+        maxAge: expiresIn ?? undefined,
     });
 
-    return NextResponse.json({ ok: true, ...data });
+    return NextResponse.json({ ok: true, ...data } satisfies LoginResponse);
 }

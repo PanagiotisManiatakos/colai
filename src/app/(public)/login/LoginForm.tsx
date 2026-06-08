@@ -5,6 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
+import { parseProxyJson } from "@/lib/api/client";
+import type { LoginSuccess } from "@/types/api/responses";
 import { loginOk, loginFail } from "@/features/auth/authSlice";
 
 export default function LoginPage({ appVersion }: { appVersion: string }) {
@@ -39,19 +41,20 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
         body: JSON.stringify({ username: u, password: p }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await parseProxyJson<LoginSuccess>(
+        res,
+        "Αποτυχία σύνδεσης.",
+      );
 
-      if (!res.ok || !data?.ok) {
-        const msg = data?.message || "Αποτυχία σύνδεσης.";
-        setError(msg);
-        dispatch(loginFail(msg));
-        return;
+      if (!data.userInfos) {
+        throw new Error("Missing user info from login response.");
       }
 
       dispatch(loginOk({ userInfos: data.userInfos }));
       router.replace(next);
-    } catch {
-      const msg = "Αποτυχία σύνδεσης. Δοκίμασε ξανά.";
+    } catch (err) {
+      const msg =
+        err instanceof Error ? err.message : "Αποτυχία σύνδεσης. Δοκίμασε ξανά.";
       setError(msg);
       dispatch(loginFail(msg));
     } finally {

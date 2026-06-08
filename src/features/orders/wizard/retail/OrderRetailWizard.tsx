@@ -4,29 +4,57 @@ import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchOrders, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { isConsentScoreTooLow } from "@/lib/consentUpload";
+import { getAmkaInlineFieldError } from "@/lib/utils/amka";
+import SynenaiseisArea from "@/features/orders/wizard/eopyy/SynenaiseisArea";
 import OrderRetailCustomerArea from "./OrderRetailCustomerArea";
 import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
 import CompletionArea from "./CompletionArea";
+import SellerActingSelector from "@/features/orders/components/SellerActingSelector";
+import {
+  getActingSellerCodeForApi,
+  hasSellerAccessList,
+} from "@/lib/sellerAccess";
+import { focusWizardField } from "@/features/orders/wizard/eopyy/wizard/wizardUtils";
 import { useRouter } from "next/navigation";
-import { getAmkaInlineFieldError } from "@/lib/utils/amka";
 
-const steps = ["Ασθενής", "Ιατρός", "Υλικά", "Touchdown"] as const;
+const steps = ["Ασθενής", "Ιατρός", "Υλικά", "Συναίνεση", "Touchdown"] as const;
 
 export default function OrderRetailWizard() {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   const [step, setStep] = React.useState(0);
+  const [actingSellerError, setActingSellerError] = React.useState<
+    string | null
+  >(null);
   const submitState = useAppSelector((s) => s.orders.draft.submitState);
+  const userInfos = useAppSelector((s) => s.auth.userInfos);
+  const actingSellerCode = useAppSelector((s) => s.auth.actingSellerCode);
   const draftOrder = useAppSelector((s) => s.orders.draft.order);
-  const hasAmkaError = Boolean(getAmkaInlineFieldError(draftOrder.customer_amka));
+  const files = useAppSelector((s) => s.orders?.draft?.files) ?? [];
+  const synaineseisResults = useAppSelector(
+    (s) => s.orders.draft.synaineseisResults,
+  );
+  const hasAmkaError = Boolean(
+    getAmkaInlineFieldError(draftOrder.customer_amka),
+  );
+  const hasConsentFormFiles = files.some(
+    (file) => file?.documentCategory === "consent_form",
+  );
+  const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
+  const requiresActingSeller = hasSellerAccessList(userInfos);
+  const actingSellerValid =
+    !requiresActingSeller ||
+    Boolean(getActingSellerCodeForApi(userInfos, actingSellerCode));
 
   const effectiveSteps = React.useMemo(() => {
     return [...steps];
   }, []);
 
   const maxStep = effectiveSteps.length - 1;
+  const currentLabel = effectiveSteps[step];
 
   function goNext() {
     setStep((s) => Math.min(s + 1, maxStep));
@@ -35,67 +63,91 @@ export default function OrderRetailWizard() {
   function goPrev() {
     setStep((s) => Math.max(s - 1, 0));
   }
+  console.log(draftOrder);
 
   async function onSave() {
+    if (!actingSellerValid) {
+      setActingSellerError("Επιλέξτε πωλητή για την παραγγελία");
+      focusWizardField("actingSellerCode");
+      return;
+    }
+
+    setActingSellerError(null);
+
     try {
       const result = await dispatch(submitDraftAsync()).unwrap();
       if (result.result) {
         router.replace("/orders");
         await dispatch(fetchOrders({ force: true }));
       } else {
-        console.log(result)
+        console.log(result);
       }
-      // optional: redirect to orders list
-      // router.replace("/orders");
-    } catch (e: any) {
-      // submitError already set in redux, but keep this for immediate UX if you want
+    } catch (e: unknown) {
       console.error(e);
     }
   }
 
-  const currentLabel = effectiveSteps[step];
+  const nextDisabled =
+    (step === 0 && hasAmkaError) ||
+    (currentLabel === "Συναίνεση" && consentScoreTooLow && hasConsentFormFiles);
+
+  const saveDisabled =
+    submitState.loading ||
+    hasAmkaError ||
+    consentScoreTooLow ||
+    (currentLabel === "Touchdown" && !actingSellerValid);
 
   return (
     <div className="order-wizard order-wizard--has-nav d-flex flex-column gap-2">
-      <StepIndicator steps={effectiveSteps as unknown as string[]} current={step} setStep={setStep} />
+      <StepIndicator
+        steps={effectiveSteps as unknown as string[]}
+        current={step}
+        setStep={setStep}
+      />
+
+      {/* <SellerActingSelector
+        error={actingSellerError}
+        clearError={() => setActingSellerError(null)}
+      /> */}
 
       {currentLabel === "Ασθενής" ? <OrderRetailCustomerArea /> : null}
       {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}
       {currentLabel === "Υλικά" ? <MaterialsArea /> : null}
+      {currentLabel === "Συναίνεση" ? <SynenaiseisArea /> : null}
       {currentLabel === "Touchdown" ? <CompletionArea /> : null}
 
       <div className="order-wizard-nav">
+        <button
+          type="button"
+          className="btn btn-outline-secondary flex-fill"
+          onClick={goPrev}
+          disabled={step === 0}
+        >
+          <i className="bi bi-chevron-left me-2" />
+          Πίσω
+        </button>
+
+        {step < maxStep ? (
           <button
             type="button"
-            className="btn btn-outline-secondary flex-fill"
-            onClick={goPrev}
-            disabled={step === 0}
+            className="btn btn-primary flex-fill"
+            onClick={goNext}
+            disabled={nextDisabled}
           >
-            <i className="bi bi-chevron-left me-2" />
-            Πίσω
+            Επόμενο
+            <i className="bi bi-chevron-right ms-2" />
           </button>
-
-          {step < maxStep ? (
-            <button
-              type="button"
-              className="btn btn-primary flex-fill"
-              onClick={goNext}
-              disabled={step === 0 && hasAmkaError}
-            >
-              Επόμενο
-              <i className="bi bi-chevron-right ms-2" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              disabled={submitState.loading || hasAmkaError}
-              className="btn btn-success flex-fill"
-              onClick={onSave}
-            >
-              <i className="bi bi-check2-circle me-2" />
-              {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
-            </button>
-          )}
+        ) : (
+          <button
+            type="button"
+            disabled={saveDisabled}
+            className="btn btn-success flex-fill"
+            onClick={onSave}
+          >
+            <i className="bi bi-check2-circle me-2" />
+            {submitState.loading ? "Αποθήκευση..." : "Αποθήκευση"}
+          </button>
+        )}
       </div>
     </div>
   );

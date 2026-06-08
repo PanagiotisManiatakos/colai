@@ -1,4 +1,8 @@
 import { shouldShowSynainesiStep } from "@/lib/customerUtils";
+import {
+  getActingSellerCodeForApi,
+  hasSellerAccessList,
+} from "@/lib/sellerAccess";
 import { isBlank } from "@/lib/utils/string";
 import type { Order } from "@/types/orders";
 import { getDraftAmkaWizardIssues } from "./amkaValidation";
@@ -11,6 +15,8 @@ export function validateEoppyOrder({
   customerIsCompletelyNew,
   hasFiles,
   hasConsentFormFiles,
+  userInfos,
+  actingSellerCode,
 }: ValidateEoppyOrderInput): WizardIssue[] {
   const issues: WizardIssue[] = [];
   const add = (
@@ -158,7 +164,7 @@ export function validateEoppyOrder({
       "symmetoxi",
       "eopyyVerifyNoParticipation",
       true,
-      "Μηδενική συμμετοχή",
+      "Επιβεβαιώστε μηδενική πληρωμή",
       draftOrder.eopyyVerifyNoParticipation != 1 &&
         !(draftOrder.posoSymmetoxis > 0),
     );
@@ -171,6 +177,15 @@ export function validateEoppyOrder({
       issues.push(issue);
     }
   }
+
+  add(
+    "touchdown",
+    "actingSellerCode",
+    true,
+    "Επιλέξτε πωλητή για την παραγγελία",
+    hasSellerAccessList(userInfos) &&
+      !getActingSellerCodeForApi(userInfos, actingSellerCode),
+  );
 
   return issues;
 }

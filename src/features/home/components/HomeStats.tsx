@@ -97,15 +97,25 @@ function MetricCard({ title, value, delta, deltaDirection = "neutral", icon, hre
 
 function WcMonthCard({ wc }: { wc: WcStoixoiMina }) {
     return (
-        <div className="app-card p-3">
-            <div className="d-flex align-items-start justify-content-between">
-                <div>
-                    <div className="fw-semibold">WC — μήνας</div>
-                    <div className="small text-secondary">Νέες και επαναλαμβανόμενες παραγγελίες</div>
+        <Link
+            href="/salesWC"
+            className="text-decoration-none text-reset d-block"
+            aria-label="WC μήνας — μετάβαση στις πωλήσεις WC"
+        >
+            <div
+                className="app-card app-card-pressable p-3"
+                style={{ WebkitTapHighlightColor: "transparent" }}
+            >
+                <div className="d-flex align-items-start justify-content-between">
+                    <div>
+                        <div className="fw-semibold">Πωλήσεις WC </div>
+                        <div className="small text-secondary">Νέες και επαναλαμβανόμενες παραγγελίες</div>
+                    </div>
+                    <i className="bi bi-chevron-right text-secondary" aria-hidden />
                 </div>
+                <WcDistributionCharts wc={wc} />
             </div>
-            <WcDistributionCharts wc={wc} />
-        </div>
+        </Link>
     );
 }
 

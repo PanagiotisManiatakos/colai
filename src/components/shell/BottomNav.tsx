@@ -18,14 +18,15 @@ function isActive(pathname: string, href: string): boolean {
 
 export default function BottomNav() {
   const pathname = usePathname();
-  const pendingDiscounts = useAppSelector((s) =>
-    s.discountRequests.requests.filter((r) => r.statusId == -1).length
+  const pendingDiscounts = useAppSelector(
+    (s) => s.discountRequests.requests.filter((r) => r.statusId == -1).length,
   );
 
   const items: Item[] = [
     { href: "/", icon: "bi-house", label: "Αρχική" },
     { href: "/orders", icon: "bi-list-check", label: "Παραγγελίες" },
     { href: "/diadikasia-wc", icon: "bi-calendar-check", label: "WC" },
+    // { href: "/salesWC", icon: "bi-receipt", label: "Πωλήσεις" },
     {
       href: "/discount-requests",
       icon: "bi-tag",
@@ -45,7 +46,7 @@ export default function BottomNav() {
               key={it.href}
               href={it.href}
               className={
-                "text-decoration-none d-flex flex-column align-items-center justify-content-center py-2 px-2 " +
+                "text-decoration-none d-flex flex-column align-items-center justify-content-center px-2 py-2 " +
                 (active ? "text-primary" : "text-secondary")
               }
               aria-current={active ? "page" : undefined}
@@ -54,7 +55,7 @@ export default function BottomNav() {
                 <i className={`nav-icon bi ${it.icon}`} />
                 {it.badge ? (
                   <span
-                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    className="position-absolute translate-middle badge rounded-pill bg-danger start-100 top-0"
                     style={{ fontSize: "0.65rem" }}
                   >
                     {it.badge}

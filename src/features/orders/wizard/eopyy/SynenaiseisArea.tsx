@@ -3,7 +3,6 @@
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
-  setDraftProperty,
   setDraftSyntagiUploaded,
   setSynaineseisResults,
 } from "@/store/orders/ordersSlice";
@@ -45,10 +44,6 @@ export default function SynenaiseisArea() {
   const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
   const consentScoreWarning = isConsentScoreWarning(synaineseisResults);
   const consentScoreHigh = isConsentScoreHigh(synaineseisResults);
-
-  React.useEffect(() => {
-    dispatch(setDraftProperty({ key: "type", value: "eopyy" }));
-  }, [dispatch]);
 
   const isUploadingNow = status === "uploading";
 
