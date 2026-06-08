@@ -209,7 +209,7 @@ export default function OrderCard({
   return (
     <>
       <div
-        className="swipe-row mb-3"
+        className="swipe-row"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}
@@ -345,19 +345,23 @@ export default function OrderCard({
                   <i className="bi bi-box-seam" />
                   <span className="small">Υλικά: {order.countYlika}</span>
                 </span>
-                {/* <div
-                  className="d-inline-flex align-items-center gap-2 text-secondary"
-                  style={{ fontSize: 13, marginTop: 4 }}
+
+                <div
+                  className="d-inline-flex align-items-center justify-content-center text-secondary mt-2"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    borderRadius: 999,
+                    background: "rgba(var(--bs-secondary-rgb), .08)",
+                    border: "1px solid var(--bs-border-color-translucent)",
+                  }}
+                  aria-hidden="true"
                 >
                   <i
                     className={`bi ${open ? "bi-chevron-up" : "bi-chevron-down"}`}
-                    style={{
-                      transition: "transform 160ms ease",
-                      transform: open ? "translateY(-1px)" : "translateY(1px)",
-                    }}
+                    style={{ fontSize: 14 }}
                   />
-                  <span>{open ? "Λιγότερα" : "Περισσότερα"}</span>
-                </div> */}
+                </div>
               </div>
             </summary>
 
@@ -419,7 +423,7 @@ export default function OrderCard({
                 {order.statusId === 0 ? (
                   <button
                     type="button"
-                    className="btn btn-outline-secondary flex-fill"
+                    className="btn btn-outline-primary flex-fill"
                     onClick={() =>
                       router.push(
                         `/orders/${order.id}/${order.type}/edit?uid=${order.uid}`,
@@ -429,6 +433,8 @@ export default function OrderCard({
                       borderRadius: 14,
                       padding: "10px 12px",
                       fontWeight: 600,
+                      background: "rgba(var(--bs-primary-rgb), .1)",
+                      borderColor: "rgba(var(--bs-primary-rgb), .35)",
                     }}
                   >
                     <i className="bi bi-pencil-fill me-2" />

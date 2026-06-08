@@ -25,10 +25,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const displayName = mounted ? fullName : "Λογαριασμός";
 
-  const onProfile = () => {
-    router.push("/settings/profile");
-  };
-
   const onSettings = () => {
     router.push("/settings");
   };
@@ -100,10 +96,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               </Dropdown.Toggle>
 
               <Dropdown.Menu>
-                <Dropdown.Item onClick={onProfile}>
-                  <i className="bi bi-person me-2" />
-                  Προφίλ
-                </Dropdown.Item>
                 <Dropdown.Item onClick={onSettings}>
                   <i className="bi bi-gear me-2" />
                   Ρυθμίσεις

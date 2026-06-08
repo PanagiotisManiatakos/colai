@@ -72,11 +72,11 @@ function getNewRepKind(value: unknown): "new" | "repeat" | "other" {
 
 function getNewRepBadgeClass(kind: ReturnType<typeof getNewRepKind>): string {
   if (kind === "new") {
-    return "bg-success text-white border border-success";
+    return "text-bg-danger";
   }
 
   if (kind === "repeat") {
-    return "bg-primary text-white border border-primary";
+    return "text-bg-success";
   }
 
   return "bg-body-tertiary text-secondary border";
@@ -628,14 +628,14 @@ function TeamSalesCard({
               style={{ minWidth: 0 }}
             >
               <span
-                className="badge rounded-pill bg-success text-white border border-success d-inline-flex align-items-center gap-1"
+                className="badge rounded-pill text-bg-danger d-inline-flex align-items-center gap-1"
                 style={{ fontSize: 12 }}
               >
                 <span className="fw-medium">N:</span>
                 <span className="fw-semibold">{metricText(sale.NEW)}</span>
               </span>
               <span
-                className="badge rounded-pill bg-primary text-white border border-primary d-inline-flex align-items-center gap-1"
+                className="badge rounded-pill text-bg-success d-inline-flex align-items-center gap-1"
                 style={{ fontSize: 12 }}
               >
                 <span className="fw-medium">E:</span>
@@ -916,7 +916,7 @@ export default function SalesWCPage() {
               {!isManagerMode ? (
                 <div className="ms-auto d-flex align-items-center gap-1 flex-shrink-0">
                   <span
-                    className="badge rounded-pill bg-success text-white border border-success d-inline-flex align-items-center gap-1"
+                    className="badge rounded-pill text-bg-danger d-inline-flex align-items-center gap-1"
                     aria-label={`Νέο ${summary.newCount}`}
                     style={{ fontSize: 12 }}
                   >
@@ -924,7 +924,7 @@ export default function SalesWCPage() {
                     <span className="fw-semibold">{summary.newCount}</span>
                   </span>
                   <span
-                    className="badge rounded-pill bg-primary text-white border border-primary d-inline-flex align-items-center gap-1"
+                    className="badge rounded-pill text-bg-success d-inline-flex align-items-center gap-1"
                     aria-label={`Επαναληπτικό ${summary.repeatCount}`}
                     style={{ fontSize: 12 }}
                   >

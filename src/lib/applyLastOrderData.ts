@@ -197,6 +197,8 @@ export function applyLastErpOrderData(
     suggestedDoctor_amka: "doctorSuggested_amka",
     suggestedDoctor_name: "doctorSuggested_name",
     suggestedDoctor_afm: "doctorSuggested_afm",
+    suggestedDoctor_domi: "doctorSuggested_domi",
+    suggestedDoctor_tel: "doctorSuggested_tel",
   };
   for (const [erpKey, orderKey] of Object.entries(map)) {
     const v = erp[erpKey];

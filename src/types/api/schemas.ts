@@ -425,6 +425,8 @@ export type OrderErpPreviousDto = {
   suggestedDoctor_amka?: string | null;
   suggestedDoctor_name?: string | null;
   suggestedDoctor_afm?: string | null;
+  suggestedDoctor_domi?: string | null;
+  suggestedDoctor_tel?: string | null;
   registrationDate?: string | null;
   documentCode?: string | null;
 };
@@ -694,6 +696,7 @@ export type EopyDoc_Iatros = {
   eidikotita?: string | null;
   amka_iatrou?: string | null;
   ygeionomiki_domi?: string | null;
+  tilefono?: string | null;
   typos_domis?: string | null;
   doctor_erpid?: string | null;
   load_info_message?: string | null;
