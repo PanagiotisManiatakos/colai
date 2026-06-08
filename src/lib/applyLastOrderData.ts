@@ -174,6 +174,8 @@ export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
   "doctorSuggested_amka",
   "doctorSuggested_name",
   "doctorSuggested_afm",
+  "doctorSuggested_domi",
+  "doctorSuggested_tel",
   "doctorSuggested_ErpGID",
   "has_suggested_doctor",
   "hasOtherSystinonIatroBool",

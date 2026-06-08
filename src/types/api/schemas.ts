@@ -88,6 +88,8 @@ export type APLAT_Sales_Order = {
   doctorSuggested_amka?: string | null;
   doctorSuggested_name?: string | null;
   doctorSuggested_afm?: string | null;
+  doctorSuggested_domi?: string | null;
+  doctorSuggested_tel?: string | null;
   doctorSuggested_ErpGID?: string | null;
   dateOfSyntagi?: string | null;
   dateIsxyeiApo?: string | null;
@@ -405,6 +407,8 @@ export type OrderPlatformPreviousDto = {
   doctorSuggested_amka?: string | null;
   doctorSuggested_name?: string | null;
   doctorSuggested_afm?: string | null;
+  doctorSuggested_domi?: string | null;
+  doctorSuggested_tel?: string | null;
   doctorSuggested_ErpGID?: string | null;
   recipient_CreatedPersonErpGID?: string | null;
   recipient_CreatedAddressErpGID?: string | null;

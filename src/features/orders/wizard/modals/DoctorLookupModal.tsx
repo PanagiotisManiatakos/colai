@@ -71,6 +71,18 @@ export default function DoctorLookupModal({
       dispatch(
         setDraftProperty({ key: "doctorSuggested_ErpGID", value: c.gid }),
       );
+      dispatch(
+        setDraftProperty({
+          key: "doctorSuggested_domi",
+          value: c.domi?.trim() ?? "",
+        }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "doctorSuggested_tel",
+          value: (c.mobile1?.trim() || c.mobile2?.trim()) ?? "",
+        }),
+      );
     } else {
       dispatch(setDraftProperty({ key: "doctor_name", value: c.doctoR_NAME }));
       dispatch(setDraftProperty({ key: "doctor_amka", value: c.doctoR_AMKA }));
