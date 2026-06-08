@@ -67,6 +67,8 @@ const CUSTOMER_AND_DELIVERY_FIELDS: (keyof Order)[] = [
   "doctorSuggested_amka",
   "doctorSuggested_name",
   "doctorSuggested_afm",
+  "doctorSuggested_domi",
+  "doctorSuggested_tel",
   "doctorSuggested_ErpGID",
   "shipMethodId",
   "shipMethodName",

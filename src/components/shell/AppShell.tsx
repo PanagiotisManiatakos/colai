@@ -2,7 +2,7 @@
 
 import React, { Suspense } from "react";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import BottomNav from "@/components/shell/BottomNav";
 import OrderDraftResetOnRouteLeave from "@/features/orders/components/OrderDraftResetOnRouteLeave";
@@ -11,29 +11,23 @@ import { logoutAsync } from "@/features/auth/authSlice";
 
 import Dropdown from "react-bootstrap/Dropdown";
 
-function shouldShowBack(pathname: string): boolean {
-  return pathname !== "/";
-}
-
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const showBack = shouldShowBack(pathname);
-
   const userInfos = useAppSelector((s) => s.auth?.userInfos);
-  const fullName = [userInfos?.fname, userInfos?.lname].filter(Boolean).join(" ") || "Λογαριασμός";
+  const fullName =
+    [userInfos?.fname, userInfos?.lname].filter(Boolean).join(" ") ||
+    "Λογαριασμός";
 
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
 
   const displayName = mounted ? fullName : "Λογαριασμός";
 
-  // Profile screen is empty for now.
-  // const onProfile = () => {
-  //   router.push("/settings/profile");
-  // };
+  const onProfile = () => {
+    router.push("/settings/profile");
+  };
 
   const onSettings = () => {
     router.push("/settings");
@@ -43,7 +37,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     try {
       await dispatch(logoutAsync());
       router.replace("/login");
-    } catch (e) { }
+    } catch (e) {}
   };
 
   return (
@@ -52,7 +46,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <OrderDraftResetOnRouteLeave />
       </Suspense>
       <header className="app-header">
-        <div className="px-3 d-flex align-items-center justify-content-between">
+        <div className="d-flex align-items-center justify-content-between px-3">
           <div className="d-flex justify-content-start flex-grow-1">
             <Image
               src="/mono_logo.png"
@@ -64,7 +58,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             />
           </div>
           {/* Left: Back */}
-          <div className="d-flex align-items-center gap-2" style={{ minWidth: 44 }}>
+          <div
+            className="d-flex align-items-center gap-2"
+            style={{ minWidth: 44 }}
+          >
             {/* {showBack ? (
               <button
                 type="button"
@@ -80,7 +77,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           {/* Center: Logo */}
 
           {/* Right: User menu */}
-          <div className="d-flex align-items-center justify-content-end" style={{ minWidth: 44 }}>
+          <div
+            className="d-flex align-items-center justify-content-end"
+            style={{ minWidth: 44 }}
+          >
             <Dropdown align="end">
               <Dropdown.Toggle
                 id="user-menu"
@@ -90,16 +90,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 aria-label="User menu"
                 style={{ maxWidth: 200 }}
               >
-                <span className="text-truncate" style={{ maxWidth: 170 }} suppressHydrationWarning>
+                <span
+                  className="text-truncate"
+                  style={{ maxWidth: 170 }}
+                  suppressHydrationWarning
+                >
                   {displayName}
                 </span>
               </Dropdown.Toggle>
 
               <Dropdown.Menu>
-                {/* <Dropdown.Item onClick={onProfile}>
+                <Dropdown.Item onClick={onProfile}>
                   <i className="bi bi-person me-2" />
                   Προφίλ
-                </Dropdown.Item> */}
+                </Dropdown.Item>
                 <Dropdown.Item onClick={onSettings}>
                   <i className="bi bi-gear me-2" />
                   Ρυθμίσεις
