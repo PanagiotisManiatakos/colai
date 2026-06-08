@@ -33,7 +33,6 @@ export default function BottomNav() {
       label: "Αιτήματα",
       badge: pendingDiscounts || undefined,
     },
-    { href: "/settings", icon: "bi-gear", label: "Ρυθμίσεις" },
   ];
 
   return (

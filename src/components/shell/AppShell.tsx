@@ -34,6 +34,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     router.push("/settings/profile");
   };
 
+  const onSettings = () => {
+    router.push("/settings");
+  };
+
   const onLogout = async () => {
     try {
       await dispatch(logoutAsync());
@@ -94,6 +98,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Dropdown.Item onClick={onProfile}>
                   <i className="bi bi-person me-2" />
                   Προφίλ
+                </Dropdown.Item>
+                <Dropdown.Item onClick={onSettings}>
+                  <i className="bi bi-gear me-2" />
+                  Ρυθμίσεις
                 </Dropdown.Item>
                 <Dropdown.Divider />
                 <Dropdown.Item onClick={onLogout}>

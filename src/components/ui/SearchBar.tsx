@@ -47,7 +47,7 @@ export function SearchBar({
         <input
           ref={inputRef}
           className="form-control border-0 ps-2 search-bar"
-          type="search"
+          type="text"
           inputMode="search"
           enterKeyHint="search"
           autoCorrect="off"
@@ -56,14 +56,18 @@ export function SearchBar({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          aria-label={placeholder}
           autoFocus={autoFocus}
           style={{ background: "none" }}
         />
         {value ? (
-          <button style={{
-            maxHeight: 36
-
-          }} type="button" className="btn border-none" onClick={clear} aria-label="Clear">
+          <button
+            type="button"
+            className="btn border-0 d-inline-flex align-items-center justify-content-center"
+            onClick={clear}
+            aria-label="Καθαρισμός αναζήτησης"
+            style={{ maxHeight: 36 }}
+          >
             <i className="bi bi-x-lg" />
           </button>
         ) : null}

@@ -66,14 +66,16 @@ export default function OrdersPage() {
 
   return (
     <>
-      <div className="app-card mb-3 p-2">
-        <SearchBar
-          placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)"
-          value={q}
-          onChange={setQ}
-          onSubmit={onSubmitSearch}
-          onClear={onClearSearch}
-        />
+      <div className="d-flex align-items-center mb-2 flex-wrap gap-2">
+        <div className="app-card flex-grow-1">
+          <SearchBar
+            placeholder="Αναζήτηση (ID, συνταγή, όνομα, ΑΜΚΑ…)"
+            value={q}
+            onChange={setQ}
+            onSubmit={onSubmitSearch}
+            onClear={onClearSearch}
+          />
+        </div>
       </div>
 
       <PullToRefresh onRefresh={onRefresh} isRefreshing={refreshing}>
