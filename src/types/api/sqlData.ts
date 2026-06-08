@@ -10,3 +10,12 @@ export interface SellerSalesWC {
   COLAI: string;
   TurnOver: string | number;
 }
+
+export interface SellerTeamatesWC {
+  SELLERCODE: string;
+  SellerName: string;
+  NEW: string;
+  REP: string;
+  TOT: string;
+  TURNOVER: string | number;
+}

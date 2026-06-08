@@ -10,7 +10,13 @@ import PullToRefresh from "@/components/ui/PullToRefresh";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { parseProxyJson } from "@/lib/api/client";
 import { formatCurrencyGR } from "@/lib/utils/number";
-import type { GetWcOrderListSuccess, SellerSalesWC } from "@/types/api";
+import { useAppSelector } from "@/store/hooks";
+import type {
+  GetWcOrderListSuccess,
+  GetWcTeamatesSuccess,
+  SellerSalesWC,
+  SellerTeamatesWC,
+} from "@/types/api";
 
 const dateFmt = new Intl.DateTimeFormat("el-GR", {
   day: "2-digit",
@@ -20,9 +26,25 @@ const dateFmt = new Intl.DateTimeFormat("el-GR", {
 
 type SortMode = "date" | "newrep";
 
+type SellerOrderDetailsState = {
+  loading: boolean;
+  error: string | null;
+  records: SellerSalesWC[] | null;
+};
+
 function textValue(value: unknown): string {
   const text = String(value ?? "").trim();
   return text || "-";
+}
+
+function metricText(value: unknown): string {
+  const text = String(value ?? "").trim();
+  return text || "0";
+}
+
+function normalizeSellerCode(value: unknown): string {
+  const text = String(value ?? "").trim();
+  return /^\d+$/.test(text) ? text.replace(/^0+(?=\d)/, "") : text;
 }
 
 function getColaiMarkerKind(value: unknown): "manual" | "app" | null {
@@ -50,11 +72,11 @@ function getNewRepKind(value: unknown): "new" | "repeat" | "other" {
 
 function getNewRepBadgeClass(kind: ReturnType<typeof getNewRepKind>): string {
   if (kind === "new") {
-    return "bg-danger-subtle text-danger-emphasis border border-danger-subtle";
+    return "bg-success text-white border border-success";
   }
 
   if (kind === "repeat") {
-    return "bg-success-subtle text-success-emphasis border border-success-subtle";
+    return "bg-primary text-white border border-primary";
   }
 
   return "bg-body-tertiary text-secondary border";
@@ -141,6 +163,23 @@ function matchesQuery(sale: SellerSalesWC, query: string): boolean {
     .includes(q);
 }
 
+function matchesTeamQuery(sale: SellerTeamatesWC, query: string): boolean {
+  const q = query.trim().toLocaleLowerCase("el-GR");
+  if (!q) return true;
+
+  return [
+    sale.SELLERCODE,
+    sale.SellerName,
+    sale.NEW,
+    sale.REP,
+    sale.TOT,
+    sale.TURNOVER,
+  ]
+    .map((value) => textValue(value).toLocaleLowerCase("el-GR"))
+    .join(" ")
+    .includes(q);
+}
+
 function getSaleTileKey(sale: SellerSalesWC, index: number): string {
   return [
     sale.ReferenceDocument,
@@ -152,6 +191,16 @@ function getSaleTileKey(sale: SellerSalesWC, index: number): string {
   ]
     .map((value) => String(value ?? "").trim())
     .join("-");
+}
+
+function getTeamTileKey(sale: SellerTeamatesWC, index: number): string {
+  return [sale.SELLERCODE, sale.SellerName, index]
+    .map((value) => String(value ?? "").trim())
+    .join("-");
+}
+
+function getSellerStateKey(sellerCode: unknown): string {
+  return normalizeSellerCode(sellerCode) || String(sellerCode ?? "").trim();
 }
 
 function DetailRow({
@@ -331,14 +380,311 @@ function SalesWCCard({
   );
 }
 
+function SellerOrderDetails({
+  state,
+  onRetry,
+}: {
+  state: SellerOrderDetailsState | undefined;
+  onRetry: () => void;
+}) {
+  const records = state?.records ?? [];
+
+  if (state?.loading && !records.length) {
+    return (
+      <div className="d-flex align-items-center gap-2 py-2 text-secondary">
+        <span className="spinner-border spinner-border-sm" aria-hidden />
+        <span style={{ fontSize: 13 }}>Φόρτωση αναλυτικών πωλήσεων...</span>
+      </div>
+    );
+  }
+
+  if (state?.error) {
+    return (
+      <Alert variant="danger" className="mb-0 py-2">
+        <div style={{ fontSize: 13 }}>{state.error}</div>
+        <button
+          type="button"
+          className="btn btn-sm btn-outline-danger mt-2"
+          onClick={onRetry}
+        >
+          Δοκιμή ξανά
+        </button>
+      </Alert>
+    );
+  }
+
+  if (!records.length) {
+    return (
+      <div className="text-secondary py-2 text-center" style={{ fontSize: 13 }}>
+        Δεν βρέθηκαν αναλυτικές πωλήσεις.
+      </div>
+    );
+  }
+
+  return (
+    <div className="d-flex flex-column gap-2">
+      {records.map((record, index) => {
+        const colaiMarker = getColaiMarkerKind(record.COLAI);
+        const newRepKind = getNewRepKind(record.NEWREP);
+        const newRepLabel = textValue(record.NEWREP);
+        const turnOver = formatTurnOver(record.TurnOver);
+        const details = [
+          {
+            icon: "bi-calendar3",
+            label: "Ημερομηνία",
+            value: formatSalesDate(record.RegistrationDate),
+          },
+          {
+            icon: "bi-file-earmark-text",
+            label: "Παραστατικό",
+            value: record.ReferenceDocument,
+          },
+          { icon: "bi-truck", label: "Tracking", value: record.TrackingNo },
+          { icon: "bi-upc-scan", label: "AD Code", value: record.ADCode },
+          ...(isZeroColai(record.COLAI)
+            ? []
+            : [{ icon: "bi-phone", label: "COLAI", value: record.COLAI }]),
+        ];
+
+        return (
+          <CollapsibleAppTile
+            key={[
+              record.ReferenceDocument,
+              record.TrackingNo,
+              record.CustomerName,
+              index,
+            ].join("-")}
+            inset="compact"
+            className="app-card-soft"
+            summary={(expanded) => (
+              <div className="w-100" style={{ minWidth: 0 }}>
+                <div
+                  className="d-flex align-items-center flex-nowrap gap-1"
+                  style={{ minWidth: 0 }}
+                >
+                  <span
+                    className="fw-semibold text-truncate"
+                    style={{
+                      color: "var(--bs-body-color)",
+                      fontSize: 14,
+                      minWidth: 0,
+                    }}
+                  >
+                    {textValue(record.CustomerName)}
+                  </span>
+                  <span className="text-secondary flex-shrink-0">-</span>
+                  <span
+                    className="text-secondary text-truncate"
+                    style={{ fontSize: 12, minWidth: 0 }}
+                  >
+                    {textValue(record.Doctor)}
+                  </span>
+                </div>
+                <div className="mt-2 d-flex align-items-center gap-2">
+                  <div
+                    className="d-flex align-items-center flex-wrap gap-1"
+                    style={{ minWidth: 0 }}
+                  >
+                    {colaiMarker ? (
+                      <span
+                        className="badge rounded-pill bg-body-tertiary text-secondary border d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                        title={
+                          colaiMarker === "app"
+                            ? "Παραγγελία από την εφαρμογή"
+                            : "Χωρίς COLAI"
+                        }
+                        aria-label={
+                          colaiMarker === "app"
+                            ? "Παραγγελία από την εφαρμογή"
+                            : "COLAI 0"
+                        }
+                        style={{
+                          fontSize: 12,
+                          minWidth: 22,
+                          minHeight: 20,
+                          paddingInline: colaiMarker === "app" ? 3 : 7,
+                        }}
+                      >
+                        {colaiMarker === "app" ? (
+                          <Image
+                            src="/logo-icon.svg"
+                            alt=""
+                            width={16}
+                            height={16}
+                            aria-hidden
+                          />
+                        ) : (
+                          "@"
+                        )}
+                      </span>
+                    ) : null}
+                    <span
+                      className={`badge rounded-pill ${getNewRepBadgeClass(newRepKind)}`}
+                      style={{ fontSize: 12 }}
+                    >
+                      {newRepLabel}
+                    </span>
+                    <span
+                      className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
+                      style={{ fontSize: 12 }}
+                    >
+                      <i className="bi bi-cash-coin text-secondary" aria-hidden />
+                      <span className="text-secondary fw-medium">Ποσό:</span>
+                      <span className="fw-semibold">{turnOver}</span>
+                    </span>
+                  </div>
+                  <i
+                    className="bi bi-chevron-down text-secondary d-inline-block flex-shrink-0 ms-auto"
+                    style={{
+                      fontSize: "1rem",
+                      transition: "transform 160ms ease",
+                      transform: expanded ? "rotate(-180deg)" : "none",
+                    }}
+                    aria-hidden
+                  />
+                </div>
+              </div>
+            )}
+          >
+            <div className="d-flex flex-column">
+              {details.map((detail, detailIndex) => (
+                <DetailRow
+                  key={detail.label}
+                  icon={detail.icon}
+                  label={detail.label}
+                  value={detail.value}
+                  showDivider={detailIndex < details.length - 1}
+                />
+              ))}
+            </div>
+          </CollapsibleAppTile>
+        );
+      })}
+      {state?.loading ? (
+        <div className="text-secondary pt-2" style={{ fontSize: 12 }}>
+          Ενημέρωση...
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function TeamSalesCard({
+  sale,
+  open,
+  onOpenChange,
+  orderState,
+  onRetryOrders,
+}: {
+  sale: SellerTeamatesWC;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  orderState: SellerOrderDetailsState | undefined;
+  onRetryOrders: () => void;
+}) {
+  return (
+    <CollapsibleAppTile
+      open={open}
+      onOpenChange={onOpenChange}
+      summary={(expanded) => (
+        <div className="w-100" style={{ minWidth: 0 }}>
+          <div
+            className="d-flex align-items-center flex-nowrap gap-2"
+            style={{ minWidth: 0 }}
+          >
+            <div
+              className="d-flex align-items-center flex-nowrap gap-1"
+              style={{ minWidth: 0 }}
+            >
+              <span
+                className="fw-semibold text-truncate"
+                style={{
+                  color: "var(--bs-body-color)",
+                  fontSize: 15,
+                  minWidth: 0,
+                }}
+              >
+                {textValue(sale.SellerName)}
+              </span>
+              <span className="text-secondary flex-shrink-0">-</span>
+              <span
+                className="text-secondary text-truncate"
+                style={{ fontSize: 13, minWidth: 0 }}
+              >
+                {textValue(sale.SELLERCODE)}
+              </span>
+            </div>
+            <span
+              className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1 flex-shrink-0 ms-auto"
+              style={{ fontSize: 12 }}
+            >
+              <i className="bi bi-cash-coin text-secondary" aria-hidden />
+              <span className="fw-semibold">{formatTurnOver(sale.TURNOVER)}</span>
+            </span>
+          </div>
+          <div className="mt-2 d-flex align-items-center gap-2">
+            <div
+              className="d-flex align-items-center flex-wrap gap-1"
+              style={{ minWidth: 0 }}
+            >
+              <span
+                className="badge rounded-pill bg-success text-white border border-success d-inline-flex align-items-center gap-1"
+                style={{ fontSize: 12 }}
+              >
+                <span className="fw-medium">N:</span>
+                <span className="fw-semibold">{metricText(sale.NEW)}</span>
+              </span>
+              <span
+                className="badge rounded-pill bg-primary text-white border border-primary d-inline-flex align-items-center gap-1"
+                style={{ fontSize: 12 }}
+              >
+                <span className="fw-medium">E:</span>
+                <span className="fw-semibold">{metricText(sale.REP)}</span>
+              </span>
+              <span
+                className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
+                style={{ fontSize: 12 }}
+              >
+                <span className="text-secondary fw-medium">Σύνολο:</span>
+                <span className="fw-semibold">{metricText(sale.TOT)}</span>
+              </span>
+            </div>
+            <i
+              className="bi bi-chevron-down text-secondary d-inline-block flex-shrink-0 ms-auto"
+              style={{
+                fontSize: "1rem",
+                transition: "transform 160ms ease",
+                transform: expanded ? "rotate(-180deg)" : "none",
+              }}
+              aria-hidden
+            />
+          </div>
+        </div>
+      )}
+    >
+      <SellerOrderDetails state={orderState} onRetry={onRetryOrders} />
+    </CollapsibleAppTile>
+  );
+}
+
 export default function SalesWCPage() {
+  const userInfos = useAppSelector((s) => s.auth.userInfos);
+  const loggedSellerCode = userInfos?.sellerCode;
+  const isManagerMode =
+    userInfos?.isManager === true && userInfos?.isSeller !== true;
   const [records, setRecords] = React.useState<SellerSalesWC[]>([]);
+  const [teamRecords, setTeamRecords] = React.useState<SellerTeamatesWC[]>([]);
+  const [summaryRecord, setSummaryRecord] =
+    React.useState<SellerTeamatesWC | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
   const [sortMode, setSortMode] = React.useState<SortMode>("newrep");
   const [openTiles, setOpenTiles] = React.useState<Record<string, boolean>>({});
+  const [orderDetailsBySeller, setOrderDetailsBySeller] = React.useState<
+    Record<string, SellerOrderDetailsState>
+  >({});
 
   const loadSales = React.useCallback(async (refresh = false) => {
     if (refresh) setRefreshing(true);
@@ -347,19 +693,65 @@ export default function SalesWCPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/wc/order-list", {
-        cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
-      });
-      const data = await parseProxyJson<GetWcOrderListSuccess>(
-        res,
-        "Failed to load seller sales",
-      );
+      if (isManagerMode) {
+        const res = await fetch("/api/wc/teamates", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
+        const data = await parseProxyJson<GetWcTeamatesSuccess>(
+          res,
+          "Failed to load seller team",
+        );
 
-      setRecords(data.records ?? []);
+        setTeamRecords(data.records ?? []);
+        setRecords([]);
+        setSummaryRecord(null);
+        return;
+      }
+
+      const [orderRes, teamatesRes] = await Promise.all([
+        fetch("/api/wc/order-list", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        }),
+        fetch("/api/wc/teamates", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        }),
+      ]);
+      const [orderData, teamatesData] = await Promise.all([
+        parseProxyJson<GetWcOrderListSuccess>(
+          orderRes,
+          "Failed to load seller sales",
+        ),
+        parseProxyJson<GetWcTeamatesSuccess>(
+          teamatesRes,
+          "Failed to load seller summary",
+        ),
+      ]);
+      const teamatesRecords = teamatesData.records ?? [];
+      const normalizedLoggedSellerCode = normalizeSellerCode(loggedSellerCode);
+
+      setTeamRecords([]);
+      setRecords(orderData.records ?? []);
+      setSummaryRecord(
+        teamatesRecords.find(
+          (record) =>
+            normalizeSellerCode(record.SELLERCODE) ===
+            normalizedLoggedSellerCode,
+        ) ??
+          teamatesRecords[0] ??
+          null,
+      );
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load seller sales";
@@ -368,7 +760,62 @@ export default function SalesWCPage() {
       setLoading(false);
       setRefreshing(false);
     }
-  }, []);
+  }, [isManagerMode, loggedSellerCode]);
+
+  const loadOrderDetails = React.useCallback(
+    async (sellerCode: string, force = false) => {
+      const sellerKey = getSellerStateKey(sellerCode);
+      if (!sellerKey) return;
+
+      const existing = orderDetailsBySeller[sellerKey];
+      if (!force && (existing?.loading || existing?.records)) return;
+
+      setOrderDetailsBySeller((prev) => ({
+        ...prev,
+        [sellerKey]: {
+          loading: true,
+          error: null,
+          records: force ? (prev[sellerKey]?.records ?? null) : null,
+        },
+      }));
+
+      try {
+        const params = new URLSearchParams({ sellerCode: sellerCode.trim() });
+        const res = await fetch(`/api/wc/order-list?${params.toString()}`, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
+        const data = await parseProxyJson<GetWcOrderListSuccess>(
+          res,
+          "Failed to load seller order list",
+        );
+
+        setOrderDetailsBySeller((prev) => ({
+          ...prev,
+          [sellerKey]: {
+            loading: false,
+            error: null,
+            records: data.records ?? [],
+          },
+        }));
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load seller order list";
+        setOrderDetailsBySeller((prev) => ({
+          ...prev,
+          [sellerKey]: {
+            loading: false,
+            error: message,
+            records: prev[sellerKey]?.records ?? null,
+          },
+        }));
+      }
+    },
+    [orderDetailsBySeller],
+  );
 
   React.useEffect(() => {
     void loadSales();
@@ -393,22 +840,38 @@ export default function SalesWCPage() {
     [q, records, sortMode],
   );
 
-  const summary = React.useMemo(() => {
-    return records.reduce(
-      (acc, sale) => {
-        const kind = getNewRepKind(sale.NEWREP);
-        if (kind === "new") acc.newCount += 1;
-        if (kind === "repeat") acc.repeatCount += 1;
-        acc.turnOverTotal += parseTurnOverValue(sale.TurnOver);
-        return acc;
-      },
-      { newCount: 0, repeatCount: 0, turnOverTotal: 0 },
-    );
-  }, [records]);
+  const visibleTeamRecords = React.useMemo(
+    () =>
+      teamRecords
+        .filter((sale) => matchesTeamQuery(sale, q))
+        .sort((a, b) => {
+          const byTurnover =
+            parseTurnOverValue(b.TURNOVER) - parseTurnOverValue(a.TURNOVER);
+          if (byTurnover !== 0) return byTurnover;
+
+          return textValue(a.SellerName).localeCompare(
+            textValue(b.SellerName),
+            "el-GR",
+          );
+        }),
+    [q, teamRecords],
+  );
+
+  const summary = React.useMemo(
+    () => ({
+      newCount: metricText(summaryRecord?.NEW),
+      repeatCount: metricText(summaryRecord?.REP),
+      turnOverTotal: parseTurnOverValue(summaryRecord?.TURNOVER),
+    }),
+    [summaryRecord],
+  );
 
   const visibleTileKeys = React.useMemo(
-    () => visibleRecords.map((sale, index) => getSaleTileKey(sale, index)),
-    [visibleRecords],
+    () =>
+      isManagerMode
+        ? visibleTeamRecords.map((sale, index) => getTeamTileKey(sale, index))
+        : visibleRecords.map((sale, index) => getSaleTileKey(sale, index)),
+    [isManagerMode, visibleRecords, visibleTeamRecords],
   );
   const allTilesExpanded =
     visibleTileKeys.length > 0 &&
@@ -421,9 +884,24 @@ export default function SalesWCPage() {
       for (const key of visibleTileKeys) next[key] = nextOpen;
       return next;
     });
-  }, [allTilesExpanded, visibleTileKeys]);
+    if (nextOpen && isManagerMode) {
+      for (const sale of visibleTeamRecords) {
+        void loadOrderDetails(sale.SELLERCODE);
+      }
+    }
+  }, [
+    allTilesExpanded,
+    isManagerMode,
+    loadOrderDetails,
+    visibleTeamRecords,
+    visibleTileKeys,
+  ]);
 
-  const showInitialLoader = loading && records.length === 0;
+  const visibleCount = isManagerMode
+    ? visibleTeamRecords.length
+    : visibleRecords.length;
+  const showInitialLoader =
+    loading && (isManagerMode ? teamRecords.length === 0 : records.length === 0);
 
   return (
     <>
@@ -434,35 +912,37 @@ export default function SalesWCPage() {
               className="d-flex align-items-center flex-nowrap gap-2"
               style={{ minWidth: 0, overflowX: "auto" }}
             >
-              <div className="h5 fw-bold mb-0 flex-shrink-0">Sales WC</div>
-              <div className="ms-auto d-flex align-items-center gap-1 flex-shrink-0">
-                <span
-                  className="badge rounded-pill bg-danger-subtle text-danger-emphasis border border-danger-subtle d-inline-flex align-items-center gap-1"
-                  aria-label={`Νέο ${summary.newCount}`}
-                  style={{ fontSize: 12 }}
-                >
-                  <span className="fw-medium">N:</span>
-                  <span className="fw-semibold">{summary.newCount}</span>
-                </span>
-                <span
-                  className="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle d-inline-flex align-items-center gap-1"
-                  aria-label={`Επαναληπτικό ${summary.repeatCount}`}
-                  style={{ fontSize: 12 }}
-                >
-                  <span className="fw-medium">E:</span>
-                  <span className="fw-semibold">{summary.repeatCount}</span>
-                </span>
-                <span
-                  className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
-                  aria-label={`Σύνολο ${formatCurrencyGR(summary.turnOverTotal)} ευρώ`}
-                  style={{ fontSize: 12 }}
-                >
-                  <span className="text-secondary fw-medium">Σύνολο:</span>
-                  <span className="fw-semibold">
-                    {formatCurrencyGR(summary.turnOverTotal)}€
+              <div className="h5 fw-bold mb-0 flex-shrink-0">Πωλήσεις WC</div>
+              {!isManagerMode ? (
+                <div className="ms-auto d-flex align-items-center gap-1 flex-shrink-0">
+                  <span
+                    className="badge rounded-pill bg-success text-white border border-success d-inline-flex align-items-center gap-1"
+                    aria-label={`Νέο ${summary.newCount}`}
+                    style={{ fontSize: 12 }}
+                  >
+                    <span className="fw-medium">N:</span>
+                    <span className="fw-semibold">{summary.newCount}</span>
                   </span>
-                </span>
-              </div>
+                  <span
+                    className="badge rounded-pill bg-primary text-white border border-primary d-inline-flex align-items-center gap-1"
+                    aria-label={`Επαναληπτικό ${summary.repeatCount}`}
+                    style={{ fontSize: 12 }}
+                  >
+                    <span className="fw-medium">E:</span>
+                    <span className="fw-semibold">{summary.repeatCount}</span>
+                  </span>
+                  <span
+                    className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
+                    aria-label={`Σύνολο ${formatCurrencyGR(summary.turnOverTotal)} ευρώ`}
+                    style={{ fontSize: 12 }}
+                  >
+                    <span className="text-secondary fw-medium">Σύνολο:</span>
+                    <span className="fw-semibold">
+                      {formatCurrencyGR(summary.turnOverTotal)}€
+                    </span>
+                  </span>
+                </div>
+              ) : null}
             </div>
           </div>
         </div>
@@ -492,34 +972,36 @@ export default function SalesWCPage() {
             {allTilesExpanded ? "Σύμπτυξη όλων" : "Ανάπτυξη όλων"}
           </span>
         </button>
-        <button
-          type="button"
-          className={`btn btn-sm flex-shrink-0 d-inline-flex align-items-center gap-1 ${
-            sortMode === "newrep" ? "btn-primary" : "btn-outline-secondary"
-          }`}
-          onClick={() =>
-            setSortMode((current) => (current === "newrep" ? "date" : "newrep"))
-          }
-          aria-pressed={sortMode === "newrep"}
-          aria-label={
-            sortMode === "newrep"
-              ? "Ταξινόμηση ανά ημερομηνία"
-              : "Ταξινόμηση ανά NEWREP"
-          }
-          title={
-            sortMode === "newrep"
-              ? "Πατήστε για ταξινόμηση ανά ημερομηνία"
-              : "Πατήστε για ταξινόμηση ανά NEWREP"
-          }
-        >
-          <i
-            className={`bi ${sortMode === "newrep" ? "bi-filter" : "bi-sort-down"}`}
-            aria-hidden
-          />
-          <span className="text-nowrap">
-            {sortMode === "newrep" ? "Πρόσφατες" : "Ημερομηνία"}
-          </span>
-        </button>
+        {!isManagerMode ? (
+          <button
+            type="button"
+            className={`btn btn-sm flex-shrink-0 d-inline-flex align-items-center gap-1 ${
+              sortMode === "newrep" ? "btn-primary" : "btn-outline-secondary"
+            }`}
+            onClick={() =>
+              setSortMode((current) => (current === "newrep" ? "date" : "newrep"))
+            }
+            aria-pressed={sortMode === "newrep"}
+            aria-label={
+              sortMode === "newrep"
+                ? "Ταξινόμηση ανά ημερομηνία"
+                : "Ταξινόμηση ανά NEWREP"
+            }
+            title={
+              sortMode === "newrep"
+                ? "Πατήστε για ταξινόμηση ανά ημερομηνία"
+                : "Πατήστε για ταξινόμηση ανά NEWREP"
+            }
+          >
+            <i
+              className={`bi ${sortMode === "newrep" ? "bi-filter" : "bi-sort-down"}`}
+              aria-hidden
+            />
+            <span className="text-nowrap">
+              {sortMode === "newrep" ? "Ημ/νία" : "Νέες"}
+            </span>
+          </button>
+        ) : null}
       </div>
 
       <PullToRefresh onRefresh={() => loadSales(true)} isRefreshing={refreshing}>
@@ -536,21 +1018,41 @@ export default function SalesWCPage() {
           </Alert>
         ) : showInitialLoader ? (
           <AppLoader label="Φόρτωση πωλήσεων..." />
-        ) : visibleRecords.length ? (
+        ) : visibleCount ? (
           <div className="d-flex flex-column gap-2">
-            {visibleRecords.map((sale, index) => {
-              const tileKey = getSaleTileKey(sale, index);
-              return (
-                <SalesWCCard
-                  key={tileKey}
-                  sale={sale}
-                  open={!!openTiles[tileKey]}
-                  onOpenChange={(open) =>
-                    setOpenTiles((prev) => ({ ...prev, [tileKey]: open }))
-                  }
-                />
-              );
-            })}
+            {isManagerMode
+              ? visibleTeamRecords.map((sale, index) => {
+                  const tileKey = getTeamTileKey(sale, index);
+                  const sellerStateKey = getSellerStateKey(sale.SELLERCODE);
+                  return (
+                    <TeamSalesCard
+                      key={tileKey}
+                      sale={sale}
+                      open={!!openTiles[tileKey]}
+                      onOpenChange={(open) => {
+                        setOpenTiles((prev) => ({ ...prev, [tileKey]: open }));
+                        if (open) void loadOrderDetails(sale.SELLERCODE);
+                      }}
+                      orderState={orderDetailsBySeller[sellerStateKey]}
+                      onRetryOrders={() =>
+                        void loadOrderDetails(sale.SELLERCODE, true)
+                      }
+                    />
+                  );
+                })
+              : visibleRecords.map((sale, index) => {
+                  const tileKey = getSaleTileKey(sale, index);
+                  return (
+                    <SalesWCCard
+                      key={tileKey}
+                      sale={sale}
+                      open={!!openTiles[tileKey]}
+                      onOpenChange={(open) =>
+                        setOpenTiles((prev) => ({ ...prev, [tileKey]: open }))
+                      }
+                    />
+                  );
+                })}
           </div>
         ) : (
           <div className="app-card text-secondary p-3 text-center">

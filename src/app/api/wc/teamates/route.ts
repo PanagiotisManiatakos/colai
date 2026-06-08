@@ -1,13 +1,13 @@
 import { cookieName, userCookieName } from "@/lib/auth";
 import type { ApiUserInfo } from "@/types/api/schemas";
-import type { SellerSalesWC } from "@/types/api/sqlData";
+import type { SellerTeamatesWC } from "@/types/api/sqlData";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 const SQL_APP_ID = "1305";
-const SQL_NAME = "ORDER_LIST_WC";
+const SQL_NAME = "TEAMATES_WC";
 
 const noCacheHeaders = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
@@ -20,11 +20,11 @@ function getObject(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function getArray(value: unknown): SellerSalesWC[] | null {
-  return Array.isArray(value) ? (value as SellerSalesWC[]) : null;
+function getArray(value: unknown): SellerTeamatesWC[] | null {
+  return Array.isArray(value) ? (value as SellerTeamatesWC[]) : null;
 }
 
-function extractRecords(payload: unknown): SellerSalesWC[] {
+function extractRecords(payload: unknown): SellerTeamatesWC[] {
   const body = getObject(payload);
   const data = getObject(body?.data);
 
@@ -107,27 +107,7 @@ function decodeUserInfoCookie(value?: string): ApiUserInfo | null {
   }
 }
 
-function normalizeSellerCode(value: unknown): string {
-  const text = String(value ?? "").trim();
-  return /^\d+$/.test(text) ? text.replace(/^0+(?=\d)/, "") : text;
-}
-
-function canAccessSeller(
-  userInfo: ApiUserInfo | null,
-  sellerCode: string,
-): boolean {
-  const normalizedTarget = normalizeSellerCode(sellerCode);
-  const normalizedOwn = normalizeSellerCode(userInfo?.sellerCode);
-  if (normalizedOwn && normalizedTarget === normalizedOwn) return true;
-
-  if (userInfo?.isManager !== true || userInfo.isSeller === true) return false;
-
-  return (userInfo.listAccessSellers ?? []).some(
-    (seller) => normalizeSellerCode(seller.sellerCode) === normalizedTarget,
-  );
-}
-
-export async function GET(req: Request) {
+export async function GET() {
   const jar = await cookies();
   const token = jar.get(cookieName)?.value;
   if (!token) {
@@ -138,21 +118,15 @@ export async function GET(req: Request) {
   }
 
   const userInfo = decodeUserInfoCookie(jar.get(userCookieName)?.value);
-  const requestedSellerCode = new URL(req.url).searchParams
-    .get("sellerCode")
-    ?.trim();
-  const sellerCode = requestedSellerCode || userInfo?.sellerCode?.trim();
+  const isManagerWithoutSellerRole =
+    userInfo?.isManager === true && userInfo.isSeller !== true;
+  const sellerCode = isManagerWithoutSellerRole
+    ? userInfo.listAccessSellers?.[0]?.sellerCode?.trim()
+    : userInfo?.sellerCode?.trim();
   if (!sellerCode) {
     return NextResponse.json(
       { ok: false, message: "Missing seller code for authenticated user" },
       { status: 400, headers: noCacheHeaders },
-    );
-  }
-
-  if (!canAccessSeller(userInfo, sellerCode)) {
-    return NextResponse.json(
-      { ok: false, message: "Not allowed to load this seller's sales" },
-      { status: 403, headers: noCacheHeaders },
     );
   }
 
@@ -194,7 +168,9 @@ export async function GET(req: Request) {
 
   const text = await upstream
     .arrayBuffer()
-    .then((buffer) => decodeResponseText(buffer, upstream.headers.get("content-type")))
+    .then((buffer) =>
+      decodeResponseText(buffer, upstream.headers.get("content-type")),
+    )
     .catch(() => "");
   const payload = parseJsonText(text);
 
