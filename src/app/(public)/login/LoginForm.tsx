@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
 import { parseProxyJson } from "@/lib/api/client";
 import type { LoginSuccess } from "@/types/api/responses";
-import { loginOk, loginFail, type AuthUser } from "@/features/auth/authSlice";
+import { loginOk, loginFail } from "@/features/auth/authSlice";
 
 export default function LoginPage({ appVersion }: { appVersion: string }) {
   const router = useRouter();
@@ -46,7 +46,11 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
         "Αποτυχία σύνδεσης.",
       );
 
-      dispatch(loginOk({ userInfos: data.userInfos as AuthUser }));
+      if (!data.userInfos) {
+        throw new Error("Missing user info from login response.");
+      }
+
+      dispatch(loginOk({ userInfos: data.userInfos }));
       router.replace(next);
     } catch (err) {
       const msg =

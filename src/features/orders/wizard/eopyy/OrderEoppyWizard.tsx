@@ -12,6 +12,7 @@ import {
   type AiStatus,
 } from "@/lib/utils/ai";
 import SubmitOrderConfirmModal from "../modals/SubmitOrderConfirmModal";
+import SellerActingSelector from "@/features/orders/components/SellerActingSelector";
 import { useRouter } from "next/navigation";
 import { buildStepDefs } from "./wizard/buildStepDefs";
 import {
@@ -76,6 +77,8 @@ export default function OrderEoppyWizard() {
   const customerIsCompletelyNew = useAppSelector(
     (s) => s.orders.draft.customerIsCompletelyNew,
   );
+  const userInfos = useAppSelector((s) => s.auth.userInfos);
+  const actingSellerCode = useAppSelector((s) => s.auth.actingSellerCode);
   const showSynainesiPanel = shouldShowSynainesiStep({
     customerIsCompletelyNew,
   });
@@ -143,8 +146,17 @@ export default function OrderEoppyWizard() {
         customerIsCompletelyNew,
         hasFiles,
         hasConsentFormFiles,
+        userInfos,
+        actingSellerCode,
       }),
-    [customerIsCompletelyNew, draftOrder, hasConsentFormFiles, hasFiles],
+    [
+      actingSellerCode,
+      customerIsCompletelyNew,
+      draftOrder,
+      hasConsentFormFiles,
+      hasFiles,
+      userInfos,
+    ],
   );
 
   const runAi = React.useCallback(
@@ -290,6 +302,11 @@ export default function OrderEoppyWizard() {
       className={`order-wizard d-flex flex-column gap-2${showWizardNav ? "order-wizard--has-nav" : ""}`}
     >
       <StepIndicator steps={labels} current={step} setStep={setStep} />
+
+      {/* <SellerActingSelector
+        error={fieldErrorsByField.actingSellerCode}
+        clearError={clearError}
+      /> */}
 
       {current?.render()}
 

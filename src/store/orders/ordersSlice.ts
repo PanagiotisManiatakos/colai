@@ -16,7 +16,13 @@ import type {
   GetOrderViewSuccess,
   PostOrderSuccess,
 } from "@/types/api/responses";
+import type { PagingResults } from "@/types/api/common";
 import { parseProxyJson } from "@/lib/api/client";
+import {
+  buildOrderListSearchParams,
+  DEFAULT_ORDER_LIST_PAGE,
+  DEFAULT_ORDER_LIST_PAGE_SIZE,
+} from "@/lib/api/orderListQuery";
 import type {
   IDoctorFormData,
   IPatientFormData,
@@ -29,6 +35,10 @@ import {
   pickDefaultPersonRow,
 } from "@/lib/utils/customerAddresses";
 import type { SynaineseisResults } from "@/lib/consentUpload";
+import {
+  applyActingSellerToOrder,
+  getActingSellerCodeForApi,
+} from "@/lib/sellerAccess";
 
 type OrderDraftType = "eopyy" | "non_eoppy";
 
@@ -77,39 +87,66 @@ export interface OrdersState {
   draft: DraftState;
   selected: SelectedOrderState | null;
   ordersQuery: string;
+  ordersPage: number;
+  ordersPageSize: number;
+  ordersPaging: PagingResults | null;
   ordersFetchedAt: number;
 }
 
 export const fetchOrders = createAsyncThunk<
-  Order[],
-  { q?: string; force?: boolean } | void,
+  { orders: Order[]; paging: PagingResults | null },
+  { q?: string; page?: number; pagesize?: number; force?: boolean } | void,
   { state: RootState }
 >(
   "orders/fetchOrders",
   async (arg) => {
-    const q = typeof arg === "object" && arg?.q ? arg.q : "";
-    const res = await fetch(
-      `/api/orders?_ts=${Date.now()}${q ? `&search=${encodeURIComponent(q)}` : ""}`,
-      {
-        cache: "no-store",
-        headers: {
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
+    const q = typeof arg === "object" && arg?.q ? arg.q.trim() : "";
+    const page =
+      typeof arg === "object" && arg?.page
+        ? arg.page
+        : DEFAULT_ORDER_LIST_PAGE;
+    const pagesize =
+      typeof arg === "object" && arg?.pagesize
+        ? arg.pagesize
+        : DEFAULT_ORDER_LIST_PAGE_SIZE;
+
+    const params = buildOrderListSearchParams({
+      search: q,
+      page,
+      pagesize,
+      _ts: Date.now(),
+    });
+
+    const res = await fetch(`/api/orders?${params.toString()}`, {
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache",
+        Pragma: "no-cache",
       },
-    );
+    });
 
     const data = await parseProxyJson<GetOrdersSuccess>(
       res,
       "Failed to load orders",
     );
 
-    return (data.orders ?? []) as Order[];
+    return {
+      orders: (data.orders ?? []) as Order[],
+      paging: data.paging ?? null,
+    };
   },
   {
     condition: (arg, { getState }) => {
       const state = getState();
       const q = typeof arg === "object" && arg?.q ? arg.q.trim() : "";
+      const page =
+        typeof arg === "object" && arg?.page
+          ? arg.page
+          : DEFAULT_ORDER_LIST_PAGE;
+      const pagesize =
+        typeof arg === "object" && arg?.pagesize
+          ? arg.pagesize
+          : DEFAULT_ORDER_LIST_PAGE_SIZE;
       const force = typeof arg === "object" && arg?.force;
 
       if (force)
@@ -118,7 +155,12 @@ export const fetchOrders = createAsyncThunk<
       if (state.orders.loadingOrders || state.orders.refreshingOrders)
         return false;
 
-      if (state.orders.orders.length > 0 && state.orders.ordersQuery === q) {
+      if (
+        state.orders.orders.length > 0 &&
+        state.orders.ordersQuery === q &&
+        state.orders.ordersPage === page &&
+        state.orders.ordersPageSize === pagesize
+      ) {
         return false;
       }
 
@@ -161,7 +203,7 @@ export const submitDraftAsync = createAsyncThunk<
   const state = thunkApi.getState();
   const { draft } = state.orders;
 
-  const order = { ...draft.order };
+  let order = { ...draft.order };
   if (!order.customer_tel?.trim() && order.customer_mobile?.trim()) {
     order.customer_tel = order.customer_mobile.trim();
   }
@@ -171,6 +213,11 @@ export const submitDraftAsync = createAsyncThunk<
   if (!order.recipient_tel?.trim() && order.recipient_mobile?.trim()) {
     order.recipient_tel = order.recipient_mobile.trim();
   }
+  order = applyActingSellerToOrder(
+    order,
+    state.auth.userInfos,
+    state.auth.actingSellerCode,
+  );
   const parsedFinalAmount = parseFloat(
     String(order.posoDiscounted).replace(",", "."),
   );
@@ -212,18 +259,29 @@ export const editDraftAsync = createAsyncThunk<
   GetOrderEditSuccess,
   { typeid: string; catid: number; uid?: string },
   { state: RootState }
->("orders/editDraftAsync", async ({ typeid, catid, uid }) => {
-  const res = await fetch(
-    `/api/orders/edit?_ts=${Date.now()}&typeid=${typeid}&catid=${catid}${uid ? `&uid=${uid}` : ""}`,
-    {
-      method: "GET",
-      cache: "no-store",
-      headers: {
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
-      },
-    },
+>("orders/editDraftAsync", async ({ typeid, catid, uid }, { getState }) => {
+  const { auth } = getState();
+  const params = new URLSearchParams({
+    _ts: String(Date.now()),
+    typeid,
+    catid: String(catid),
+  });
+  if (uid) params.set("uid", uid);
+
+  const sellercode = getActingSellerCodeForApi(
+    auth.userInfos,
+    auth.actingSellerCode,
   );
+  if (sellercode) params.set("sellercode", sellercode);
+
+  const res = await fetch(`/api/orders/edit?${params.toString()}`, {
+    method: "GET",
+    cache: "no-store",
+    headers: {
+      "Cache-Control": "no-cache",
+      Pragma: "no-cache",
+    },
+  });
 
   return parseProxyJson<GetOrderEditSuccess>(res, "Failed to submit order");
 });
@@ -287,6 +345,9 @@ const initialStateBase: OrdersState = {
   },
   selected: null,
   ordersQuery: "",
+  ordersPage: DEFAULT_ORDER_LIST_PAGE,
+  ordersPageSize: DEFAULT_ORDER_LIST_PAGE_SIZE,
+  ordersPaging: null,
   ordersFetchedAt: 0,
 };
 
@@ -396,6 +457,9 @@ const ordersSlice = createSlice({
       state.refreshingOrders = false;
       state.ordersError = null;
       state.ordersQuery = "";
+      state.ordersPage = DEFAULT_ORDER_LIST_PAGE;
+      state.ordersPageSize = DEFAULT_ORDER_LIST_PAGE_SIZE;
+      state.ordersPaging = null;
       state.ordersFetchedAt = 0;
       state.selected = null;
     },
@@ -782,13 +846,25 @@ const ordersSlice = createSlice({
       if (force) state.refreshingOrders = false;
       else state.loadingOrders = false;
 
-      state.orders = action.payload;
+      state.orders = action.payload.orders;
+      state.ordersPaging = action.payload.paging;
 
       const q =
         typeof action.meta.arg === "object" && action.meta.arg?.q
           ? action.meta.arg.q.trim()
           : "";
+      const page =
+        typeof action.meta.arg === "object" && action.meta.arg?.page
+          ? action.meta.arg.page
+          : DEFAULT_ORDER_LIST_PAGE;
+      const pagesize =
+        typeof action.meta.arg === "object" && action.meta.arg?.pagesize
+          ? action.meta.arg.pagesize
+          : DEFAULT_ORDER_LIST_PAGE_SIZE;
+
       state.ordersQuery = q;
+      state.ordersPage = page;
+      state.ordersPageSize = pagesize;
       state.ordersFetchedAt = Date.now();
     });
     b.addCase(fetchOrders.rejected, (state, action) => {

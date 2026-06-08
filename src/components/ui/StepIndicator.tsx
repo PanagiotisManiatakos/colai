@@ -63,7 +63,7 @@ export function StepIndicator({
   }, [current, overflowing]);
 
   return (
-    <div className="app-card mb-2 p-3">
+    <div className="app-card mb-1 p-3">
       <div
         ref={rowRef}
         className="d-flex align-items-center"
