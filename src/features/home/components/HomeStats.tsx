@@ -159,11 +159,16 @@ function MetricCard({ title, value, delta, deltaDirection = "neutral", icon, hre
 
 function WcMonthCard() {
     const userInfos = useAppSelector((s) => s.auth.userInfos);
+    const isManager =
+        userInfos?.isManager === true && userInfos?.isSeller !== true;
+    const loggedSellerCode = normalizeSellerCode(userInfos?.sellerCode);
     const [summary, setSummary] = React.useState<WcEndpointSummary>(emptyWcSummary);
     const [loading, setLoading] = React.useState(true);
     const [error, setError] = React.useState<string | null>(null);
 
     React.useEffect(() => {
+        if (!userInfos) return;
+
         let alive = true;
 
         async function loadWcSummary() {
@@ -185,15 +190,12 @@ function WcMonthCard() {
                 if (!alive) return;
 
                 const records = data.records ?? [];
-                const isManager =
-                    userInfos?.isManager === true && userInfos?.isSeller !== true;
 
                 if (isManager) {
                     setSummary(sumTeamRows(records));
                     return;
                 }
 
-                const loggedSellerCode = normalizeSellerCode(userInfos?.sellerCode);
                 const sellerRecord =
                     records.find(
                         (record) =>
@@ -230,7 +232,7 @@ function WcMonthCard() {
         return () => {
             alive = false;
         };
-    }, [userInfos]);
+    }, [userInfos, isManager, loggedSellerCode]);
 
     return (
         <Link
@@ -328,6 +330,7 @@ export default function HomeStats() {
     const mom = dash.totalOrders_month_perc;
     const momDir: "up" | "down" | "neutral" = mom > 0 ? "up" : mom < 0 ? "down" : "neutral";
     const momLabel = `${pctFmt.format(Math.abs(mom))}%`;
+    const showInitialDashLoader = dash.loading && dash.lastFetchedAt === 0;
 
     return (
         <div
@@ -345,42 +348,42 @@ export default function HomeStats() {
                 </Alert>
             ) : null}
 
-            {dash.loading && dash.lastFetchedAt === 0 ? (
+            {showInitialDashLoader ? (
                 <AppLoader label="Φόρτωση αρχικής…" />
-            ) : (
-                <>
-                    <div className="row g-3 mb-3">
-                        <MetricCard
-                            title="Παραγγελίες μήνα"
-                            value={formatInt(dash.totalOrders_month)}
-                            delta={momLabel}
-                            deltaDirection={momDir}
-                            icon="bi-box-seam"
-                        />
-                        <MetricCard
-                            title="Συνταγές επόμενων 10 ημερών"
-                            value={formatInt(dash.next10DaysSyntages)}
-                            delta={null}
-                            icon="bi-paperclip"
-                            href="/diadikasia-wc?next10=1"
-                        />
-                    </div>
+            ) : null}
 
-                    <div className="d-grid gap-3">
-                        <WcMonthCard />
-                        <MonthComparisonCard
-                            current={dash.totalOrders_month}
-                            previous={dash.totalOrders_prev_month}
-                            pendingReviews={dash.pendingReviews}
-                        />
-                        <div className="app-card p-3">
-                            <div className="fw-semibold">Πρόσφατες παραγγελίες</div>
-                            <div className="small text-secondary">Τελευταίες 14 ημέρες</div>
-                            <RecentOrdersByDayChart orders={dash.lastOrders} />
-                        </div>
+            <div className={showInitialDashLoader ? "d-none" : undefined}>
+                <div className="row g-3 mb-3">
+                    <MetricCard
+                        title="Παραγγελίες μήνα"
+                        value={formatInt(dash.totalOrders_month)}
+                        delta={momLabel}
+                        deltaDirection={momDir}
+                        icon="bi-box-seam"
+                    />
+                    <MetricCard
+                        title="Συνταγές επόμενων 10 ημερών"
+                        value={formatInt(dash.next10DaysSyntages)}
+                        delta={null}
+                        icon="bi-paperclip"
+                        href="/diadikasia-wc?next10=1"
+                    />
+                </div>
+
+                <div className="d-grid gap-3">
+                    <WcMonthCard />
+                    <MonthComparisonCard
+                        current={dash.totalOrders_month}
+                        previous={dash.totalOrders_prev_month}
+                        pendingReviews={dash.pendingReviews}
+                    />
+                    <div className="app-card p-3">
+                        <div className="fw-semibold">Πρόσφατες παραγγελίες</div>
+                        <div className="small text-secondary">Τελευταίες 14 ημέρες</div>
+                        <RecentOrdersByDayChart orders={dash.lastOrders} />
                     </div>
-                </>
-            )}
+                </div>
+            </div>
 
             <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
         </div>

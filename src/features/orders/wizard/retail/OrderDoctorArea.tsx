@@ -122,6 +122,43 @@ export default function OrderDoctorArea() {
               }
             />
           </Field>
+          <div className="row g-2">
+            <div className="col-6">
+              <Field label="Υγειονομική δομή">
+                <input
+                  className="form-control"
+                  name="doctorSuggested_domi"
+                  value={data.doctorSuggested_domi ?? ""}
+                  onChange={(e) =>
+                    dispatch(
+                      setDraftProperty({
+                        key: "doctorSuggested_domi",
+                        value: e.target.value,
+                      }),
+                    )
+                  }
+                />
+              </Field>
+            </div>
+            <div className="col-6">
+              <Field label="Τηλέφωνο">
+                <input
+                  className="form-control"
+                  name="doctorSuggested_tel"
+                  inputMode="tel"
+                  value={data.doctorSuggested_tel ?? ""}
+                  onChange={(e) =>
+                    dispatch(
+                      setDraftProperty({
+                        key: "doctorSuggested_tel",
+                        value: e.target.value,
+                      }),
+                    )
+                  }
+                />
+              </Field>
+            </div>
+          </div>
         </>
       )}
     </div>

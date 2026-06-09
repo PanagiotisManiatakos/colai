@@ -8,7 +8,7 @@ export interface SellerSalesWC {
   Doctor: string;
   CustomerName: string;
   COLAI: string;
-  TurnOver: string | number;
+  Turnover: string | number;
 }
 
 export interface SellerTeamatesWC {

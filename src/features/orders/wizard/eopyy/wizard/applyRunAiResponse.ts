@@ -8,6 +8,7 @@ import {
   syncShipToOtherAddressFlags,
 } from "@/lib/applyLastOrderData";
 import { hasText, isBlank, trimmedString } from "@/lib/utils/string";
+import { normalizeSymmPercentage } from "./wizardUtils";
 import {
   clearDraftAddressesList,
   loadCustomerAddressesAsync,
@@ -494,7 +495,7 @@ export async function applyRunAiResponse(
     dispatch(
       setDraftProperty({
         key: "symmPercentage",
-        value: gnomatevsi.symmetoxi_percentage,
+        value: normalizeSymmPercentage(gnomatevsi.symmetoxi_percentage),
       }),
     );
     dispatch(

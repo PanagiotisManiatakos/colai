@@ -119,7 +119,7 @@ function formatSalesDate(value: string | null | undefined): string {
   return dateFmt.format(new Date(timestamp));
 }
 
-function parseTurnOverValue(value: string | number | null | undefined): number {
+function parseTurnoverValue(value: string | number | null | undefined): number {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
 
   const raw = String(value ?? "").trim();
@@ -135,11 +135,11 @@ function parseTurnOverValue(value: string | number | null | undefined): number {
   return Number.isFinite(amount) ? amount : 0;
 }
 
-function formatTurnOver(value: string | number | null | undefined): string {
+function formatTurnover(value: string | number | null | undefined): string {
   const text = String(value ?? "").trim();
   if (!text) return "-";
 
-  return `${formatCurrencyGR(parseTurnOverValue(value))}€`;
+  return `${formatCurrencyGR(parseTurnoverValue(value))}€`;
 }
 
 function matchesQuery(sale: SellerSalesWC, query: string): boolean {
@@ -156,7 +156,7 @@ function matchesQuery(sale: SellerSalesWC, query: string): boolean {
     sale.Doctor,
     sale.CustomerName,
     sale.COLAI,
-    sale.TurnOver,
+    sale.Turnover,
   ]
     .map((value) => textValue(value).toLocaleLowerCase("el-GR"))
     .join(" ")
@@ -224,7 +224,7 @@ function DetailRow({
       }
     >
       <div
-        className="text-secondary d-flex align-items-center gap-1 flex-shrink-0"
+        className="text-secondary d-flex align-items-center flex-shrink-0 gap-1"
         style={{ fontSize: 12 }}
       >
         <i className={`bi ${icon}`} aria-hidden />
@@ -252,7 +252,7 @@ function SalesWCCard({
   const colaiMarker = getColaiMarkerKind(sale.COLAI);
   const newRepKind = getNewRepKind(sale.NEWREP);
   const newRepLabel = textValue(sale.NEWREP);
-  const turnOver = formatTurnOver(sale.TurnOver);
+  const turnover = formatTurnover(sale.Turnover);
   const details = [
     {
       icon: "bi-calendar3",
@@ -299,14 +299,14 @@ function SalesWCCard({
               {textValue(sale.Doctor)}
             </span>
           </div>
-          <div className="mt-2 d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center mt-2 gap-2">
             <div
               className="d-flex align-items-center flex-wrap gap-1"
               style={{ minWidth: 0 }}
             >
               {colaiMarker ? (
                 <span
-                  className="badge rounded-pill bg-body-tertiary text-secondary border d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                  className="badge rounded-pill bg-body-tertiary text-secondary d-inline-flex align-items-center justify-content-center flex-shrink-0 border"
                   title={
                     colaiMarker === "app"
                       ? "Παραγγελία από την εφαρμογή"
@@ -344,16 +344,16 @@ function SalesWCCard({
                 {newRepLabel}
               </span>
               <span
-                className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
+                className="badge rounded-pill bg-body-tertiary text-body d-inline-flex align-items-center gap-1 border"
                 style={{ fontSize: 12 }}
               >
                 <i className="bi bi-cash-coin text-secondary" aria-hidden />
                 <span className="text-secondary fw-medium">Ποσό:</span>
-                <span className="fw-semibold">{turnOver}</span>
+                <span className="fw-semibold">{turnover}</span>
               </span>
             </div>
             <i
-              className="bi bi-chevron-down text-secondary d-inline-block flex-shrink-0 ms-auto"
+              className="bi bi-chevron-down text-secondary d-inline-block ms-auto flex-shrink-0"
               style={{
                 fontSize: "1rem",
                 transition: "transform 160ms ease",
@@ -391,7 +391,7 @@ function SellerOrderDetails({
 
   if (state?.loading && !records.length) {
     return (
-      <div className="d-flex align-items-center gap-2 py-2 text-secondary">
+      <div className="d-flex align-items-center text-secondary gap-2 py-2">
         <span className="spinner-border spinner-border-sm" aria-hidden />
         <span style={{ fontSize: 13 }}>Φόρτωση αναλυτικών πωλήσεων...</span>
       </div>
@@ -427,7 +427,7 @@ function SellerOrderDetails({
         const colaiMarker = getColaiMarkerKind(record.COLAI);
         const newRepKind = getNewRepKind(record.NEWREP);
         const newRepLabel = textValue(record.NEWREP);
-        const turnOver = formatTurnOver(record.TurnOver);
+        const turnover = formatTurnover(record.Turnover);
         const details = [
           {
             icon: "bi-calendar3",
@@ -480,14 +480,14 @@ function SellerOrderDetails({
                     {textValue(record.Doctor)}
                   </span>
                 </div>
-                <div className="mt-2 d-flex align-items-center gap-2">
+                <div className="d-flex align-items-center mt-2 gap-2">
                   <div
                     className="d-flex align-items-center flex-wrap gap-1"
                     style={{ minWidth: 0 }}
                   >
                     {colaiMarker ? (
                       <span
-                        className="badge rounded-pill bg-body-tertiary text-secondary border d-inline-flex align-items-center justify-content-center flex-shrink-0"
+                        className="badge rounded-pill bg-body-tertiary text-secondary d-inline-flex align-items-center justify-content-center flex-shrink-0 border"
                         title={
                           colaiMarker === "app"
                             ? "Παραγγελία από την εφαρμογή"
@@ -525,16 +525,19 @@ function SellerOrderDetails({
                       {newRepLabel}
                     </span>
                     <span
-                      className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
+                      className="badge rounded-pill bg-body-tertiary text-body d-inline-flex align-items-center gap-1 border"
                       style={{ fontSize: 12 }}
                     >
-                      <i className="bi bi-cash-coin text-secondary" aria-hidden />
+                      <i
+                        className="bi bi-cash-coin text-secondary"
+                        aria-hidden
+                      />
                       <span className="text-secondary fw-medium">Ποσό:</span>
-                      <span className="fw-semibold">{turnOver}</span>
+                      <span className="fw-semibold">{turnover}</span>
                     </span>
                   </div>
                   <i
-                    className="bi bi-chevron-down text-secondary d-inline-block flex-shrink-0 ms-auto"
+                    className="bi bi-chevron-down text-secondary d-inline-block ms-auto flex-shrink-0"
                     style={{
                       fontSize: "1rem",
                       transition: "transform 160ms ease",
@@ -615,14 +618,16 @@ function TeamSalesCard({
               </span>
             </div>
             <span
-              className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1 flex-shrink-0 ms-auto"
+              className="badge rounded-pill bg-body-tertiary text-body d-inline-flex align-items-center ms-auto flex-shrink-0 gap-1 border"
               style={{ fontSize: 12 }}
             >
               <i className="bi bi-cash-coin text-secondary" aria-hidden />
-              <span className="fw-semibold">{formatTurnOver(sale.TURNOVER)}</span>
+              <span className="fw-semibold">
+                {formatTurnover(sale.TURNOVER)}
+              </span>
             </span>
           </div>
-          <div className="mt-2 d-flex align-items-center gap-2">
+          <div className="d-flex align-items-center mt-2 gap-2">
             <div
               className="d-flex align-items-center flex-wrap gap-1"
               style={{ minWidth: 0 }}
@@ -642,7 +647,7 @@ function TeamSalesCard({
                 <span className="fw-semibold">{metricText(sale.REP)}</span>
               </span>
               <span
-                className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
+                className="badge rounded-pill bg-body-tertiary text-body d-inline-flex align-items-center gap-1 border"
                 style={{ fontSize: 12 }}
               >
                 <span className="text-secondary fw-medium">Σύνολο:</span>
@@ -650,7 +655,7 @@ function TeamSalesCard({
               </span>
             </div>
             <i
-              className="bi bi-chevron-down text-secondary d-inline-block flex-shrink-0 ms-auto"
+              className="bi bi-chevron-down text-secondary d-inline-block ms-auto flex-shrink-0"
               style={{
                 fontSize: "1rem",
                 transition: "transform 160ms ease",
@@ -686,81 +691,85 @@ export default function SalesWCPage() {
     Record<string, SellerOrderDetailsState>
   >({});
 
-  const loadSales = React.useCallback(async (refresh = false) => {
-    if (refresh) setRefreshing(true);
-    else setLoading(true);
+  const loadSales = React.useCallback(
+    async (refresh = false) => {
+      if (refresh) setRefreshing(true);
+      else setLoading(true);
 
-    setError(null);
+      setError(null);
 
-    try {
-      if (isManagerMode) {
-        const res = await fetch("/api/wc/teamates", {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-          },
-        });
-        const data = await parseProxyJson<GetWcTeamatesSuccess>(
-          res,
-          "Failed to load seller team",
+      try {
+        if (isManagerMode) {
+          const res = await fetch("/api/wc/teamates", {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+          });
+          const data = await parseProxyJson<GetWcTeamatesSuccess>(
+            res,
+            "Failed to load seller team",
+          );
+
+          setTeamRecords(data.records ?? []);
+          setRecords([]);
+          setSummaryRecord(null);
+          return;
+        }
+
+        const [orderRes, teamatesRes] = await Promise.all([
+          fetch("/api/wc/order-list", {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+          }),
+          fetch("/api/wc/teamates", {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+              Pragma: "no-cache",
+            },
+          }),
+        ]);
+        const [orderData, teamatesData] = await Promise.all([
+          parseProxyJson<GetWcOrderListSuccess>(
+            orderRes,
+            "Failed to load seller sales",
+          ),
+          parseProxyJson<GetWcTeamatesSuccess>(
+            teamatesRes,
+            "Failed to load seller summary",
+          ),
+        ]);
+        const teamatesRecords = teamatesData.records ?? [];
+        const normalizedLoggedSellerCode =
+          normalizeSellerCode(loggedSellerCode);
+
+        setTeamRecords([]);
+        setRecords(orderData.records ?? []);
+        setSummaryRecord(
+          teamatesRecords.find(
+            (record) =>
+              normalizeSellerCode(record.SELLERCODE) ===
+              normalizedLoggedSellerCode,
+          ) ??
+            teamatesRecords[0] ??
+            null,
         );
-
-        setTeamRecords(data.records ?? []);
-        setRecords([]);
-        setSummaryRecord(null);
-        return;
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load seller sales";
+        setError(message);
+      } finally {
+        setLoading(false);
+        setRefreshing(false);
       }
-
-      const [orderRes, teamatesRes] = await Promise.all([
-        fetch("/api/wc/order-list", {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-          },
-        }),
-        fetch("/api/wc/teamates", {
-          cache: "no-store",
-          headers: {
-            "Cache-Control": "no-cache",
-            Pragma: "no-cache",
-          },
-        }),
-      ]);
-      const [orderData, teamatesData] = await Promise.all([
-        parseProxyJson<GetWcOrderListSuccess>(
-          orderRes,
-          "Failed to load seller sales",
-        ),
-        parseProxyJson<GetWcTeamatesSuccess>(
-          teamatesRes,
-          "Failed to load seller summary",
-        ),
-      ]);
-      const teamatesRecords = teamatesData.records ?? [];
-      const normalizedLoggedSellerCode = normalizeSellerCode(loggedSellerCode);
-
-      setTeamRecords([]);
-      setRecords(orderData.records ?? []);
-      setSummaryRecord(
-        teamatesRecords.find(
-          (record) =>
-            normalizeSellerCode(record.SELLERCODE) ===
-            normalizedLoggedSellerCode,
-        ) ??
-          teamatesRecords[0] ??
-          null,
-      );
-    } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to load seller sales";
-      setError(message);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, [isManagerMode, loggedSellerCode]);
+    },
+    [isManagerMode, loggedSellerCode],
+  );
 
   const loadOrderDetails = React.useCallback(
     async (sellerCode: string, force = false) => {
@@ -803,7 +812,9 @@ export default function SalesWCPage() {
         }));
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to load seller order list";
+          err instanceof Error
+            ? err.message
+            : "Failed to load seller order list";
         setOrderDetailsBySeller((prev) => ({
           ...prev,
           [sellerKey]: {
@@ -846,7 +857,7 @@ export default function SalesWCPage() {
         .filter((sale) => matchesTeamQuery(sale, q))
         .sort((a, b) => {
           const byTurnover =
-            parseTurnOverValue(b.TURNOVER) - parseTurnOverValue(a.TURNOVER);
+            parseTurnoverValue(b.TURNOVER) - parseTurnoverValue(a.TURNOVER);
           if (byTurnover !== 0) return byTurnover;
 
           return textValue(a.SellerName).localeCompare(
@@ -861,7 +872,7 @@ export default function SalesWCPage() {
     () => ({
       newCount: metricText(summaryRecord?.NEW),
       repeatCount: metricText(summaryRecord?.REP),
-      turnOverTotal: parseTurnOverValue(summaryRecord?.TURNOVER),
+      turnoverTotal: parseTurnoverValue(summaryRecord?.TURNOVER),
     }),
     [summaryRecord],
   );
@@ -901,7 +912,8 @@ export default function SalesWCPage() {
     ? visibleTeamRecords.length
     : visibleRecords.length;
   const showInitialLoader =
-    loading && (isManagerMode ? teamRecords.length === 0 : records.length === 0);
+    loading &&
+    (isManagerMode ? teamRecords.length === 0 : records.length === 0);
 
   return (
     <>
@@ -912,9 +924,11 @@ export default function SalesWCPage() {
               className="d-flex align-items-center flex-nowrap gap-2"
               style={{ minWidth: 0, overflowX: "auto" }}
             >
-              <div className="h5 fw-bold mb-0 flex-shrink-0">Πωλήσεις WC</div>
+              <div className="h5 fw-bold mb-0 flex-shrink-0">
+                Αποτέλεσμα WC 30 ημερών
+              </div>
               {!isManagerMode ? (
-                <div className="ms-auto d-flex align-items-center gap-1 flex-shrink-0">
+                <div className="d-flex align-items-center ms-auto flex-shrink-0 gap-1">
                   <span
                     className="badge rounded-pill text-bg-danger d-inline-flex align-items-center gap-1"
                     aria-label={`Νέο ${summary.newCount}`}
@@ -932,13 +946,13 @@ export default function SalesWCPage() {
                     <span className="fw-semibold">{summary.repeatCount}</span>
                   </span>
                   <span
-                    className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
-                    aria-label={`Σύνολο ${formatCurrencyGR(summary.turnOverTotal)} ευρώ`}
+                    className="badge rounded-pill bg-body-tertiary text-body d-inline-flex align-items-center gap-1 border"
+                    aria-label={`Σύνολο ${formatCurrencyGR(summary.turnoverTotal)} ευρώ`}
                     style={{ fontSize: 12 }}
                   >
                     <span className="text-secondary fw-medium">Σύνολο:</span>
                     <span className="fw-semibold">
-                      {formatCurrencyGR(summary.turnOverTotal)}€
+                      {formatCurrencyGR(summary.turnoverTotal)}€
                     </span>
                   </span>
                 </div>
@@ -946,7 +960,6 @@ export default function SalesWCPage() {
             </div>
           </div>
         </div>
-
       </div>
 
       <div className="d-flex align-items-center mb-2 flex-wrap gap-2">
@@ -975,11 +988,13 @@ export default function SalesWCPage() {
         {!isManagerMode ? (
           <button
             type="button"
-            className={`btn btn-sm flex-shrink-0 d-inline-flex align-items-center gap-1 ${
+            className={`btn btn-sm d-inline-flex align-items-center flex-shrink-0 gap-1 ${
               sortMode === "newrep" ? "btn-primary" : "btn-outline-secondary"
             }`}
             onClick={() =>
-              setSortMode((current) => (current === "newrep" ? "date" : "newrep"))
+              setSortMode((current) =>
+                current === "newrep" ? "date" : "newrep",
+              )
             }
             aria-pressed={sortMode === "newrep"}
             aria-label={
@@ -1004,7 +1019,10 @@ export default function SalesWCPage() {
         ) : null}
       </div>
 
-      <PullToRefresh onRefresh={() => loadSales(true)} isRefreshing={refreshing}>
+      <PullToRefresh
+        onRefresh={() => loadSales(true)}
+        isRefreshing={refreshing}
+      >
         {error ? (
           <Alert variant="danger" className="mb-3">
             <div>{error}</div>

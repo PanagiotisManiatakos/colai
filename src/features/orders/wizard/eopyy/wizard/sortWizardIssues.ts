@@ -23,12 +23,6 @@ export function sortWizardIssues(
   stepOrder: Map<StepKey, StepOrderEntry>,
 ): WizardIssue[] {
   return [...issues].sort((a, b) => {
-    const aIsActingSeller = a.field === "actingSellerCode";
-    const bIsActingSeller = b.field === "actingSellerCode";
-    if (aIsActingSeller !== bIsActingSeller) {
-      return aIsActingSeller ? -1 : 1;
-    }
-
     const orderA = stepOrder.get(a.step)?.number ?? Number.MAX_SAFE_INTEGER;
     const orderB = stepOrder.get(b.step)?.number ?? Number.MAX_SAFE_INTEGER;
     if (orderA !== orderB) return orderA - orderB;

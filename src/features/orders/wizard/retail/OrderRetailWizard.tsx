@@ -12,11 +12,6 @@ import OrderDoctorArea from "./OrderDoctorArea";
 import MaterialsArea from "./MaterialsArea";
 import CompletionArea from "./CompletionArea";
 import SellerActingSelector from "@/features/orders/components/SellerActingSelector";
-import {
-  getActingSellerCodeForApi,
-  hasSellerAccessList,
-} from "@/lib/sellerAccess";
-import { focusWizardField } from "@/features/orders/wizard/eopyy/wizard/wizardUtils";
 import { useRouter } from "next/navigation";
 
 const steps = ["Ασθενής", "Ιατρός", "Υλικά", "Συναίνεση", "Touchdown"] as const;
@@ -26,12 +21,7 @@ export default function OrderRetailWizard() {
   const router = useRouter();
 
   const [step, setStep] = React.useState(0);
-  const [actingSellerError, setActingSellerError] = React.useState<
-    string | null
-  >(null);
   const submitState = useAppSelector((s) => s.orders.draft.submitState);
-  const userInfos = useAppSelector((s) => s.auth.userInfos);
-  const actingSellerCode = useAppSelector((s) => s.auth.actingSellerCode);
   const draftOrder = useAppSelector((s) => s.orders.draft.order);
   const files = useAppSelector((s) => s.orders?.draft?.files) ?? [];
   const synaineseisResults = useAppSelector(
@@ -44,10 +34,6 @@ export default function OrderRetailWizard() {
     (file) => file?.documentCategory === "consent_form",
   );
   const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
-  const requiresActingSeller = hasSellerAccessList(userInfos);
-  const actingSellerValid =
-    !requiresActingSeller ||
-    Boolean(getActingSellerCodeForApi(userInfos, actingSellerCode));
 
   const effectiveSteps = React.useMemo(() => {
     return [...steps];
@@ -66,14 +52,6 @@ export default function OrderRetailWizard() {
   console.log(draftOrder);
 
   async function onSave() {
-    if (!actingSellerValid) {
-      setActingSellerError("Επιλέξτε πωλητή για την παραγγελία");
-      focusWizardField("actingSellerCode");
-      return;
-    }
-
-    setActingSellerError(null);
-
     try {
       const result = await dispatch(submitDraftAsync()).unwrap();
       if (result.result) {
@@ -92,10 +70,7 @@ export default function OrderRetailWizard() {
     (currentLabel === "Συναίνεση" && consentScoreTooLow && hasConsentFormFiles);
 
   const saveDisabled =
-    submitState.loading ||
-    hasAmkaError ||
-    consentScoreTooLow ||
-    (currentLabel === "Touchdown" && !actingSellerValid);
+    submitState.loading || hasAmkaError || consentScoreTooLow;
 
   return (
     <div className="order-wizard order-wizard--has-nav d-flex flex-column gap-2">
@@ -105,10 +80,7 @@ export default function OrderRetailWizard() {
         setStep={setStep}
       />
 
-      {/* <SellerActingSelector
-        error={actingSellerError}
-        clearError={() => setActingSellerError(null)}
-      /> */}
+      <SellerActingSelector />
 
       {currentLabel === "Ασθενής" ? <OrderRetailCustomerArea /> : null}
       {currentLabel === "Ιατρός" ? <OrderDoctorArea /> : null}

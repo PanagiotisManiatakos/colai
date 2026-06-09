@@ -220,7 +220,7 @@ export default function DiscountRequestCard({
       `}</style>
 
       <div
-        className="swipe-row mb-3"
+        className="swipe-row"
         style={{
           touchAction: "pan-y",
           userSelect: "auto",
