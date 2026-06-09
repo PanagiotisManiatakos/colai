@@ -4,11 +4,16 @@ import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import AppLoader from "@/components/ui/AppLoader";
 import { fetchDashboardData } from "@/store/dashboard/slice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import type { WcStoixoiMina } from "@/types/dashboard";
 import {
     RecentOrdersByDayChart,
     WcDistributionCharts,
 } from "@/features/home/components/DashboardCharts";
+import { parseProxyJson } from "@/lib/api/client";
+import type { WcStoixoiMina } from "@/types/dashboard";
+import type {
+    GetWcTeamatesSuccess,
+    SellerTeamatesWC,
+} from "@/types/api";
 import Link from "next/link";
 import React from "react";
 import { Alert } from "react-bootstrap";
@@ -21,6 +26,63 @@ const pctFmt = new Intl.NumberFormat("el-GR", {
 
 function formatInt(n: number): string {
     return intFmt.format(Number.isFinite(n) ? n : 0);
+}
+
+function normalizeSellerCode(value: unknown): string {
+    const text = String(value ?? "").trim();
+    return /^\d+$/.test(text) ? text.replace(/^0+(?=\d)/, "") : text;
+}
+
+function parseMetricValue(value: unknown): number {
+    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+
+    const raw = String(value ?? "").trim();
+    if (!raw) return 0;
+
+    const compact = raw.replace(/[€\s]/g, "");
+    const normalized =
+        compact.includes(",") && compact.includes(".")
+            ? compact.replace(/\./g, "").replace(",", ".")
+            : compact.replace(",", ".");
+    const amount = Number(normalized);
+
+    return Number.isFinite(amount) ? amount : 0;
+}
+
+type WcEndpointSummary = {
+    newCount: number;
+    repeatCount: number;
+    turnover: number;
+};
+
+const emptyWcSummary: WcEndpointSummary = {
+    newCount: 0,
+    repeatCount: 0,
+    turnover: 0,
+};
+
+function sumTeamRows(records: SellerTeamatesWC[]): WcEndpointSummary {
+    return records.reduce<WcEndpointSummary>(
+        (acc, record) => ({
+            newCount: acc.newCount + parseMetricValue(record.NEW),
+            repeatCount: acc.repeatCount + parseMetricValue(record.REP),
+            turnover: acc.turnover + parseMetricValue(record.TURNOVER),
+        }),
+        emptyWcSummary,
+    );
+}
+
+function wcSummaryToChartData(summary: WcEndpointSummary): WcStoixoiMina {
+    const total = summary.newCount + summary.repeatCount;
+    const newShare = total > 0 ? summary.newCount / total : 0;
+    const amountNew = summary.turnover * newShare;
+
+    return {
+        count_paragg_new: summary.newCount,
+        count_paragg_repeat: summary.repeatCount,
+        amount_paragg_new: amountNew,
+        amount_paragg_repeat: summary.turnover - amountNew,
+    };
 }
 
 type MetricCardProps = {
@@ -95,7 +157,81 @@ function MetricCard({ title, value, delta, deltaDirection = "neutral", icon, hre
     );
 }
 
-function WcMonthCard({ wc }: { wc: WcStoixoiMina }) {
+function WcMonthCard() {
+    const userInfos = useAppSelector((s) => s.auth.userInfos);
+    const [summary, setSummary] = React.useState<WcEndpointSummary>(emptyWcSummary);
+    const [loading, setLoading] = React.useState(true);
+    const [error, setError] = React.useState<string | null>(null);
+
+    React.useEffect(() => {
+        let alive = true;
+
+        async function loadWcSummary() {
+            setLoading(true);
+            setError(null);
+
+            try {
+                const res = await fetch("/api/wc/teamates", {
+                    cache: "no-store",
+                    headers: {
+                        "Cache-Control": "no-cache",
+                        Pragma: "no-cache",
+                    },
+                });
+                const data = await parseProxyJson<GetWcTeamatesSuccess>(
+                    res,
+                    "Failed to load WC sales summary",
+                );
+                if (!alive) return;
+
+                const records = data.records ?? [];
+                const isManager =
+                    userInfos?.isManager === true && userInfos?.isSeller !== true;
+
+                if (isManager) {
+                    setSummary(sumTeamRows(records));
+                    return;
+                }
+
+                const loggedSellerCode = normalizeSellerCode(userInfos?.sellerCode);
+                const sellerRecord =
+                    records.find(
+                        (record) =>
+                            normalizeSellerCode(record.SELLERCODE) ===
+                            loggedSellerCode,
+                    ) ??
+                    records[0] ??
+                    null;
+
+                setSummary(
+                    sellerRecord
+                        ? {
+                              newCount: parseMetricValue(sellerRecord.NEW),
+                              repeatCount: parseMetricValue(sellerRecord.REP),
+                              turnover: parseMetricValue(sellerRecord.TURNOVER),
+                          }
+                        : emptyWcSummary,
+                );
+            } catch (err) {
+                if (!alive) return;
+                const message =
+                    err instanceof Error
+                        ? err.message
+                        : "Failed to load WC sales summary";
+                setSummary(emptyWcSummary);
+                setError(message);
+            } finally {
+                if (alive) setLoading(false);
+            }
+        }
+
+        void loadWcSummary();
+
+        return () => {
+            alive = false;
+        };
+    }, [userInfos]);
+
     return (
         <Link
             href="/salesWC"
@@ -113,7 +249,14 @@ function WcMonthCard({ wc }: { wc: WcStoixoiMina }) {
                     </div>
                     <i className="bi bi-chevron-right text-secondary" aria-hidden />
                 </div>
-                <WcDistributionCharts wc={wc} />
+                {loading ? (
+                    <div className="small text-secondary mt-3">Φόρτωση...</div>
+                ) : (
+                    <WcDistributionCharts wc={wcSummaryToChartData(summary)} />
+                )}
+                {error ? (
+                    <div className="small text-danger mt-2">Δεν φορτώθηκαν τα στοιχεία WC.</div>
+                ) : null}
             </div>
         </Link>
     );
@@ -224,7 +367,7 @@ export default function HomeStats() {
                     </div>
 
                     <div className="d-grid gap-3">
-                        {dash.wC_stoixoi_mina ? <WcMonthCard wc={dash.wC_stoixoi_mina} /> : null}
+                        <WcMonthCard />
                         <MonthComparisonCard
                             current={dash.totalOrders_month}
                             previous={dash.totalOrders_prev_month}

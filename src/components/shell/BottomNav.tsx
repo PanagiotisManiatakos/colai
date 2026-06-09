@@ -26,14 +26,13 @@ export default function BottomNav() {
     { href: "/", icon: "bi-house", label: "Αρχική" },
     { href: "/orders", icon: "bi-list-check", label: "Παραγγελίες" },
     { href: "/diadikasia-wc", icon: "bi-calendar-check", label: "WC" },
-    // { href: "/salesWC", icon: "bi-receipt", label: "Πωλήσεις" },
+    { href: "/salesWC", icon: "bi-receipt", label: "Πωλήσεις" },
     {
       href: "/discount-requests",
       icon: "bi-tag",
       label: "Αιτήματα",
       badge: pendingDiscounts || undefined,
     },
-    { href: "/settings", icon: "bi-gear", label: "Ρυθμίσεις" },
   ];
 
   return (

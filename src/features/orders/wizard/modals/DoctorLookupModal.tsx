@@ -5,7 +5,10 @@ import { Modal } from "react-bootstrap";
 import { useAppDispatch } from "@/store/hooks";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import AppLoader from "@/components/ui/AppLoader";
-import type { DoctorSearchResult, SearchDoctorsSuccess } from "@/types/api/responses";
+import type {
+  DoctorSearchResult,
+  SearchDoctorsSuccess,
+} from "@/types/api/responses";
 import { parseProxyJson } from "@/lib/api/client";
 
 export type DoctorLookupModal = DoctorSearchResult;
@@ -47,7 +50,10 @@ export default function DoctorLookupModal({
           headers: { "Cache-Control": "no-cache", Pragma: "no-cache" },
         },
       );
-      const data = await parseProxyJson<SearchDoctorsSuccess>(res, "Search failed");
+      const data = await parseProxyJson<SearchDoctorsSuccess>(
+        res,
+        "Search failed",
+      );
 
       setResults(data.listDoctors ?? []);
     } catch (e: any) {
@@ -70,6 +76,18 @@ export default function DoctorLookupModal({
       );
       dispatch(
         setDraftProperty({ key: "doctorSuggested_ErpGID", value: c.gid }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "doctorSuggested_domi",
+          value: c.domi?.trim() ?? "",
+        }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "doctorSuggested_tel",
+          value: (c.mobile1?.trim() || c.mobile2?.trim()) ?? "",
+        }),
       );
     } else {
       dispatch(setDraftProperty({ key: "doctor_name", value: c.doctoR_NAME }));
@@ -138,7 +156,13 @@ export default function DoctorLookupModal({
                     AMKA: {r.doctoR_AMKA || "—"}
                   </div>
                   <div className="small text-secondary">
-                    Ειδικότητα: {`${r.eidikotita ?? ""}`}
+                    Ειδικότητα: {`${r.eidikotita ?? ""}` || "—"}
+                  </div>
+                  <div className="small text-secondary">
+                    Υγειονομική δομή: {r.domi?.trim() || "—"}
+                  </div>
+                  <div className="small text-secondary">
+                    Τηλέφωνο: {r.mobile1?.trim() || r.mobile2?.trim() || "—"}
                   </div>
                 </button>
               ))}

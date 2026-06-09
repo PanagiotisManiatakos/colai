@@ -434,6 +434,20 @@ export async function applyRunAiResponse(
           value: suggestedDoctor.doctor_erpid,
         }),
       );
+    suggestedDoctor.ygeionomiki_domi &&
+      dispatch(
+        setDraftProperty({
+          key: "doctorSuggested_domi",
+          value: suggestedDoctor.ygeionomiki_domi,
+        }),
+      );
+    suggestedDoctor.tilefono &&
+      dispatch(
+        setDraftProperty({
+          key: "doctorSuggested_tel",
+          value: suggestedDoctor.tilefono,
+        }),
+      );
   }
 
   const gnomatevsi = jsonDoc.gnomateusi;

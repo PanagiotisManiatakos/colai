@@ -5,7 +5,7 @@ import type {
   PagingResults,
   ToastMessage,
 } from "./common";
-import type { SellerSalesWC } from "./sqlData";
+import type { SellerSalesWC, SellerTeamatesWC } from "./sqlData";
 import type {
   APLAT_Sales_Order,
   AddressAndPersonDto,
@@ -126,6 +126,11 @@ export type GetWcOrderListResponse =
   | ApiSuccess<{ records: SellerSalesWC[] }>
   | ApiFailure;
 
+/** `GET /api/wc/teamates` */
+export type GetWcTeamatesResponse =
+  | ApiSuccess<{ records: SellerTeamatesWC[] }>
+  | ApiFailure;
+
 /** `POST /api/auth/login` */
 export type LoginResponse = ApiSuccess<LoginResp> | ApiFailure;
 export type LoginSuccess = Extract<LoginResponse, { ok: true }>;
@@ -158,6 +163,7 @@ export type GetDiscountRequestsSuccess = Success<GetDiscountRequestsResponse>;
 export type ReviewDiscountRequestSuccess = Success<ReviewDiscountRequestResponse>;
 export type GetWcCalendarSuccess = Success<GetWcCalendarResponse>;
 export type GetWcOrderListSuccess = Success<GetWcOrderListResponse>;
+export type GetWcTeamatesSuccess = Success<GetWcTeamatesResponse>;
 export type AuthMeSuccess = Success<AuthMeResponse>;
 /** Re-export commonly used schema aliases for consumers. */
 export type CustomerSearchResult = COLAI_T_CUSTOMER_PERSONAL_INFO;

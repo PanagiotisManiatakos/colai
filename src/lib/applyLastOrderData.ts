@@ -174,6 +174,8 @@ export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
   "doctorSuggested_amka",
   "doctorSuggested_name",
   "doctorSuggested_afm",
+  "doctorSuggested_domi",
+  "doctorSuggested_tel",
   "doctorSuggested_ErpGID",
   "has_suggested_doctor",
   "hasOtherSystinonIatroBool",
@@ -195,6 +197,8 @@ export function applyLastErpOrderData(
     suggestedDoctor_amka: "doctorSuggested_amka",
     suggestedDoctor_name: "doctorSuggested_name",
     suggestedDoctor_afm: "doctorSuggested_afm",
+    suggestedDoctor_domi: "doctorSuggested_domi",
+    suggestedDoctor_tel: "doctorSuggested_tel",
   };
   for (const [erpKey, orderKey] of Object.entries(map)) {
     const v = erp[erpKey];

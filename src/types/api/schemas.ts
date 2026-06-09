@@ -88,6 +88,8 @@ export type APLAT_Sales_Order = {
   doctorSuggested_amka?: string | null;
   doctorSuggested_name?: string | null;
   doctorSuggested_afm?: string | null;
+  doctorSuggested_domi?: string | null;
+  doctorSuggested_tel?: string | null;
   doctorSuggested_ErpGID?: string | null;
   dateOfSyntagi?: string | null;
   dateIsxyeiApo?: string | null;
@@ -405,6 +407,8 @@ export type OrderPlatformPreviousDto = {
   doctorSuggested_amka?: string | null;
   doctorSuggested_name?: string | null;
   doctorSuggested_afm?: string | null;
+  doctorSuggested_domi?: string | null;
+  doctorSuggested_tel?: string | null;
   doctorSuggested_ErpGID?: string | null;
   recipient_CreatedPersonErpGID?: string | null;
   recipient_CreatedAddressErpGID?: string | null;
@@ -421,6 +425,8 @@ export type OrderErpPreviousDto = {
   suggestedDoctor_amka?: string | null;
   suggestedDoctor_name?: string | null;
   suggestedDoctor_afm?: string | null;
+  suggestedDoctor_domi?: string | null;
+  suggestedDoctor_tel?: string | null;
   registrationDate?: string | null;
   documentCode?: string | null;
 };
@@ -690,6 +696,7 @@ export type EopyDoc_Iatros = {
   eidikotita?: string | null;
   amka_iatrou?: string | null;
   ygeionomiki_domi?: string | null;
+  tilefono?: string | null;
   typos_domis?: string | null;
   doctor_erpid?: string | null;
   load_info_message?: string | null;
