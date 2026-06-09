@@ -119,7 +119,7 @@ function formatSalesDate(value: string | null | undefined): string {
   return dateFmt.format(new Date(timestamp));
 }
 
-function parseTurnOverValue(value: string | number | null | undefined): number {
+function parseTurnoverValue(value: string | number | null | undefined): number {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
 
   const raw = String(value ?? "").trim();
@@ -135,11 +135,11 @@ function parseTurnOverValue(value: string | number | null | undefined): number {
   return Number.isFinite(amount) ? amount : 0;
 }
 
-function formatTurnOver(value: string | number | null | undefined): string {
+function formatTurnover(value: string | number | null | undefined): string {
   const text = String(value ?? "").trim();
   if (!text) return "-";
 
-  return `${formatCurrencyGR(parseTurnOverValue(value))}€`;
+  return `${formatCurrencyGR(parseTurnoverValue(value))}€`;
 }
 
 function matchesQuery(sale: SellerSalesWC, query: string): boolean {
@@ -156,7 +156,7 @@ function matchesQuery(sale: SellerSalesWC, query: string): boolean {
     sale.Doctor,
     sale.CustomerName,
     sale.COLAI,
-    sale.TurnOver,
+    sale.Turnover,
   ]
     .map((value) => textValue(value).toLocaleLowerCase("el-GR"))
     .join(" ")
@@ -252,7 +252,7 @@ function SalesWCCard({
   const colaiMarker = getColaiMarkerKind(sale.COLAI);
   const newRepKind = getNewRepKind(sale.NEWREP);
   const newRepLabel = textValue(sale.NEWREP);
-  const turnOver = formatTurnOver(sale.TurnOver);
+  const turnover = formatTurnover(sale.Turnover);
   const details = [
     {
       icon: "bi-calendar3",
@@ -349,7 +349,7 @@ function SalesWCCard({
               >
                 <i className="bi bi-cash-coin text-secondary" aria-hidden />
                 <span className="text-secondary fw-medium">Ποσό:</span>
-                <span className="fw-semibold">{turnOver}</span>
+                <span className="fw-semibold">{turnover}</span>
               </span>
             </div>
             <i
@@ -427,7 +427,7 @@ function SellerOrderDetails({
         const colaiMarker = getColaiMarkerKind(record.COLAI);
         const newRepKind = getNewRepKind(record.NEWREP);
         const newRepLabel = textValue(record.NEWREP);
-        const turnOver = formatTurnOver(record.TurnOver);
+        const turnover = formatTurnover(record.Turnover);
         const details = [
           {
             icon: "bi-calendar3",
@@ -530,7 +530,7 @@ function SellerOrderDetails({
                     >
                       <i className="bi bi-cash-coin text-secondary" aria-hidden />
                       <span className="text-secondary fw-medium">Ποσό:</span>
-                      <span className="fw-semibold">{turnOver}</span>
+                      <span className="fw-semibold">{turnover}</span>
                     </span>
                   </div>
                   <i
@@ -619,7 +619,7 @@ function TeamSalesCard({
               style={{ fontSize: 12 }}
             >
               <i className="bi bi-cash-coin text-secondary" aria-hidden />
-              <span className="fw-semibold">{formatTurnOver(sale.TURNOVER)}</span>
+              <span className="fw-semibold">{formatTurnover(sale.TURNOVER)}</span>
             </span>
           </div>
           <div className="mt-2 d-flex align-items-center gap-2">
@@ -846,7 +846,7 @@ export default function SalesWCPage() {
         .filter((sale) => matchesTeamQuery(sale, q))
         .sort((a, b) => {
           const byTurnover =
-            parseTurnOverValue(b.TURNOVER) - parseTurnOverValue(a.TURNOVER);
+            parseTurnoverValue(b.TURNOVER) - parseTurnoverValue(a.TURNOVER);
           if (byTurnover !== 0) return byTurnover;
 
           return textValue(a.SellerName).localeCompare(
@@ -861,7 +861,7 @@ export default function SalesWCPage() {
     () => ({
       newCount: metricText(summaryRecord?.NEW),
       repeatCount: metricText(summaryRecord?.REP),
-      turnOverTotal: parseTurnOverValue(summaryRecord?.TURNOVER),
+      turnoverTotal: parseTurnoverValue(summaryRecord?.TURNOVER),
     }),
     [summaryRecord],
   );
@@ -933,12 +933,12 @@ export default function SalesWCPage() {
                   </span>
                   <span
                     className="badge rounded-pill bg-body-tertiary text-body border d-inline-flex align-items-center gap-1"
-                    aria-label={`Σύνολο ${formatCurrencyGR(summary.turnOverTotal)} ευρώ`}
+                    aria-label={`Σύνολο ${formatCurrencyGR(summary.turnoverTotal)} ευρώ`}
                     style={{ fontSize: 12 }}
                   >
                     <span className="text-secondary fw-medium">Σύνολο:</span>
                     <span className="fw-semibold">
-                      {formatCurrencyGR(summary.turnOverTotal)}€
+                      {formatCurrencyGR(summary.turnoverTotal)}€
                     </span>
                   </span>
                 </div>
