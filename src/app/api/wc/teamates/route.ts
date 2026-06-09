@@ -52,7 +52,9 @@ function getUpstreamErrorMessage(payload: unknown): string | null {
 
   const statusCode = Number(body.statusCode);
   if (Number.isFinite(statusCode) && statusCode !== 0 && statusCode !== 200) {
-    return String(body.message ?? body.detailedMessage ?? "SQL data service failed");
+    return String(
+      body.message ?? body.detailedMessage ?? "SQL data service failed",
+    );
   }
 
   return null;
@@ -72,7 +74,10 @@ function countReplacementChars(text: string): number {
   return (text.match(/\uFFFD/g) ?? []).length;
 }
 
-function decodeResponseText(buffer: ArrayBuffer, contentType: string | null): string {
+function decodeResponseText(
+  buffer: ArrayBuffer,
+  contentType: string | null,
+): string {
   const charset = contentType?.match(/charset=([^;\s]+)/i)?.[1]?.trim();
   if (charset) {
     try {
@@ -130,8 +135,9 @@ export async function GET() {
     );
   }
 
-  const serviceUrl = process.env.SQL_DATA_SERVICE_URL;
-  const clientID = process.env.SQL_DATA_CLIENT_ID;
+  const serviceUrl = "https://mavrogenis.oncloud.gr/s1services";
+  const clientID =
+    "9J8pGt4bDKDYG6ebDZ1r9JL4LKboJtH0OafQJMTKGq559JL5U4HoILDuGann9JOmLK5BH7D7Qt1GGazfKKybDZ0bDKDnL51HTKrgS6DMTcLrKLTjLrPVLLD1SaHZILXDL5LGU6T79JT69JL3OavMJ4LLTNbbL5HPSavlP590QNX4LNCbDqH5LIKrHNLXIt14KaftJ7LOIaGbDZ1A9JOmT7D2Kr5bNtPuPLTKRKK";
 
   if (!serviceUrl || !clientID) {
     return NextResponse.json(
