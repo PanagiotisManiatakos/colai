@@ -95,3 +95,27 @@ export function applyActingSellerToOrder<
     ...(seller.sellerName ? { sellerName: seller.sellerName } : {}),
   };
 }
+
+export function appendActingSellerCommentsSuffix<
+  T extends { sellerComments?: string | null },
+>(
+  order: T,
+  userInfos: ApiUserInfo | null | undefined,
+  actingSellerCode: string | null | undefined,
+): T {
+  if (!getActingSellerCodeForApi(userInfos, actingSellerCode)) {
+    return order;
+  }
+
+  const username = userInfos?.username?.trim();
+  if (!username) return order;
+
+  const existing = order.sellerComments?.trim() ?? "";
+  const suffix = `καταχωρήθηκε από ${username}`;
+  const sellerComments = existing ? `${existing} - ${suffix}` : suffix;
+
+  return {
+    ...order,
+    sellerComments,
+  };
+}

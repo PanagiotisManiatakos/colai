@@ -37,6 +37,7 @@ import {
 import type { SynaineseisResults } from "@/lib/consentUpload";
 import {
   applyActingSellerToOrder,
+  appendActingSellerCommentsSuffix,
   getActingSellerCodeForApi,
 } from "@/lib/sellerAccess";
 
@@ -214,6 +215,11 @@ export const submitDraftAsync = createAsyncThunk<
     order.recipient_tel = order.recipient_mobile.trim();
   }
   order = applyActingSellerToOrder(
+    order,
+    state.auth.userInfos,
+    state.auth.actingSellerCode,
+  );
+  order = appendActingSellerCommentsSuffix(
     order,
     state.auth.userInfos,
     state.auth.actingSellerCode,
