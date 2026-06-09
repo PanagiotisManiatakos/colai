@@ -12,6 +12,21 @@ import { useRouter } from "next/navigation";
 import { formatCurrencyGR } from "@/lib/utils/number";
 
 const ACTION_WIDTH = 88;
+const DESKTOP_MEDIA_QUERY = "(min-width: 768px)";
+
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = React.useState(false);
+
+  React.useEffect(() => {
+    const mq = window.matchMedia(DESKTOP_MEDIA_QUERY);
+    const update = () => setIsDesktop(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  return isDesktop;
+}
 
 export default function OrderCard({
   order,
@@ -26,7 +41,9 @@ export default function OrderCard({
   const list_order_types = useAppSelector((s) => s.staticData.list_Order_Types);
   const list_group_eoppy = useAppSelector((s) => s.staticData.list_GroupEoppy);
 
-  const canSwipeDelete = order.statusId === 0 && userInfo?.isSeller;
+  const isDesktop = useIsDesktop();
+  const canDelete = order.statusId === 0 && userInfo?.isSeller;
+  const canSwipeDelete = canDelete && !isDesktop;
 
   const [x, setX] = React.useState(0);
   const [dragging, setDragging] = React.useState(false);
@@ -42,7 +59,9 @@ export default function OrderCard({
     baseX: 0,
     active: false,
     swiping: false,
+    pointerId: -1,
   });
+  const blockedClickRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!canSwipeDelete) {
@@ -59,18 +78,19 @@ export default function OrderCard({
 
   function onPointerDown(e: React.PointerEvent<HTMLDivElement>) {
     if (!canSwipeDelete) return;
-    if (e.pointerType === "mouse" && e.button !== 0) return;
+    // Swipe-to-delete is a touch gesture; mouse clicks must expand the card.
+    if (e.pointerType === "mouse") return;
+    if (e.button !== 0) return;
 
+    blockedClickRef.current = false;
     startRef.current = {
       x: e.clientX,
       y: e.clientY,
       baseX: x,
       active: true,
       swiping: false,
+      pointerId: e.pointerId,
     };
-
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    setDragging(true);
   }
 
   function onPointerMove(e: React.PointerEvent<HTMLDivElement>) {
@@ -83,7 +103,11 @@ export default function OrderCard({
     if (!startRef.current.swiping) {
       const isHorizontal = Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy);
       if (!isHorizontal) return;
+
       startRef.current.swiping = true;
+      blockedClickRef.current = true;
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+      setDragging(true);
     }
 
     e.preventDefault();
@@ -92,31 +116,44 @@ export default function OrderCard({
     setX(Math.round(nextX));
   }
 
-  function settle() {
+  function releaseCapturedPointer(e: React.PointerEvent<HTMLDivElement>) {
+    const el = e.currentTarget as HTMLElement;
+    if (
+      startRef.current.pointerId >= 0 &&
+      el.hasPointerCapture(startRef.current.pointerId)
+    ) {
+      el.releasePointerCapture(startRef.current.pointerId);
+    }
+  }
+
+  function settle(e: React.PointerEvent<HTMLDivElement>) {
+    releaseCapturedPointer(e);
     setDragging(false);
     startRef.current.active = false;
+    startRef.current.pointerId = -1;
 
     const shouldOpen = x < -ACTION_WIDTH * 0.35;
     setX(shouldOpen ? -ACTION_WIDTH : 0);
   }
 
-  function onPointerUp() {
+  function onPointerUp(e: React.PointerEvent<HTMLDivElement>) {
     if (!canSwipeDelete) return;
     if (!startRef.current.active) return;
-    settle();
+    settle(e);
   }
 
-  function onPointerCancel() {
+  function onPointerCancel(e: React.PointerEvent<HTMLDivElement>) {
     if (!canSwipeDelete) return;
     if (!startRef.current.active) return;
-    settle();
+    blockedClickRef.current = false;
+    settle(e);
   }
 
   function blockClickIfSwiping(e: React.SyntheticEvent) {
-    if (startRef.current.swiping) {
+    if (blockedClickRef.current) {
       e.preventDefault();
       e.stopPropagation();
-      startRef.current.swiping = false;
+      blockedClickRef.current = false;
     }
   }
 
@@ -148,6 +185,8 @@ export default function OrderCard({
     setDragging(false);
     startRef.current.active = false;
     startRef.current.swiping = false;
+    startRef.current.pointerId = -1;
+    blockedClickRef.current = false;
   }
 
   const reveal = canSwipeDelete
@@ -455,6 +494,22 @@ export default function OrderCard({
                   <i className="bi bi-eye me-2" />
                   Προβολή
                 </Link>
+
+                {canDelete && isDesktop ? (
+                  <button
+                    type="button"
+                    className="btn btn-outline-danger flex-fill"
+                    onClick={onClickDelete}
+                    style={{
+                      borderRadius: 14,
+                      padding: "10px 12px",
+                      fontWeight: 600,
+                    }}
+                  >
+                    <i className="bi bi-trash3 me-2" />
+                    Διαγραφή
+                  </button>
+                ) : null}
               </div>
             </div>
           </details>
