@@ -5,10 +5,7 @@ import React from "react";
 import SearchableSelect, {
   type SearchableSelectOption,
 } from "@/components/ui/SearchableSelect";
-import {
-  getAccessibleSellers,
-  hasSellerAccessList,
-} from "@/lib/sellerAccess";
+import { getAccessibleSellers, hasSellerAccessList } from "@/lib/sellerAccess";
 import { setActingSellerCode } from "@/features/auth/authSlice";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";

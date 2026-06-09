@@ -2,7 +2,7 @@ import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { formatCurrencyGR } from "@/lib/utils/number";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { FormSelect } from "react-bootstrap";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
 import OrderField from "@/components/ui/OrderField";
 import OrderSwitchField from "@/components/ui/OrdeSwitchField";
@@ -39,6 +39,74 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
     data.payFullOrDiscount == 2 &&
     Number.isFinite(finalAmount) &&
     finalAmount === 0;
+
+  const isDiscountMode = data.payFullOrDiscount == 2;
+  const showParticipationFinalAmount =
+    data.eidos_Egkrisis == 1 && !isDiscountMode;
+
+  const prominentAmountInputClass =
+    "form-control fw-bold text-end prominent-amount-input";
+
+  const prominentAmountWrapStyle: React.CSSProperties = {
+    padding: "12px 14px",
+    borderRadius: 14,
+    border: "1px solid rgba(var(--bs-primary-rgb), .28)",
+    background: "rgba(var(--bs-primary-rgb), .08)",
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  };
+
+  const prominentAmountSuffixStyle: React.CSSProperties = {
+    fontSize: "1.35rem",
+    fontWeight: 700,
+    flexShrink: 0,
+    lineHeight: 1,
+  };
+
+  const prominentAmountInputStyle: React.CSSProperties = {
+    fontSize: "1.35rem",
+    letterSpacing: 0.3,
+    border: "none",
+    background: "transparent",
+    boxShadow: "none",
+    padding: 0,
+    flex: 1,
+    minWidth: 0,
+  };
+
+  const prevPosoSymmetoxisRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (data.payFullOrDiscount !== 2) {
+      return;
+    }
+
+    const currentPosoSymmetoxis = Number(data.posoSymmetoxis ?? 0);
+    if (prevPosoSymmetoxisRef.current === currentPosoSymmetoxis) {
+      return;
+    }
+
+    const hadPrevious = prevPosoSymmetoxisRef.current !== null;
+    prevPosoSymmetoxisRef.current = currentPosoSymmetoxis;
+
+    if (!hadPrevious) {
+      return;
+    }
+
+    dispatch(
+      setDraftProperty({
+        key: "posoDiscounted",
+        value: formatCurrencyGR(currentPosoSymmetoxis),
+      }),
+    );
+  }, [data.payFullOrDiscount, data.posoSymmetoxis, dispatch]);
+
+  useEffect(() => {
+    if (data.payFullOrDiscount !== 2) {
+      prevPosoSymmetoxisRef.current = null;
+    }
+  }, [data.payFullOrDiscount]);
 
   useEffect(() => {
     if (data.eopyyVerifyNoParticipation == 1) {
@@ -93,7 +161,7 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
           style={{ height: 51 }}
           className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2"
         >
-          <div className="fw-semibold">Συμμετοχή</div>
+          <div className="fw-semibold">Συμμετοχή ασθενή</div>
         </div>
 
         <OrderField label="%">
@@ -189,18 +257,32 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                 </OrderField>
               </div>
             </div>
-            <div className="col-6">
-              <OrderField label="Πληρωτέο">
-                <input
-                  className="form-control"
-                  name="posoSymmetoxis"
-                  inputMode="numeric"
-                  disabled
-                  readOnly
-                  value={formatCurrencyGR(data.posoSymmetoxis ?? 0)}
-                />
-              </OrderField>
-            </div>
+            {showParticipationFinalAmount ? (
+              <div className="col-12">
+                <OrderField
+                  label={
+                    <span style={{ fontSize: "0.95rem", letterSpacing: 0.2 }}>
+                      Τελικό ποσό πληρωμής
+                    </span>
+                  }
+                >
+                  <div style={prominentAmountWrapStyle}>
+                    <input
+                      className={prominentAmountInputClass}
+                      style={prominentAmountInputStyle}
+                      name="posoSymmetoxis"
+                      inputMode="numeric"
+                      disabled
+                      readOnly
+                      value={formatCurrencyGR(data.posoSymmetoxis ?? 0)}
+                    />
+                    <span style={prominentAmountSuffixStyle} aria-hidden>
+                      €
+                    </span>
+                  </div>
+                </OrderField>
+              </div>
+            ) : null}
           </>
         )}
 
@@ -353,45 +435,63 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                 ))}
               </FormSelect>
             </OrderField>
-            <OrderField label="Τελικό ποσό">
-              <input
-                className="form-control"
-                name="posoDiscounted"
-                inputMode="decimal"
-                value={data.posoDiscounted ?? 0}
-                onChange={(e) => {
-                  const raw = e.target.value
-                    .replaceAll(".", "")
-                    .replaceAll(",", ".");
-                  const maxAllowed = data.posoSymmetoxis ?? 0;
+            <OrderField
+              label={
+                <span style={{ fontSize: "0.95rem", letterSpacing: 0.2 }}>
+                  Τελικό ποσό πληρωμής
+                </span>
+              }
+            >
+              <div style={prominentAmountWrapStyle}>
+                <input
+                  className={prominentAmountInputClass}
+                  style={prominentAmountInputStyle}
+                  name="posoDiscounted"
+                  inputMode="decimal"
+                  value={data.posoDiscounted ?? 0}
+                  onChange={(e) => {
+                    const raw = e.target.value
+                      .replaceAll("€", "")
+                      .trim()
+                      .replaceAll(".", "")
+                      .replaceAll(",", ".");
+                    const maxAllowed = data.posoSymmetoxis ?? 0;
 
-                  if (raw === "") {
-                    dispatch(
-                      setDraftProperty({ key: "posoDiscounted", value: "" }),
-                    );
-                    return;
-                  }
+                    if (raw === "") {
+                      dispatch(
+                        setDraftProperty({ key: "posoDiscounted", value: "" }),
+                      );
+                      return;
+                    }
 
-                  if (parseFloat(raw) <= maxAllowed) {
+                    if (parseFloat(raw) <= maxAllowed) {
+                      dispatch(
+                        setDraftProperty({
+                          key: "posoDiscounted",
+                          value: raw.replace(".", ","),
+                        }),
+                      );
+                    }
+                  }}
+                  onBlur={(e) => {
                     dispatch(
                       setDraftProperty({
                         key: "posoDiscounted",
-                        value: raw.replace(".", ","),
+                        value: formatCurrencyGR(
+                          e.target.value
+                            .replaceAll("€", "")
+                            .trim()
+                            .replaceAll(".", "")
+                            .replaceAll(",", "."),
+                        ),
                       }),
                     );
-                  }
-                }}
-                onBlur={(e) => {
-                  dispatch(
-                    setDraftProperty({
-                      key: "posoDiscounted",
-                      value: formatCurrencyGR(
-                        e.target.value.replaceAll(".", "").replaceAll(",", "."),
-                      ),
-                    }),
-                  );
-                }}
-              />
+                  }}
+                />
+                <span style={prominentAmountSuffixStyle} aria-hidden>
+                  €
+                </span>
+              </div>
             </OrderField>
             {isFinalAmountZero && (
               <OrderSwitchField

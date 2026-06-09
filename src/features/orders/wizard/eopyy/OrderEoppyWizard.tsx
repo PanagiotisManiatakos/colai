@@ -77,8 +77,6 @@ export default function OrderEoppyWizard() {
   const customerIsCompletelyNew = useAppSelector(
     (s) => s.orders.draft.customerIsCompletelyNew,
   );
-  const userInfos = useAppSelector((s) => s.auth.userInfos);
-  const actingSellerCode = useAppSelector((s) => s.auth.actingSellerCode);
   const showSynainesiPanel = shouldShowSynainesiStep({
     customerIsCompletelyNew,
   });
@@ -146,17 +144,8 @@ export default function OrderEoppyWizard() {
         customerIsCompletelyNew,
         hasFiles,
         hasConsentFormFiles,
-        userInfos,
-        actingSellerCode,
       }),
-    [
-      actingSellerCode,
-      customerIsCompletelyNew,
-      draftOrder,
-      hasConsentFormFiles,
-      hasFiles,
-      userInfos,
-    ],
+    [customerIsCompletelyNew, draftOrder, hasConsentFormFiles, hasFiles],
   );
 
   const runAi = React.useCallback(
@@ -303,10 +292,7 @@ export default function OrderEoppyWizard() {
     >
       <StepIndicator steps={labels} current={step} setStep={setStep} />
 
-      {/* <SellerActingSelector
-        error={fieldErrorsByField.actingSellerCode}
-        clearError={clearError}
-      /> */}
+      <SellerActingSelector clearError={clearError} />
 
       {current?.render()}
 
