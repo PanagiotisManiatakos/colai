@@ -9,6 +9,36 @@ import { parseProxyJson } from "@/lib/api/client";
 
 const LS_KEY = "discountRequests";
 
+function extractDiscountRequestsPayload(payload: unknown): {
+  requests: DiscountRequest[];
+  userCanMakeAction: boolean;
+} {
+  const root =
+    typeof payload === "object" && payload !== null
+      ? (payload as Record<string, unknown>)
+      : null;
+  const data =
+    typeof root?.data === "object" && root.data !== null
+      ? (root.data as Record<string, unknown>)
+      : null;
+
+  const requests = (
+    Array.isArray(data?.mydata)
+      ? data.mydata
+      : Array.isArray(root?.mydata)
+        ? root.mydata
+        : Array.isArray(root?.data)
+          ? root.data
+          : []
+  ) as DiscountRequest[];
+
+  const userCanMakeAction = Boolean(
+    data?.userCanMakeAction ?? root?.userCanMakeAction,
+  );
+
+  return { requests, userCanMakeAction };
+}
+
 export interface DiscountRequestState {
   requests: DiscountRequest[];
   loadingList: boolean;
@@ -70,7 +100,7 @@ export const fetchDiscountRequests = createAsyncThunk<
       const q = typeof arg === "object" && arg?.q ? arg.q.trim() : "";
       const force = typeof arg === "object" && arg?.force;
 
-      if (force) return !(state.discountRequests.refreshingList || state.discountRequests.loadingList);
+      if (force) return !state.discountRequests.refreshingList;
 
       if (state.discountRequests.loadingList || state.discountRequests.refreshingList) return false;
 
@@ -145,25 +175,27 @@ const discountRequestsSlice = createSlice({
       else state.loadingList = true;
     });
     b.addCase(fetchDiscountRequests.fulfilled, (state, action) => {
-      const payload = action.payload;
-      const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
-      if (force) state.refreshingList = false;
-      else state.loadingList = false;
-      state.requests = (payload.data.mydata ?? []) as DiscountRequest[];
-      state.userCanMakeAction = payload.data.userCanMakeAction ?? false;
+      const { requests, userCanMakeAction } = extractDiscountRequestsPayload(
+        action.payload,
+      );
 
-        const q =
-          typeof action.meta.arg === "object" && action.meta.arg?.q
-            ? action.meta.arg.q.trim()
-            : "";
-        state.query = q;
-        state.requestsFetchedAt = Date.now();
-        persistStateToLocalStorage(state);
+      state.loadingList = false;
+      state.refreshingList = false;
+      state.requests = requests;
+      state.userCanMakeAction = userCanMakeAction;
+      state.error = null;
+
+      const q =
+        typeof action.meta.arg === "object" && action.meta.arg?.q
+          ? action.meta.arg.q.trim()
+          : "";
+      state.query = q;
+      state.requestsFetchedAt = Date.now();
+      persistStateToLocalStorage(state);
     });
     b.addCase(fetchDiscountRequests.rejected, (state, action) => {
-      const force = typeof action.meta.arg === "object" && !!(action.meta.arg as any)?.force;
-      if (force) state.refreshingList = false;
-      else state.loadingList = false;
+      state.loadingList = false;
+      state.refreshingList = false;
 
       state.error = action.error.message || "Failed to load discount requests";
     });

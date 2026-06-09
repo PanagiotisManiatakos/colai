@@ -1,5 +1,24 @@
 export const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
+export const SYMM_PERCENTAGE_OPTIONS = [0, 10, 25] as const;
+
+export function normalizeSymmPercentage(value: unknown): number | null {
+  const n = Number(value);
+  return SYMM_PERCENTAGE_OPTIONS.includes(
+    n as (typeof SYMM_PERCENTAGE_OPTIONS)[number],
+  )
+    ? n
+    : null;
+}
+
+export function isAllowedSymmPercentage(
+  value: unknown,
+): value is (typeof SYMM_PERCENTAGE_OPTIONS)[number] {
+  return SYMM_PERCENTAGE_OPTIONS.includes(
+    value as (typeof SYMM_PERCENTAGE_OPTIONS)[number],
+  );
+}
+
 export function hasAnyValue(obj: Record<string, unknown>): boolean {
   return Object.values(obj).some((v) => v !== null && v !== "");
 }

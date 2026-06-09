@@ -24,10 +24,51 @@ export default function DiscountRequestsPage() {
   const [q, setQ] = React.useState(urlSearch);
 
   React.useEffect(() => {
+    setQ(urlSearch);
+  }, [urlSearch]);
+
+  React.useEffect(() => {
     void dispatch(
       fetchDiscountRequests(urlSearch ? { q: urlSearch } : undefined),
     );
   }, [dispatch, urlSearch]);
+
+  React.useEffect(() => {
+    if (listLoading || discountRequests.requests.length > 0) return;
+    if (discountRequests.requestsFetchedAt > 0) return;
+
+    const retryMs = 2000;
+    const timer = window.setTimeout(() => {
+      void dispatch(
+        fetchDiscountRequests(
+          urlSearch ? { q: urlSearch, force: true } : { force: true },
+        ),
+      );
+    }, retryMs);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    dispatch,
+    discountRequests.requests.length,
+    discountRequests.requestsFetchedAt,
+    listLoading,
+    urlSearch,
+  ]);
+
+  React.useEffect(() => {
+    if (!listLoading || discountRequests.requestsFetchedAt > 0) return;
+
+    const retryMs = 3000;
+    const timer = window.setTimeout(() => {
+      void dispatch(
+        fetchDiscountRequests(
+          urlSearch ? { q: urlSearch, force: true } : { force: true },
+        ),
+      );
+    }, retryMs);
+
+    return () => window.clearTimeout(timer);
+  }, [dispatch, discountRequests.requestsFetchedAt, listLoading, urlSearch]);
 
   const applySearchToUrl = React.useCallback(
     (next: string) => {

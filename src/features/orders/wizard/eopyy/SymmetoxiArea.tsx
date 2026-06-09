@@ -7,6 +7,10 @@ import FormErrorsContext from "@/components/ui/FormErrorContect";
 import OrderField from "@/components/ui/OrderField";
 import OrderSwitchField from "@/components/ui/OrdeSwitchField";
 import type { SymmetoxiAreaProps } from "./componentProps";
+import {
+  isAllowedSymmPercentage,
+  SYMM_PERCENTAGE_OPTIONS,
+} from "./wizard/wizardUtils";
 
 const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
   const data = useAppSelector((s) => s.orders.draft.order);
@@ -93,15 +97,13 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
         </div>
 
         <OrderField label="%">
-          <input
-            className="form-control"
+          <FormSelect
             name="symmPercentage"
-            inputMode="numeric"
-            type="number"
-            min={0}
-            max={100}
-            step={1}
-            value={data.symmPercentage ?? ""}
+            value={
+              isAllowedSymmPercentage(data.symmPercentage)
+                ? String(data.symmPercentage)
+                : ""
+            }
             onChange={(e) => {
               const raw = e.target.value;
 
@@ -112,14 +114,19 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                 return;
               }
 
-              let n = Number(raw);
-              if (Number.isNaN(n)) return;
-
-              n = Math.max(0, Math.min(100, n));
+              const n = Number(raw);
+              if (!isAllowedSymmPercentage(n)) return;
 
               dispatch(setDraftProperty({ key: "symmPercentage", value: n }));
             }}
-          />
+          >
+            <option value="" />
+            {SYMM_PERCENTAGE_OPTIONS.map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </FormSelect>
         </OrderField>
 
         <div className="row g-2">

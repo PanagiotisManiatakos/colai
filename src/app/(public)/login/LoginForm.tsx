@@ -8,6 +8,7 @@ import { useAppDispatch } from "@/store/hooks";
 import { parseProxyJson } from "@/lib/api/client";
 import type { LoginSuccess } from "@/types/api/responses";
 import { loginOk, loginFail } from "@/features/auth/authSlice";
+import { resetDiscountRequestsUserSession } from "@/store/discountRequests/discountRequestsSlice";
 
 export default function LoginPage({ appVersion }: { appVersion: string }) {
   const router = useRouter();
@@ -51,6 +52,7 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
       }
 
       dispatch(loginOk({ userInfos: data.userInfos }));
+      dispatch(resetDiscountRequestsUserSession());
       router.replace(next);
     } catch (err) {
       const msg =
