@@ -685,7 +685,7 @@ export default function SalesWCPage() {
   const [refreshing, setRefreshing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [q, setQ] = React.useState("");
-  const [sortMode, setSortMode] = React.useState<SortMode>("newrep");
+  const [sortMode, setSortMode] = React.useState<SortMode>("date");
   const [openTiles, setOpenTiles] = React.useState<Record<string, boolean>>({});
   const [orderDetailsBySeller, setOrderDetailsBySeller] = React.useState<
     Record<string, SellerOrderDetailsState>
