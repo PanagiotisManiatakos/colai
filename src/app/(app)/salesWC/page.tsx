@@ -924,7 +924,7 @@ export default function SalesWCPage() {
               className="d-flex align-items-center flex-nowrap gap-2"
               style={{ minWidth: 0, overflowX: "auto" }}
             >
-              <div className="h5 fw-bold mb-0 flex-shrink-0">
+              <div className="h5 fw-bold small mb-0 flex-shrink-0">
                 Αποτέλεσμα WC 30 ημερών
               </div>
               {!isManagerMode ? (
