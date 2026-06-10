@@ -411,6 +411,16 @@ html[data-bs-theme="dark"] .app-card-soft {
   z-index: 35;
   bottom: calc(var(--app-bottom-nav-total-height) + 18px);
   right: 16px;
+  padding: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-fab .bi {
+  display: block;
+  line-height: 1;
 }
 
 .app-fab--inline {
@@ -421,7 +431,7 @@ html[data-bs-theme="dark"] .app-card-soft {
 }
 
 @media (min-width: 576px) {
-  .app-fab {
+  .app-fab:not(.app-fab--inline) {
     right: calc((100vw - var(--app-max-width)) / 2 + 16px);
   }
 }

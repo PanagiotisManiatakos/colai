@@ -21,8 +21,8 @@ export function FloatingActionButton({
     <Link
       href={href}
       aria-label={ariaLabel}
-      className={`app-fab btn btn-primary rounded-circle d-flex align-items-center shadow justify-content-center${
-        inline ? "app-fab--inline" : ""
+      className={`app-fab btn btn-primary rounded-circle shadow d-flex align-items-center justify-content-center${
+        inline ? " app-fab--inline" : ""
       }`}
       style={{ width: 56, height: 56 }}
     >
