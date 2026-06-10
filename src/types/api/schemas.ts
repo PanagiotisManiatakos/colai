@@ -819,6 +819,11 @@ export type ApiAccessSellerItem = {
   sellerName?: string | null;
 };
 
+export type ApiAccessAreaTeamItem = {
+  name?: string | null;
+  value?: string | null;
+};
+
 export type ApiAvailableAiClient = {
   name: string;
   code: string;
@@ -839,6 +844,7 @@ export type ApiUserInfo = {
   isManager: boolean;
   sellerCode?: string | null;
   listAccessSellers?: ApiAccessSellerItem[] | null;
+  listAccessAreaTeam?: ApiAccessAreaTeamItem[] | null;
   travmaArea?: string | null;
   travmaTeam?: string | null;
 };
