@@ -921,14 +921,14 @@ export default function SalesWCPage() {
         <div className="d-flex align-items-start gap-3">
           <div className="w-100" style={{ minWidth: 0 }}>
             <div
-              className="d-flex align-items-center flex-nowrap gap-2"
-              style={{ minWidth: 0, overflowX: "auto" }}
+              className="d-flex flex-column align-items-center flex-md-row flex-md-nowrap align-items-md-center text-md-start gap-md-2 gap-2 text-center"
+              style={{ minWidth: 0 }}
             >
-              <div className="h5 fw-bold small mb-0 flex-shrink-0">
+              <div className="h5 fw-bold mb-0 flex-shrink-0">
                 Αποτέλεσμα WC 30 ημερών
               </div>
               {!isManagerMode ? (
-                <div className="d-flex align-items-center ms-auto flex-shrink-0 gap-1">
+                <div className="d-flex align-items-center justify-content-center ms-md-auto flex-shrink-0 gap-1">
                   <span
                     className="badge rounded-pill text-bg-danger d-inline-flex align-items-center gap-1"
                     aria-label={`Νέο ${summary.newCount}`}
