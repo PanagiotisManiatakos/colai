@@ -7,6 +7,7 @@
   --app-max-width: 560px;
   --app-nav-height: 72px;
   --order-wizard-nav-height: 56px;
+  --list-pagination-height: 108px;
   --app-bottom-nav-total-height: calc(var(--app-nav-height) + var(--safe-bottom));
   --app-content-pad-bottom: 60px;
   --app-radius: 22px;
@@ -57,6 +58,12 @@ html[data-pwa="true"] .app-header {
 
 html[data-pwa="true"] .app-content {
   padding-bottom: calc(var(--app-content-pad-bottom) + var(--app-bottom-nav-total-height));
+}
+
+@media (min-width: 768px) {
+  :root {
+    --list-pagination-height: 76px;
+  }
 }
 
 @media (min-width: 992px) {
@@ -247,6 +254,64 @@ html[data-bs-theme="dark"] .order-wizard-nav {
   border-top: 1px solid rgba(255, 255, 255, 0.10);
 }
 
+.list-pagination-spacer {
+  height: var(--list-pagination-height);
+  flex-shrink: 0;
+}
+
+.list-pagination-spacer--with-fab {
+  height: calc(var(--list-pagination-height) + 68px);
+}
+
+.list-pagination-spacer--fab-only {
+  height: 68px;
+}
+
+.list-pagination-stack {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: var(--app-bottom-nav-total-height);
+  z-index: 29;
+  width: min(100%, var(--app-max-width));
+  box-sizing: border-box;
+}
+
+.list-pagination-fab-row {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 16px 10px;
+}
+
+.list-pagination-stack .list-pagination-nav {
+  position: relative;
+  left: auto;
+  bottom: auto;
+  transform: none;
+  width: 100%;
+  z-index: auto;
+}
+
+.list-pagination-nav {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: var(--app-bottom-nav-total-height);
+  z-index: 29;
+  width: min(100%, var(--app-max-width));
+  box-sizing: border-box;
+  margin: 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.76);
+  backdrop-filter: saturate(180%) blur(18px);
+  border-top: 1px solid rgba(16, 24, 40, 0.08);
+}
+
+html[data-bs-theme="dark"] .list-pagination-nav {
+  background: rgba(11, 18, 32, 0.72);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
 .app-bottom-nav {
   position: fixed;
   left: 50%;
@@ -344,12 +409,29 @@ html[data-bs-theme="dark"] .app-card-soft {
 .app-fab {
   position: fixed;
   z-index: 35;
-  bottom: calc(var(--app-nav-height) + 18px + var(--safe-bottom));
+  bottom: calc(var(--app-bottom-nav-total-height) + 18px);
   right: 16px;
+  padding: 0;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-fab .bi {
+  display: block;
+  line-height: 1;
+}
+
+.app-fab--inline {
+  position: static;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
 }
 
 @media (min-width: 576px) {
-  .app-fab {
+  .app-fab:not(.app-fab--inline) {
     right: calc((100vw - var(--app-max-width)) / 2 + 16px);
   }
 }

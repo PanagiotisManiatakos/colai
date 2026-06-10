@@ -124,7 +124,7 @@ export default function OrderDoctorArea() {
           </Field>
           <div className="row g-2">
             <div className="col-6">
-              <Field label="Υγειονομική δομή">
+              <Field label="Δομή">
                 <input
                   className="form-control"
                   name="doctorSuggested_domi"

@@ -24,6 +24,7 @@ export const hydrateAuth = createAsyncThunk("auth/hydrate", async () => {
   const data = await res.json();
   return data as {
     authenticated: boolean;
+    userInfos?: ApiUserInfo | null;
     user?: Pick<ApiUserInfo, "username">;
   };
 });
@@ -94,7 +95,9 @@ const authSlice = createSlice({
     b.addCase(hydrateAuth.fulfilled, (state, action) => {
       if (action.payload.authenticated) {
         state.status = "authenticated";
-        //state.user = action.payload.user ?? { username: "user" };
+        if (action.payload.userInfos) {
+          state.userInfos = action.payload.userInfos;
+        }
         persistStateToLocalStorage(state);
       } else {
         state.status = "unauthenticated";

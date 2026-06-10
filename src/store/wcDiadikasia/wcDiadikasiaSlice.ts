@@ -4,6 +4,7 @@ import { wcCalendar } from "@/types/wc";
 import type { GetWcCalendarSuccess } from "@/types/api/responses";
 import type { AplatReportCustomerStatus } from "@/types/api/schemas";
 import { parseProxyJson } from "@/lib/api/client";
+import { resolveAreaTeamFromUserInfo } from "@/lib/wcAreaTeam";
 
 const LS_KEY = "wc";
 
@@ -30,9 +31,14 @@ export const fetchWCCalendar = createAsyncThunk<
   { state: RootState }
 >(
     "wc/fetchWCDiadikasiaCalendar",
-    async (arg) => {
+    async (arg, { getState }) => {
         const q = typeof arg === "object" && arg?.q ? arg.q : "";
-        const res = await fetch(`/api/wc-diadikasia/calendar?_ts=${Date.now()}${q ? `&searchfield=${encodeURIComponent(q)}` : ""}`, {
+        const areateam = resolveAreaTeamFromUserInfo(getState().auth.userInfos);
+        const params = new URLSearchParams({ _ts: String(Date.now()) });
+        if (q) params.set("searchfield", q);
+        if (areateam) params.set("areateam", areateam);
+
+        const res = await fetch(`/api/wc-diadikasia/calendar?${params.toString()}`, {
             cache: "no-store",
             headers: {
                 "Cache-Control": "no-cache",

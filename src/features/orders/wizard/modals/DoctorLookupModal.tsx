@@ -17,9 +17,11 @@ export default function DoctorLookupModal({
   show,
   onClose,
   isSuggested,
+  isOtherSuggested,
 }: {
   show: boolean;
   isSuggested?: boolean;
+  isOtherSuggested?: boolean;
   onClose: () => void;
 }) {
   const dispatch = useAppDispatch();
@@ -64,7 +66,44 @@ export default function DoctorLookupModal({
   }
 
   function applyDoctor(c: DoctorLookupModal) {
-    if (isSuggested) {
+    if (isOtherSuggested) {
+      dispatch(
+        setDraftProperty({
+          key: "otherDoctorSuggested_name",
+          value: c.doctoR_NAME,
+        }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "otherDoctorSuggested_amka",
+          value: c.doctoR_AMKA,
+        }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "otherDoctorSuggested_afm",
+          value: c.doctoR_AFM,
+        }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "otherDoctorSuggested_ErpGID",
+          value: c.gid,
+        }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "otherDoctorSuggested_domi",
+          value: c.domi?.trim() ?? "",
+        }),
+      );
+      dispatch(
+        setDraftProperty({
+          key: "otherDoctorSuggested_mobile",
+          value: (c.mobile1?.trim() || c.mobile2?.trim()) ?? "",
+        }),
+      );
+    } else if (isSuggested) {
       dispatch(
         setDraftProperty({ key: "doctorSuggested_name", value: c.doctoR_NAME }),
       );
@@ -159,7 +198,7 @@ export default function DoctorLookupModal({
                     Ειδικότητα: {`${r.eidikotita ?? ""}` || "—"}
                   </div>
                   <div className="small text-secondary">
-                    Υγειονομική δομή: {r.domi?.trim() || "—"}
+                    Δομή: {r.domi?.trim() || "—"}
                   </div>
                   <div className="small text-secondary">
                     Τηλέφωνο: {r.mobile1?.trim() || r.mobile2?.trim() || "—"}

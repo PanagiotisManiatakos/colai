@@ -1,9 +1,18 @@
 "use client";
 
+import React from "react";
+import { createPortal } from "react-dom";
+
+import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import {
   formatListPageInfo,
   type ListPaginationState,
 } from "@/lib/pagination/listPagination";
+
+type ListPaginationFab = {
+  href: string;
+  ariaLabel: string;
+};
 
 type ListPaginationProps = Pick<
   ListPaginationState,
@@ -12,6 +21,7 @@ type ListPaginationProps = Pick<
   disabled?: boolean;
   onPageChange: (page: number) => void;
   pageInfo?: ListPaginationState;
+  fab?: ListPaginationFab;
 };
 
 export default function ListPagination({
@@ -22,13 +32,23 @@ export default function ListPagination({
   disabled = false,
   onPageChange,
   pageInfo,
+  fab,
 }: ListPaginationProps) {
-  if (!showPagination) return null;
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const hasFab = Boolean(fab);
+  const hasNav = showPagination;
+
+  if (!hasFab && !hasNav) return null;
 
   const infoText = pageInfo ? formatListPageInfo(pageInfo) : null;
 
-  return (
-    <div className="app-card mt-3 p-3">
+  const nav = hasNav ? (
+    <nav className="list-pagination-nav" aria-label="Σελιδοποίηση λίστας">
       <div className="d-md-none">
         <div className="d-flex justify-content-between align-items-center gap-2">
           <button
@@ -89,6 +109,36 @@ export default function ListPagination({
           <i className="bi bi-chevron-right ms-1" aria-hidden />
         </button>
       </div>
+    </nav>
+  ) : null;
+
+  const stack = (
+    <div className="list-pagination-stack">
+      {fab ? (
+        <div className="list-pagination-fab-row">
+          <FloatingActionButton
+            href={fab.href}
+            ariaLabel={fab.ariaLabel}
+            inline
+          />
+        </div>
+      ) : null}
+      {nav}
     </div>
+  );
+
+  const spacerClassName = [
+    "list-pagination-spacer",
+    hasFab && hasNav && "list-pagination-spacer--with-fab",
+    hasFab && !hasNav && "list-pagination-spacer--fab-only",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
+  return (
+    <>
+      <div className={spacerClassName} aria-hidden="true" />
+      {mounted ? createPortal(stack, document.body) : null}
+    </>
   );
 }

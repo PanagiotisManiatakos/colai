@@ -91,6 +91,13 @@ export type APLAT_Sales_Order = {
   doctorSuggested_domi?: string | null;
   doctorSuggested_tel?: string | null;
   doctorSuggested_ErpGID?: string | null;
+  propose_other_suggested_doctor?: number | null;
+  otherDoctorSuggested_amka?: string | null;
+  otherDoctorSuggested_name?: string | null;
+  otherDoctorSuggested_afm?: string | null;
+  otherDoctorSuggested_domi?: string | null;
+  otherDoctorSuggested_mobile?: string | null;
+  otherDoctorSuggested_ErpGID?: string | null;
   dateOfSyntagi?: string | null;
   dateIsxyeiApo?: string | null;
   dateIsxyeiEos?: string | null;
@@ -832,6 +839,8 @@ export type ApiUserInfo = {
   isManager: boolean;
   sellerCode?: string | null;
   listAccessSellers?: ApiAccessSellerItem[] | null;
+  travmaArea?: string | null;
+  travmaTeam?: string | null;
 };
 
 /** AMSA `/api/login` payload. */

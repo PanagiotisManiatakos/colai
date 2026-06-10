@@ -39,8 +39,15 @@ export default function DiscountRequestsPage() {
 
   const activeTab: DiscountRequestsTab =
     searchParams.get("tab") === "reviewed" ? "reviewed" : "pending";
-  const listDiscountstatus = activeTab === "pending" ? -1 : undefined;
   const [q, setQ] = React.useState(urlSearch);
+
+  const pendingRequests = React.useMemo(
+    () =>
+      discountRequests.requests.filter((r) =>
+        isPendingDiscountRequest(r.isDiscountApproved),
+      ),
+    [discountRequests.requests],
+  );
 
   const reviewedRequests = React.useMemo(
     () =>
@@ -51,17 +58,11 @@ export default function DiscountRequestsPage() {
   );
 
   const visibleRequests =
-    activeTab === "pending" ? discountRequests.requests : reviewedRequests;
+    activeTab === "pending" ? pendingRequests : reviewedRequests;
 
   const pendingTabLabel =
-    discountStatuses.find((s) => s.value == "-1")?.text ?? "Εκκρεμή";
+    discountStatuses.find((s) => s.value == "-1")?.text ?? "Αναμονή";
   const reviewedTabLabel = "Απαντημένα";
-  const pendingTabCount =
-    activeTab === "pending"
-      ? (paging?.totalrecords ?? discountRequests.requests.length)
-      : discountRequests.requests.filter((r) =>
-          isPendingDiscountRequest(r.isDiscountApproved),
-        ).length;
 
   React.useEffect(() => {
     setQ(urlSearch);
@@ -73,11 +74,9 @@ export default function DiscountRequestsPage() {
         q: urlSearch,
         page: urlPage,
         pagesize: DEFAULT_DISCOUNT_LIST_PAGE_SIZE,
-        discountstatus: listDiscountstatus,
-        force: true,
       }),
     );
-  }, [dispatch, urlSearch, urlPage, listDiscountstatus]);
+  }, [dispatch, urlSearch, urlPage]);
 
   const onSubmitSearch = React.useCallback(() => {
     applySearchToUrl(q);
@@ -92,7 +91,6 @@ export default function DiscountRequestsPage() {
       mutateSearchParams((params) => {
         if (tab === "pending") params.delete("tab");
         else params.set("tab", tab);
-        params.delete("page");
       });
     },
     [mutateSearchParams],
@@ -104,11 +102,10 @@ export default function DiscountRequestsPage() {
         q: urlSearch,
         page: urlPage,
         pagesize: DEFAULT_DISCOUNT_LIST_PAGE_SIZE,
-        discountstatus: listDiscountstatus,
         force: true,
       }),
     ).unwrap();
-  }, [dispatch, urlSearch, urlPage, listDiscountstatus]);
+  }, [dispatch, urlSearch, urlPage]);
 
   const pagination = getListPaginationState({
     paging,
@@ -147,7 +144,9 @@ export default function DiscountRequestsPage() {
               onClick={() => setActiveTab("pending")}
             >
               {pendingTabLabel}
-              <span className="badge bg-secondary ms-2">{pendingTabCount}</span>
+              <span className="badge bg-secondary ms-2">
+                {pendingRequests.length}
+              </span>
             </button>
           </li>
           <li className="nav-item">
@@ -177,7 +176,7 @@ export default function DiscountRequestsPage() {
         ) : discountRequests.requests.length ? (
           <div className="app-card text-secondary p-3 text-center">
             {activeTab === "pending"
-              ? "Δεν βρέθηκαν εκκρεμή αιτήματα."
+              ? "Δεν βρέθηκαν αιτήματα σε αναμονή."
               : "Δεν βρέθηκαν απαντημένα αιτήματα."}
           </div>
         ) : (
@@ -185,14 +184,14 @@ export default function DiscountRequestsPage() {
             Δεν βρέθηκαν αιτήματα.
           </div>
         )}
-
-        <ListPagination
-          {...pagination}
-          disabled={listLoading}
-          onPageChange={goToPage}
-          pageInfo={pagination}
-        />
       </PullToRefresh>
+
+      <ListPagination
+        {...pagination}
+        disabled={listLoading}
+        onPageChange={goToPage}
+        pageInfo={pagination}
+      />
     </>
   );
 }

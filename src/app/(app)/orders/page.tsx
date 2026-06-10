@@ -5,7 +5,6 @@ import React from "react";
 import AppLoader from "@/components/ui/AppLoader";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { FloatingActionButton } from "@/components/ui/FloatingActionButton";
 import ListPagination from "@/components/ui/ListPagination";
 
 import OrderCard from "@/features/orders/components/OrderCard";
@@ -98,18 +97,19 @@ export default function OrdersPage() {
             Δεν βρέθηκαν παραγγελίες.
           </div>
         )}
-
-        <ListPagination
-          {...pagination}
-          disabled={listLoading}
-          onPageChange={goToPage}
-          pageInfo={pagination}
-        />
       </PullToRefresh>
 
-      {userInfo?.isSeller && (
-        <FloatingActionButton href="/orders/0" ariaLabel="Νέα παραγγελία" />
-      )}
+      <ListPagination
+        {...pagination}
+        disabled={listLoading}
+        onPageChange={goToPage}
+        pageInfo={pagination}
+        fab={
+          userInfo?.isSeller
+            ? { href: "/orders/0", ariaLabel: "Νέα παραγγελία" }
+            : undefined
+        }
+      />
     </>
   );
 }

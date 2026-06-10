@@ -151,10 +151,6 @@ export const fetchDiscountRequests = createAsyncThunk<
         typeof arg === "object" && arg?.pagesize
           ? arg.pagesize
           : DEFAULT_DISCOUNT_LIST_PAGE_SIZE;
-      const discountstatus =
-        typeof arg === "object" && arg?.discountstatus != null
-          ? arg.discountstatus
-          : null;
       const force = typeof arg === "object" && arg?.force;
 
       if (force) return !state.discountRequests.refreshingList;
@@ -170,8 +166,7 @@ export const fetchDiscountRequests = createAsyncThunk<
         state.discountRequests.requestsFetchedAt > 0 &&
         state.discountRequests.query === q &&
         state.discountRequests.page === page &&
-        state.discountRequests.pagesize === pagesize &&
-        state.discountRequests.discountstatus === discountstatus
+        state.discountRequests.pagesize === pagesize
       ) {
         return false;
       }

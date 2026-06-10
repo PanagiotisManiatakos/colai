@@ -2,6 +2,7 @@ import { shouldShowSynainesiStep } from "@/lib/customerUtils";
 import { isBlank } from "@/lib/utils/string";
 import type { Order } from "@/types/orders";
 import { getDraftAmkaWizardIssues } from "./amkaValidation";
+import { getDraftBarcodeWizardIssues } from "./barcodeValidation";
 import { getCustomerFieldWizardIssues } from "./customerFieldValidation";
 import type { StepKey, ValidateEoppyOrderInput, WizardIssue } from "./types";
 import { onlyDigits } from "./wizardUtils";
@@ -168,6 +169,10 @@ export function validateEoppyOrder({
     }
 
     for (const issue of getDraftAmkaWizardIssues(draftOrder)) {
+      issues.push(issue);
+    }
+
+    for (const issue of getDraftBarcodeWizardIssues(draftOrder)) {
       issues.push(issue);
     }
   }
