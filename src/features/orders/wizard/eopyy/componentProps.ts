@@ -61,6 +61,11 @@ export type SymmetoxiAreaProps = {
   clearError?: (field: string) => void;
 };
 
+export type SyntagiAreaProps = {
+  errors?: Record<string, string | boolean>;
+  clearError?: (field: string) => void;
+};
+
 export type OrderCustomerAreaProps = {
   errors?: Record<string, string | boolean>;
   clearError?: (field: string) => void;

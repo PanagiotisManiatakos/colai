@@ -26,6 +26,9 @@ import {
   hasDraftAmkaErrors,
 } from "./wizard/amkaValidation";
 import {
+  getDraftBarcodeFieldErrors,
+} from "./wizard/barcodeValidation";
+import {
   hasCustomerFieldErrors,
   isCustomerTouchdownOnlyField,
 } from "./wizard/customerFieldValidation";
@@ -117,15 +120,23 @@ export default function OrderEoppyWizard() {
     [draftOrder],
   );
 
+  const barcodeErrorsByField = React.useMemo(
+    () => getDraftBarcodeFieldErrors(draftOrder),
+    [draftOrder],
+  );
+
   const fieldErrorsByField = React.useMemo(() => {
-    const m: Record<string, string | boolean> = { ...amkaErrorsByField };
+    const m: Record<string, string | boolean> = {
+      ...amkaErrorsByField,
+      ...barcodeErrorsByField,
+    };
     for (const [field, message] of Object.entries(errorsByField)) {
       if (!isCustomerTouchdownOnlyField(field)) {
         m[field] = message;
       }
     }
     return m;
-  }, [amkaErrorsByField, errorsByField]);
+  }, [amkaErrorsByField, barcodeErrorsByField, errorsByField]);
 
   const hasAmkaErrors = React.useMemo(
     () => hasDraftAmkaErrors(draftOrder),

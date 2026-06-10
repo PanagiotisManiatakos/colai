@@ -2,9 +2,86 @@ import OrderField from "@/components/ui/OrderField";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import type { AppDispatch } from "@/store/store";
 import React from "react";
 import DoctorLookupModal from "../modals/DoctorLookupModal";
 import type { OrderDoctorAreaProps } from "./componentProps";
+import type { Order } from "@/types/orders";
+
+const OTHER_SUGGESTED_DOCTOR_KEYS = [
+  "otherDoctorSuggested_amka",
+  "otherDoctorSuggested_name",
+  "otherDoctorSuggested_afm",
+  "otherDoctorSuggested_domi",
+  "otherDoctorSuggested_mobile",
+] as const;
+
+const SUGGESTED_DOCTOR_KEYS = [
+  "doctorSuggested_amka",
+  "doctorSuggested_name",
+  "doctorSuggested_afm",
+  "doctorSuggested_domi",
+  "doctorSuggested_tel",
+  "doctorSuggested_ErpGID",
+] as const;
+
+type SuggestedDoctorSnapshot = {
+  has_suggested_doctor: number;
+  hasOtherSystinonIatroBool: boolean;
+  doctorSuggested_amka: string;
+  doctorSuggested_name: string;
+  doctorSuggested_afm: string;
+  doctorSuggested_domi: string;
+  doctorSuggested_tel: string;
+  doctorSuggested_ErpGID: string;
+};
+
+function captureSuggestedDoctorSnapshot(
+  order: Order,
+): SuggestedDoctorSnapshot | null {
+  if (order.has_suggested_doctor != 2) return null;
+
+  return {
+    has_suggested_doctor: order.has_suggested_doctor,
+    hasOtherSystinonIatroBool: Boolean(order.hasOtherSystinonIatroBool),
+    doctorSuggested_amka: order.doctorSuggested_amka ?? "",
+    doctorSuggested_name: order.doctorSuggested_name ?? "",
+    doctorSuggested_afm: order.doctorSuggested_afm ?? "",
+    doctorSuggested_domi: order.doctorSuggested_domi ?? "",
+    doctorSuggested_tel: order.doctorSuggested_tel ?? "",
+    doctorSuggested_ErpGID: order.doctorSuggested_ErpGID ?? "",
+  };
+}
+
+function restoreSuggestedDoctorSnapshot(
+  dispatch: AppDispatch,
+  snapshot: SuggestedDoctorSnapshot,
+) {
+  dispatch(
+    setDraftProperty({
+      key: "has_suggested_doctor",
+      value: snapshot.has_suggested_doctor,
+    }),
+  );
+  dispatch(
+    setDraftProperty({
+      key: "hasOtherSystinonIatroBool",
+      value: snapshot.hasOtherSystinonIatroBool,
+    }),
+  );
+  for (const key of SUGGESTED_DOCTOR_KEYS) {
+    dispatch(setDraftProperty({ key, value: snapshot[key] }));
+  }
+}
+
+function clearOtherSuggestedDoctorFields(dispatch: AppDispatch) {
+  for (const key of OTHER_SUGGESTED_DOCTOR_KEYS) {
+    dispatch(setDraftProperty({ key, value: "" }));
+  }
+  dispatch(
+    setDraftProperty({ key: "otherDoctorSuggested_ErpGID", value: null }),
+  );
+}
 
 export default function OrderDoctorArea({
   errors,
@@ -15,12 +92,26 @@ export default function OrderDoctorArea({
     (s) => s.orders.draft.customerIsCompletelyNew,
   );
   const disableFieldsBelowTypos = customerIsCompletelyNew !== true;
+  const isExistingCustomer = !!String(data.customer_ErpGID ?? "").trim();
+  const proposeOtherSuggestedDoctor = data.propose_other_suggested_doctor == 1;
+  const showOtherSuggestedDoctorFields =
+    data.has_suggested_doctor == 2 && !proposeOtherSuggestedDoctor;
   const dispatch = useAppDispatch();
   const [showLookup, setShowLookup] = React.useState(false);
   const [showSuggestedLookup, setShowSuggestedLookup] = React.useState(false);
+  const [showChangeSuggestedLookup, setShowChangeSuggestedLookup] =
+    React.useState(false);
+  const suggestedDoctorBeforeChangeRef =
+    React.useRef<SuggestedDoctorSnapshot | null>(null);
+  const [otherSuggestedDoctorWasActive, setOtherSuggestedDoctorWasActive] =
+    React.useState(false);
+  const disableOtherSuggestedDoctorRadio =
+    proposeOtherSuggestedDoctor && otherSuggestedDoctorWasActive;
 
   const openDoctorLookup = () => setShowLookup(true);
   const openSuggestedDoctorLookup = () => setShowSuggestedLookup(true);
+  const openChangeSuggestedDoctorLookup = () =>
+    setShowChangeSuggestedLookup(true);
 
   return (
     <div className="app-card p-3">
@@ -74,7 +165,7 @@ export default function OrderDoctorArea({
           />
         </OrderField>
         <div className="row g-2">
-          <div className="col-7">
+          <div className="col-6">
             <OrderField label="ΑΜΚΑ">
               <input
                 className="form-control"
@@ -93,7 +184,7 @@ export default function OrderDoctorArea({
             </OrderField>
           </div>
 
-          <div className="col-5">
+          <div className="col-6">
             <OrderField label="ΑΦΜ">
               <input
                 className="form-control"
@@ -113,34 +204,43 @@ export default function OrderDoctorArea({
           </div>
         </div>
 
-        <OrderField label="Υγεινομική δομή">
-          <input
-            className="form-control"
-            name="doctor_Domi"
-            value={data.doctor_Domi ?? ""}
-            onChange={(e) =>
-              dispatch(
-                setDraftProperty({ key: "doctor_Domi", value: e.target.value }),
-              )
-            }
-          />
-        </OrderField>
+        <div className="row g-2">
+          <div className="col-6">
+            <OrderField label="Δομή">
+              <input
+                className="form-control"
+                name="doctor_Domi"
+                value={data.doctor_Domi ?? ""}
+                onChange={(e) =>
+                  dispatch(
+                    setDraftProperty({
+                      key: "doctor_Domi",
+                      value: e.target.value,
+                    }),
+                  )
+                }
+              />
+            </OrderField>
+          </div>
 
-        <OrderField label="Τύπος">
-          <input
-            className="form-control"
-            name="doctor_DomiTypos"
-            value={data.doctor_DomiTypos ?? ""}
-            onChange={(e) =>
-              dispatch(
-                setDraftProperty({
-                  key: "doctor_DomiTypos",
-                  value: e.target.value,
-                }),
-              )
-            }
-          />
-        </OrderField>
+          <div className="col-6">
+            <OrderField label="Τύπος">
+              <input
+                className="form-control"
+                name="doctor_DomiTypos"
+                value={data.doctor_DomiTypos ?? ""}
+                onChange={(e) =>
+                  dispatch(
+                    setDraftProperty({
+                      key: "doctor_DomiTypos",
+                      value: e.target.value,
+                    }),
+                  )
+                }
+              />
+            </OrderField>
+          </div>
+        </div>
 
         <fieldset disabled={disableFieldsBelowTypos}>
           <div className="form-check form-switch switch-lg mb-2">
@@ -149,7 +249,10 @@ export default function OrderDoctorArea({
               name="has_suggested_doctor"
               id="has_suggested_doctor_0"
               type="radio"
-              checked={data.has_suggested_doctor == 0}
+              checked={
+                data.has_suggested_doctor == 0 && !proposeOtherSuggestedDoctor
+              }
+              disabled={proposeOtherSuggestedDoctor}
               onChange={() => {
                 dispatch(
                   setDraftProperty({ key: "has_suggested_doctor", value: 0 }),
@@ -196,15 +299,205 @@ export default function OrderDoctorArea({
               Ο ίδιος
             </label>
           </div>
+        </fieldset>
 
+        {isExistingCustomer ? (
+          <>
+            <div className="form-check form-switch switch-lg mb-2">
+              <input
+                className="form-check-input"
+                type="checkbox"
+                id="propose_other_suggested_doctor"
+                checked={proposeOtherSuggestedDoctor}
+                onChange={(e) => {
+                  dispatch(
+                    setDraftProperty({
+                      key: "propose_other_suggested_doctor",
+                      value: e.target.checked ? 1 : 0,
+                    }),
+                  );
+                  if (e.target.checked) {
+                    const snapshot = captureSuggestedDoctorSnapshot(data);
+                    suggestedDoctorBeforeChangeRef.current = snapshot;
+                    setOtherSuggestedDoctorWasActive(snapshot != null);
+                    clearOtherSuggestedDoctorFields(dispatch);
+                  } else {
+                    clearOtherSuggestedDoctorFields(dispatch);
+                    const snapshot = suggestedDoctorBeforeChangeRef.current;
+                    if (snapshot) {
+                      restoreSuggestedDoctorSnapshot(dispatch, snapshot);
+                      suggestedDoctorBeforeChangeRef.current = null;
+                    }
+                    setOtherSuggestedDoctorWasActive(false);
+                  }
+                }}
+              />
+              <label
+                className="form-check-label"
+                htmlFor="propose_other_suggested_doctor"
+              >
+                Αλλαγή συστήνοντος ιατρού
+              </label>
+            </div>
+
+            {proposeOtherSuggestedDoctor ? (
+              <>
+                <div className="d-flex align-items-center border-bottom mb-3 gap-3 pb-3">
+                  <label className="form-label fw-semibold mb-0 flex-shrink-0">
+                    Συστήνων ιατρός
+                  </label>
+                  <div
+                    className="input-group flex-grow-1"
+                    style={{ minWidth: 0 }}
+                  >
+                    <input
+                      type="text"
+                      readOnly
+                      className="form-control"
+                      placeholder="Αναζήτηση..."
+                      onClick={openChangeSuggestedDoctorLookup}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          openChangeSuggestedDoctorLookup();
+                        }
+                      }}
+                      aria-label="Αναζήτηση συστήνοντος ιατρού για αλλαγή"
+                      style={{ cursor: "pointer" }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={openChangeSuggestedDoctorLookup}
+                      aria-label="Αναζήτηση"
+                    >
+                      <i className="bi bi-search" />
+                    </button>
+                  </div>
+                </div>
+
+                <DoctorLookupModal
+                  show={showChangeSuggestedLookup}
+                  isOtherSuggested
+                  onClose={() => setShowChangeSuggestedLookup(false)}
+                />
+
+                <div className="p-2 mb-2">
+                  <div className="row g-2">
+                    <div className="col-12">
+                      <OrderField label="Ονοματεπώνυμο">
+                        <input
+                          className="form-control"
+                          name="otherDoctorSuggested_name"
+                          value={data.otherDoctorSuggested_name ?? ""}
+                          onChange={(e) =>
+                            dispatch(
+                              setDraftProperty({
+                                key: "otherDoctorSuggested_name",
+                                value: e.target.value,
+                              }),
+                            )
+                          }
+                        />
+                      </OrderField>
+                    </div>
+                  </div>
+                  <div className="row g-2">
+                    <div className="col-6">
+                      <OrderField label="ΑΜΚΑ">
+                        <input
+                          className="form-control"
+                          name="otherDoctorSuggested_amka"
+                          inputMode="numeric"
+                          value={data.otherDoctorSuggested_amka ?? ""}
+                          onChange={(e) =>
+                            dispatch(
+                              setDraftProperty({
+                                key: "otherDoctorSuggested_amka",
+                                value: e.target.value,
+                              }),
+                            )
+                          }
+                        />
+                      </OrderField>
+                    </div>
+                    <div className="col-6">
+                      <OrderField label="ΑΦΜ">
+                        <input
+                          className="form-control"
+                          name="otherDoctorSuggested_afm"
+                          inputMode="numeric"
+                          value={data.otherDoctorSuggested_afm ?? ""}
+                          onChange={(e) =>
+                            dispatch(
+                              setDraftProperty({
+                                key: "otherDoctorSuggested_afm",
+                                value: e.target.value,
+                              }),
+                            )
+                          }
+                        />
+                      </OrderField>
+                    </div>
+                  </div>
+                  <div className="row g-2">
+                    <div className="col-6">
+                      <OrderField label="Κινητό">
+                        <input
+                          className="form-control"
+                          name="otherDoctorSuggested_mobile"
+                          inputMode="tel"
+                          value={data.otherDoctorSuggested_mobile ?? ""}
+                          onChange={(e) =>
+                            dispatch(
+                              setDraftProperty({
+                                key: "otherDoctorSuggested_mobile",
+                                value: e.target.value,
+                              }),
+                            )
+                          }
+                        />
+                      </OrderField>
+                    </div>
+                    <div className="col-6">
+                      <OrderField label="Δομή">
+                        <input
+                          className="form-control"
+                          name="otherDoctorSuggested_domi"
+                          value={data.otherDoctorSuggested_domi ?? ""}
+                          onChange={(e) =>
+                            dispatch(
+                              setDraftProperty({
+                                key: "otherDoctorSuggested_domi",
+                                value: e.target.value,
+                              }),
+                            )
+                          }
+                        />
+                      </OrderField>
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </>
+        ) : null}
+
+        <fieldset disabled={disableFieldsBelowTypos}>
           <div className="form-check form-switch switch-lg mb-2">
             <input
               className="form-check-input"
               name="has_suggested_doctor"
               id="has_suggested_doctor_3"
               type="radio"
-              checked={data.has_suggested_doctor == 2}
+              checked={
+                data.has_suggested_doctor == 2 &&
+                !disableOtherSuggestedDoctorRadio
+              }
+              disabled={disableOtherSuggestedDoctorRadio}
               onChange={() => {
+                setOtherSuggestedDoctorWasActive(false);
+                suggestedDoctorBeforeChangeRef.current = null;
                 dispatch(
                   setDraftProperty({ key: "has_suggested_doctor", value: 2 }),
                 );
@@ -214,6 +507,13 @@ export default function OrderDoctorArea({
                     value: true,
                   }),
                 );
+                dispatch(
+                  setDraftProperty({
+                    key: "propose_other_suggested_doctor",
+                    value: 0,
+                  }),
+                );
+                clearOtherSuggestedDoctorFields(dispatch);
               }}
             />
             <label
@@ -224,7 +524,7 @@ export default function OrderDoctorArea({
             </label>
           </div>
 
-          {data.has_suggested_doctor == 2 && (
+          {showOtherSuggestedDoctorFields && (
             <>
               <div className="d-flex align-items-center border-bottom mb-3 gap-3 pb-3">
                 <label className="form-label fw-semibold mb-0 flex-shrink-0">
@@ -281,7 +581,7 @@ export default function OrderDoctorArea({
                 />
               </OrderField>
               <div className="row g-2">
-                <div className="col-7">
+                <div className="col-6">
                   <OrderField label="ΑΜΚΑ">
                     <input
                       className="form-control"
@@ -299,7 +599,7 @@ export default function OrderDoctorArea({
                     />
                   </OrderField>
                 </div>
-                <div className="col-5">
+                <div className="col-6">
                   <OrderField label="ΑΦΜ">
                     <input
                       className="form-control"
@@ -320,24 +620,7 @@ export default function OrderDoctorArea({
               </div>
               <div className="row g-2">
                 <div className="col-6">
-                  <OrderField label="Υγειονομική δομή">
-                    <input
-                      className="form-control"
-                      name="doctorSuggested_domi"
-                      value={data.doctorSuggested_domi ?? ""}
-                      onChange={(e) =>
-                        dispatch(
-                          setDraftProperty({
-                            key: "doctorSuggested_domi",
-                            value: e.target.value,
-                          }),
-                        )
-                      }
-                    />
-                  </OrderField>
-                </div>
-                <div className="col-6">
-                  <OrderField label="Τηλέφωνο">
+                  <OrderField label="Κινητό">
                     <input
                       className="form-control"
                       name="doctorSuggested_tel"
@@ -347,6 +630,23 @@ export default function OrderDoctorArea({
                         dispatch(
                           setDraftProperty({
                             key: "doctorSuggested_tel",
+                            value: e.target.value,
+                          }),
+                        )
+                      }
+                    />
+                  </OrderField>
+                </div>
+                <div className="col-6">
+                  <OrderField label="Δομή">
+                    <input
+                      className="form-control"
+                      name="doctorSuggested_domi"
+                      value={data.doctorSuggested_domi ?? ""}
+                      onChange={(e) =>
+                        dispatch(
+                          setDraftProperty({
+                            key: "doctorSuggested_domi",
                             value: e.target.value,
                           }),
                         )

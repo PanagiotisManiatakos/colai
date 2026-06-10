@@ -87,7 +87,9 @@ export function buildStepDefs({
     {
       key: "syntagi",
       label: STEP_LABELS.syntagi,
-      render: () => <SyntagiArea />,
+      render: () => (
+        <SyntagiArea errors={errorsByField} clearError={clearError} />
+      ),
     },
     {
       key: "aiMaterials",

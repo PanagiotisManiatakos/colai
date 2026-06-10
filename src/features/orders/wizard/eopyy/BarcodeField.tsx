@@ -2,7 +2,12 @@
 
 import React from "react";
 import { Modal } from "react-bootstrap";
+import FormErrorsContext from "@/components/ui/FormErrorContect";
 import type { BarcodeFieldProps } from "./componentProps";
+
+function mergeClassName(a?: string, b?: string) {
+  return [a, b].filter(Boolean).join(" ");
+}
 
 export default function BarcodeField({
   label,
@@ -18,6 +23,9 @@ export default function BarcodeField({
   scanButtonAriaLabel = "Scan barcode",
   modalTitle = "Σάρωση Barcode",
 }: BarcodeFieldProps) {
+  const { errors, clearError } = React.useContext(FormErrorsContext);
+  const fieldError = name ? errors[name] : undefined;
+
   const [show, setShow] = React.useState(false);
   const [starting, setStarting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -114,14 +122,24 @@ export default function BarcodeField({
 
       <div className="input-group">
         <input
-          className="form-control"
+          className={mergeClassName(
+            "form-control",
+            fieldError ? "is-invalid" : "",
+          )}
           name={name}
           value={value}
           placeholder={placeholder}
           inputMode={inputMode}
           disabled={disabled}
           autoFocus={autoFocus}
-          onChange={(e) => onChange(e.target.value)}
+          aria-invalid={!!fieldError}
+          onChange={(e) => {
+            onChange(e.target.value);
+            if (name && fieldError && clearError) clearError(name);
+          }}
+          onBlur={() => {
+            if (name && fieldError && clearError) clearError(name);
+          }}
         />
 
         <button
@@ -136,7 +154,11 @@ export default function BarcodeField({
         </button>
       </div>
 
-      {hint ? <div className="form-text">{hint}</div> : null}
+      {fieldError && fieldError !== true ? (
+        <div className="invalid-feedback d-block">{fieldError}</div>
+      ) : hint ? (
+        <div className="form-text">{hint}</div>
+      ) : null}
 
       <Modal
         show={show}

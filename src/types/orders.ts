@@ -71,6 +71,13 @@ export type Order = {
   doctorSuggested_domi: string;
   doctorSuggested_tel: string;
   doctorSuggested_ErpGID: string;
+  propose_other_suggested_doctor: number;
+  otherDoctorSuggested_amka: string;
+  otherDoctorSuggested_name: string;
+  otherDoctorSuggested_afm: string;
+  otherDoctorSuggested_domi: string;
+  otherDoctorSuggested_mobile: string;
+  otherDoctorSuggested_ErpGID: string;
   dateOfSyntagi: string; // ISO datetime
   dateIsxyeiApo: string; // ISO datetime
   dateIsxyeiEos: string; // ISO datetime

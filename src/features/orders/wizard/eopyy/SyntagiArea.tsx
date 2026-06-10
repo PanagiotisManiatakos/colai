@@ -1,9 +1,11 @@
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import FormErrorsContext from "@/components/ui/FormErrorContect";
 import { Order } from "@/types/orders";
 import React from "react";
 import { FormSelect } from "react-bootstrap";
 import BarcodeField from "./BarcodeField";
+import type { SyntagiAreaProps } from "./componentProps";
 
 function Field({
   label,
@@ -23,7 +25,7 @@ function Field({
   );
 }
 
-const SyntagiArea = () => {
+const SyntagiArea = ({ errors, clearError }: SyntagiAreaProps) => {
   const data = useAppSelector((s) => s.orders.draft.order);
   const dispatch = useAppDispatch();
   const eidiEgrisis =
@@ -62,6 +64,7 @@ const SyntagiArea = () => {
 
   return (
     <div className="app-card p-3">
+      <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
         <div
           style={{ height: 51 }}
           className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2"
@@ -294,6 +297,7 @@ const SyntagiArea = () => {
                     </Field>
                 </div>
             </div> */}
+      </FormErrorsContext.Provider>
     </div>
   );
 };
