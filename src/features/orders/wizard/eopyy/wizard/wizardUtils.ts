@@ -1,5 +1,9 @@
 export const onlyDigits = (s: string) => s.replace(/\D/g, "");
 
+export function normalizeBarcode(value: unknown): string {
+  return String(value ?? "").replace(/\s/g, "");
+}
+
 export const SYMM_PERCENTAGE_OPTIONS = [0, 10, 25] as const;
 
 export function normalizeSymmPercentage(value: unknown): number | null {

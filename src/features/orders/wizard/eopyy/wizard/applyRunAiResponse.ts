@@ -8,7 +8,7 @@ import {
   syncShipToOtherAddressFlags,
 } from "@/lib/applyLastOrderData";
 import { hasText, isBlank, trimmedString } from "@/lib/utils/string";
-import { normalizeSymmPercentage } from "./wizardUtils";
+import { hasAnyValue, normalizeBarcode, normalizeSymmPercentage } from "./wizardUtils";
 import {
   clearDraftAddressesList,
   loadCustomerAddressesAsync,
@@ -30,7 +30,6 @@ import type {
   OrderFile,
   OrderYlika,
 } from "@/types/orders";
-import { hasAnyValue } from "./wizardUtils";
 import {
   findAddressPersonByAmka,
   getCustomerMobileFromAddressPerson,
@@ -453,10 +452,10 @@ export async function applyRunAiResponse(
 
   const gnomatevsi = jsonDoc.gnomateusi;
   if (gnomatevsi) {
-    jsonDoc.barcode &&
-      dispatch(
-        setDraftProperty({ key: "barcode", value: jsonDoc.barcode }),
-      );
+    const barcode = normalizeBarcode(jsonDoc.barcode);
+    if (barcode) {
+      dispatch(setDraftProperty({ key: "barcode", value: barcode }));
+    }
     gnomatevsi.imerominia_gnomateusis &&
       dispatch(
         setDraftProperty({
