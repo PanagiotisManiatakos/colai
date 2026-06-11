@@ -3,9 +3,16 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useAppSelector } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import LeaveOrderWizardConfirmModal from "@/features/orders/components/LeaveOrderWizardConfirmModal";
+import BottomToast from "@/components/ui/BottomToast";
+import { hasOrderWizardDraftContent } from "@/lib/orderWizardDraftContent";
 import { isOrderWizardPath } from "@/lib/orderWizardRoute";
+import {
+  fetchOrders,
+  setDraftProperty,
+  submitDraftAsync,
+} from "@/store/orders/ordersSlice";
 
 type Item = {
   href: string;
@@ -22,10 +29,18 @@ function isActive(pathname: string, href: string): boolean {
 export default function BottomNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const pendingDiscounts = useAppSelector(
     (s) => s.discountRequests.requests.filter((r) => r.statusId == -1).length,
   );
+  const draft = useAppSelector((s) => s.orders.draft);
+  const submitState = useAppSelector((s) => s.orders.draft.submitState);
+  const hasDraftContent = React.useMemo(
+    () => hasOrderWizardDraftContent(draft),
+    [draft],
+  );
   const [pendingHref, setPendingHref] = React.useState<string | null>(null);
+  const [tempSaveToast, setTempSaveToast] = React.useState<string | null>(null);
   const guardWizardLeave = isOrderWizardPath(pathname);
 
   const items: Item[] = [
@@ -46,6 +61,7 @@ export default function BottomNav() {
     href: string,
   ) {
     if (!guardWizardLeave || pathname === href) return;
+    if (!hasDraftContent) return;
     event.preventDefault();
     setPendingHref(href);
   }
@@ -53,6 +69,26 @@ export default function BottomNav() {
   function confirmLeave() {
     if (pendingHref) router.push(pendingHref);
     setPendingHref(null);
+  }
+
+  async function confirmTempSave() {
+    if (!pendingHref) return;
+
+    try {
+      dispatch(setDraftProperty({ key: "isTempSave", value: 1 }));
+      const result = await dispatch(submitDraftAsync()).unwrap();
+      if (result.result) {
+        const href = pendingHref;
+        setPendingHref(null);
+        setTempSaveToast(
+          result.message?.trim() || "Η προσωρινή αποθήκευση ολοκληρώθηκε",
+        );
+        router.push(href);
+        await dispatch(fetchOrders({ force: true }));
+      }
+    } catch {
+      // submitState.error is shown in the modal
+    }
   }
 
   return (
@@ -94,6 +130,15 @@ export default function BottomNav() {
         show={pendingHref != null}
         onCancel={() => setPendingHref(null)}
         onConfirm={confirmLeave}
+        onTempSave={() => void confirmTempSave()}
+        tempSaveLoading={submitState.loading}
+        tempSaveError={submitState.error}
+      />
+
+      <BottomToast
+        message={tempSaveToast}
+        durationMs={2000}
+        onDismiss={() => setTempSaveToast(null)}
       />
     </>
   );

@@ -25,9 +25,7 @@ import {
   getDraftAmkaFieldErrors,
   hasDraftAmkaErrors,
 } from "./wizard/amkaValidation";
-import {
-  getDraftBarcodeFieldErrors,
-} from "./wizard/barcodeValidation";
+import { getDraftBarcodeFieldErrors } from "./wizard/barcodeValidation";
 import {
   hasCustomerFieldErrors,
   isCustomerTouchdownOnlyField,

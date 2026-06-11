@@ -351,6 +351,22 @@ html[data-bs-theme="dark"] .app-bottom-nav {
   letter-spacing: -0.01em;
 }
 
+.app-bottom-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: calc(var(--app-bottom-nav-total-height) + 12px);
+  z-index: 31;
+  width: min(calc(100% - 24px), calc(var(--app-max-width) - 24px));
+  pointer-events: none;
+}
+
+.app-bottom-toast__inner {
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .app-card {
   background: var(--app-surface);
   border: 1px solid var(--app-surface-border);
