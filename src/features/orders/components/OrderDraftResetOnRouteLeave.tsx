@@ -3,10 +3,8 @@
 import React from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useAppDispatch } from "@/store/hooks";
+import { ORDER_WIZARD_PATH_RE } from "@/lib/orderWizardRoute";
 import { resetEntireDraft } from "@/store/orders/ordersSlice";
-
-/** `/orders/:orderId/:orderType/edit` or `.../new` */
-const WIZARD_ORDER_RE = /^\/orders\/([^/]+)\/([^/]+)\/(edit|new)$/;
 
 /**
  * Clears persisted draft (order `{}`, ai_ylika/files `[]`, etc.) when navigating away from
@@ -32,8 +30,8 @@ export default function OrderDraftResetOnRouteLeave() {
         const before = prevRef.current;
         prevRef.current = curr;
 
-        const prevMatch = before.pathname.match(WIZARD_ORDER_RE);
-        const currMatch = pathname.match(WIZARD_ORDER_RE);
+        const prevMatch = before.pathname.match(ORDER_WIZARD_PATH_RE);
+        const currMatch = pathname.match(ORDER_WIZARD_PATH_RE);
 
         const wasOnWizard = !!prevMatch;
         const onWizard = !!currMatch;
