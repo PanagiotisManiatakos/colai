@@ -25,9 +25,7 @@ import {
   getDraftAmkaFieldErrors,
   hasDraftAmkaErrors,
 } from "./wizard/amkaValidation";
-import {
-  getDraftBarcodeFieldErrors,
-} from "./wizard/barcodeValidation";
+import { getDraftBarcodeFieldErrors } from "./wizard/barcodeValidation";
 import {
   hasCustomerFieldErrors,
   isCustomerTouchdownOnlyField,
@@ -166,7 +164,7 @@ export default function OrderEoppyWizard() {
       setAiMessage(null);
 
       const controller = new AbortController();
-      const pendingTimeoutMs = 60_000;
+      const pendingTimeoutMs = 120_000;
       const t = window.setTimeout(() => controller.abort(), pendingTimeoutMs);
 
       try {
