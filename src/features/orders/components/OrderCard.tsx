@@ -3,7 +3,7 @@
 import React from "react";
 import type { Order } from "@/types/orders";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { formatUIDate } from "@/lib/utils/date";
+import { formatCompactUIDateTime, formatUIDate } from "@/lib/utils/date";
 import Link from "next/link";
 import { Modal, Button } from "react-bootstrap";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -198,6 +198,7 @@ export default function OrderCard({
   const groupText =
     list_group_eoppy?.find((g) => g.value == String(order.group_EOPPY_id))
       ?.text ?? "";
+  const dateInText = formatCompactUIDateTime(order.dateIn);
 
   const doctorLabel =
     order.has_suggested_doctor == 2 ? "Συστήνων ιατρός" : "Ιατρός";
@@ -227,6 +228,14 @@ export default function OrderCard({
     background: "rgba(var(--bs-primary-rgb), .12)",
     color: "var(--bs-primary)",
     border: "1px solid rgba(var(--bs-primary-rgb), .18)",
+  };
+
+  const timestampChipStyle: React.CSSProperties = {
+    background: "rgba(var(--bs-info-rgb), .1)",
+    color: "var(--bs-emphasis-color)",
+    border: "1px solid rgba(var(--bs-info-rgb), .22)",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,.08)",
+    fontVariantNumeric: "tabular-nums",
   };
 
   const cardStyle: React.CSSProperties = {
@@ -326,6 +335,16 @@ export default function OrderCard({
                   {typeText ? <span style={chipStyle}>{typeText}</span> : null}
                   {groupText ? (
                     <span style={chipStyle}>{groupText}</span>
+                  ) : null}
+                  {dateInText ? (
+                    <span
+                      style={{ ...chipStyle, ...timestampChipStyle }}
+                      title={`Καταχώρηση: ${dateInText}`}
+                      aria-label={`Καταχώρηση: ${dateInText}`}
+                    >
+                      <i className="bi bi-clock-history" />
+                      <span className="fw-semibold">{dateInText}</span>
+                    </span>
                   ) : null}
                 </div>
 

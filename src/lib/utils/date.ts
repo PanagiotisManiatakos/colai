@@ -28,6 +28,31 @@ export function formatUIDate(
     return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
 }
 
+export function formatCompactUIDateTime(
+    value: string | number | Date | null | undefined,
+): string {
+    if (value == null || value === "") return "";
+
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return String(value);
+
+    const hh = pad2(d.getHours());
+    const min = pad2(d.getMinutes());
+    const time = `${hh}:${min}`;
+
+    const today = new Date();
+    const isToday =
+        d.getFullYear() === today.getFullYear() &&
+        d.getMonth() === today.getMonth() &&
+        d.getDate() === today.getDate();
+
+    if (isToday) return time;
+
+    const dd = pad2(d.getDate());
+    const mm = pad2(d.getMonth() + 1);
+    return `${dd}/${mm} ${time}`;
+}
+
 export function formatStringToISODDateTime(
     value: string,
 ): string | null {
@@ -50,5 +75,4 @@ export function formatStringToISODDateTime(
 
     return iso;
 }
-
 
