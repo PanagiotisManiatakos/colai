@@ -290,16 +290,16 @@ export default function OrderRetailCustomerArea() {
           </div>
         </div>
 
-        <OrderField label="Σχόλια">
+        <OrderField label="Σχόλια παραγγελίας">
           <textarea
             className="form-control"
-            name="customer_notes"
+            name="sellerComments"
             rows={2}
-            value={data.customer_notes ?? ""}
+            value={data.sellerComments ?? ""}
             onChange={(e) =>
               dispatch(
                 setDraftProperty({
-                  key: "customer_notes",
+                  key: "sellerComments",
                   value: e.target.value,
                 }),
               )

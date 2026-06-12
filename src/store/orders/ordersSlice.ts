@@ -30,6 +30,8 @@ import type {
 } from "@/lib/interface";
 import { RootState } from "@/store/store";
 import { formatStringToISODDateTime, formatUIDate } from "@/lib/utils/date";
+import { parseGreekDecimal } from "@/lib/utils/number";
+import { pickFirstNonBlankString } from "@/lib/utils/string";
 import {
   pickDefaultAddressGid,
   pickDefaultPersonRow,
@@ -224,9 +226,7 @@ export const submitDraftAsync = createAsyncThunk<
     state.auth.userInfos,
     state.auth.actingSellerCode,
   );
-  const parsedFinalAmount = parseFloat(
-    String(order.posoDiscounted).replace(",", "."),
-  );
+  const parsedFinalAmount = parseGreekDecimal(order.posoDiscounted);
   const canShowMidenikiToggle =
     order.payFullOrDiscount == 2 &&
     Number.isFinite(parsedFinalAmount) &&
@@ -239,8 +239,8 @@ export const submitDraftAsync = createAsyncThunk<
       dateOfSyntagi: formatStringToISODDateTime(order.dateOfSyntagi),
       dateIsxyeiApo: formatStringToISODDateTime(order.dateIsxyeiApo),
       dateIsxyeiEos: formatStringToISODDateTime(order.dateIsxyeiEos),
-      posoDiscounted: parseFloat(String(order.posoDiscounted)),
-      posoSymmetoxis: parseFloat(String(order.posoSymmetoxis)),
+      posoDiscounted: parseGreekDecimal(order.posoDiscounted),
+      posoSymmetoxis: parseGreekDecimal(order.posoSymmetoxis),
       hasConfirmedMidenikiPliromi: zeroParticipationConfirmed
         ? true
         : canShowMidenikiToggle
@@ -916,6 +916,16 @@ const ordersSlice = createSlice({
         state.draft.order.dateOfSyntagi = formatUIDate(order.dateOfSyntagi);
         state.draft.order.dateIsxyeiApo = formatUIDate(order.dateIsxyeiApo);
         state.draft.order.dateIsxyeiEos = formatUIDate(order.dateIsxyeiEos);
+        const loadedOrderRecord = order as Record<string, unknown>;
+        const mergedComments = pickFirstNonBlankString(
+          order?.sellerComments,
+          loadedOrderRecord.customer_notes,
+          loadedOrderRecord.customer_Notes,
+          order?.recipient_Notes,
+        );
+        if (mergedComments) {
+          state.draft.order.sellerComments = mergedComments;
+        }
         const prevUid =
           prevOrder?.uid != null ? String(prevOrder.uid).trim() : "";
         const nextUid = order?.uid != null ? String(order.uid).trim() : "";

@@ -692,6 +692,57 @@ html[data-bs-theme="dark"], .modal-content {
   background-color: var(--app-bg);
 }
 
+.leave-order-modal {
+  margin: 0 auto;
+  max-width: min(100%, var(--app-max-width));
+  width: 100%;
+  min-height: 100%;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 12px calc(var(--app-bottom-nav-total-height) + 12px);
+}
+
+.leave-order-modal .modal-content {
+  border: 1px solid var(--app-surface-border);
+  border-radius: 22px 22px 18px 18px;
+  box-shadow: var(--app-shadow);
+  overflow: hidden;
+}
+
+.leave-order-modal__body {
+  padding: 12px 16px 16px;
+}
+
+.leave-order-modal__handle {
+  width: 42px;
+  height: 4px;
+  margin: 0 auto 14px;
+  border-radius: 999px;
+  background: rgba(var(--bs-secondary-rgb), 0.35);
+}
+
+.leave-order-modal__icon {
+  width: 44px;
+  height: 44px;
+  background: rgba(var(--bs-warning-rgb), 0.12);
+  border: 1px solid rgba(var(--bs-warning-rgb), 0.2);
+  color: var(--bs-warning);
+}
+
+html[data-bs-theme="dark"] .leave-order-modal__icon {
+  color: #ffc107;
+}
+
+.leave-order-modal__btn {
+  border-radius: 14px;
+  font-weight: 600;
+  padding: 12px 16px;
+}
+
+.leave-order-modal__btn-cancel {
+  margin-top: 10px;
+}
+
 .ai-mat-title {
   display: -webkit-box;
   -webkit-box-orient: vertical;
