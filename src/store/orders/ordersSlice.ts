@@ -30,6 +30,7 @@ import type {
 } from "@/lib/interface";
 import { RootState } from "@/store/store";
 import { formatStringToISODDateTime, formatUIDate } from "@/lib/utils/date";
+import { parseGreekDecimal } from "@/lib/utils/number";
 import {
   pickDefaultAddressGid,
   pickDefaultPersonRow,
@@ -224,9 +225,7 @@ export const submitDraftAsync = createAsyncThunk<
     state.auth.userInfos,
     state.auth.actingSellerCode,
   );
-  const parsedFinalAmount = parseFloat(
-    String(order.posoDiscounted).replace(",", "."),
-  );
+  const parsedFinalAmount = parseGreekDecimal(order.posoDiscounted);
   const canShowMidenikiToggle =
     order.payFullOrDiscount == 2 &&
     Number.isFinite(parsedFinalAmount) &&
@@ -239,8 +238,8 @@ export const submitDraftAsync = createAsyncThunk<
       dateOfSyntagi: formatStringToISODDateTime(order.dateOfSyntagi),
       dateIsxyeiApo: formatStringToISODDateTime(order.dateIsxyeiApo),
       dateIsxyeiEos: formatStringToISODDateTime(order.dateIsxyeiEos),
-      posoDiscounted: parseFloat(String(order.posoDiscounted)),
-      posoSymmetoxis: parseFloat(String(order.posoSymmetoxis)),
+      posoDiscounted: parseGreekDecimal(order.posoDiscounted),
+      posoSymmetoxis: parseGreekDecimal(order.posoSymmetoxis),
       hasConfirmedMidenikiPliromi: zeroParticipationConfirmed
         ? true
         : canShowMidenikiToggle
