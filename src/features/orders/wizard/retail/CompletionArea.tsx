@@ -1,6 +1,7 @@
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { formatCurrencyGR } from "@/lib/utils/number";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import OrderField from "@/components/ui/OrderField";
 import React from "react";
 import { Alert, FormSelect } from "react-bootstrap";
 
@@ -249,6 +250,26 @@ export default function CompletionArea() {
           </label>
         </div>
       </div>
+
+      <div className="app-card p-3">
+        <OrderField label="Σχόλια παραγγελίας">
+          <textarea
+            className="form-control"
+            name="sellerComments"
+            rows={2}
+            value={data.sellerComments ?? ""}
+            onChange={(e) =>
+              dispatch(
+                setDraftProperty({
+                  key: "sellerComments",
+                  value: e.target.value,
+                }),
+              )
+            }
+          />
+        </OrderField>
+      </div>
+
       {submitState.error && (
         <Alert className="mt-3" variant="danger">
           {submitState.error}

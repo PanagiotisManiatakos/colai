@@ -55,6 +55,25 @@ export default function Touchdown({
             Προσωρινή αποθήκευση
           </label>
         </div>
+
+        <div className="mt-3">
+          <OrderField label="Σχόλια παραγγελίας">
+            <textarea
+              className="form-control"
+              name="sellerComments"
+              rows={2}
+              value={data.sellerComments ?? ""}
+              onChange={(e) =>
+                dispatch(
+                  setDraftProperty({
+                    key: "sellerComments",
+                    value: e.target.value,
+                  }),
+                )
+              }
+            />
+          </OrderField>
+        </div>
       </div>
 
       {sortedIssues.length > 0 && (
@@ -119,25 +138,6 @@ export default function Touchdown({
           </div>
         </div>
       )}
-
-      <div className="app-card p-3">
-        <OrderField label="Σχόλια παραγγελίας">
-          <textarea
-            className="form-control"
-            name="sellerComments"
-            rows={2}
-            value={data.sellerComments ?? ""}
-            onChange={(e) =>
-              dispatch(
-                setDraftProperty({
-                  key: "sellerComments",
-                  value: e.target.value,
-                }),
-              )
-            }
-          />
-        </OrderField>
-      </div>
 
       {submitState.error && (
         <Alert className="mt-3" variant="danger">

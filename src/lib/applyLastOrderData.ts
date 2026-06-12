@@ -4,10 +4,11 @@ import type { Order } from "@/types/orders";
 import { hasText } from "@/lib/utils/string";
 
 const KEY_MAP: Record<string, keyof Order> = {
-  customer_Notes: "customer_notes",
-  customerNotes: "customer_notes",
-  recipient_Notes: "recipient_Notes",
-  recipientNotes: "recipient_Notes",
+  customer_Notes: "sellerComments",
+  customerNotes: "sellerComments",
+  customer_notes: "sellerComments",
+  recipient_Notes: "sellerComments",
+  recipientNotes: "sellerComments",
   preselected_address_GID: "address_ErpGID",
   address_GID: "address_ErpGID",
   preselected_person_GID: "person_ErpGID",
@@ -137,7 +138,7 @@ export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
   "customer_mobile2",
   "customer_email",
   "customer_dob",
-  "customer_notes",
+  "sellerComments",
   "customer_ErpGID",
   "customer_other_address",
   "customer_other_city",
@@ -160,7 +161,6 @@ export const LAST_CUSTOMER_WEB_ORDER_ALLOW_KEYS = new Set<string>([
   "recipient_ErpGID",
   "recipient_ErpContact_PersonGID",
   "recipient_ErpContact_AddressGID",
-  "recipient_Notes",
   "person_ErpGID",
   "address_ErpGID",
   "preselected_person_GID",

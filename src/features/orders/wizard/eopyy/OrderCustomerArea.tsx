@@ -364,7 +364,8 @@ export default function OrderCustomerArea({
                   onChange={(e) => {
                     const value = e.target.value;
                     if (!amkaEditedByUser) {
-                      baselineCustomerAmkaRef.current = data.customer_amka ?? "";
+                      baselineCustomerAmkaRef.current =
+                        data.customer_amka ?? "";
                     }
                     setAmkaEditedByUser(true);
                     setAmkaSearchOpen(isValidAmka(value));
@@ -543,16 +544,16 @@ export default function OrderCustomerArea({
           </div>
         </div>
 
-        <OrderField label="Σχόλια">
+        <OrderField label="Σχόλια παραγγελίας">
           <textarea
             className="form-control"
-            name="customer_notes"
+            name="sellerComments"
             rows={2}
-            value={data.customer_notes ?? ""}
+            value={data.sellerComments ?? ""}
             onChange={(e) =>
               dispatch(
                 setDraftProperty({
-                  key: "customer_notes",
+                  key: "sellerComments",
                   value: e.target.value,
                 }),
               )
@@ -967,16 +968,16 @@ export default function OrderCustomerArea({
                 </OrderField>
               </div>
             </div>
-            <OrderField label="Σχόλια">
+            <OrderField label="Σχόλια παραγγελίας">
               <textarea
                 className="form-control"
-                name="recipient_Notes"
+                name="sellerComments"
                 rows={2}
-                value={data.recipient_Notes ?? ""}
+                value={data.sellerComments ?? ""}
                 onChange={(e) =>
                   dispatch(
                     setDraftProperty({
-                      key: "recipient_Notes",
+                      key: "sellerComments",
                       value: e.target.value,
                     }),
                   )

@@ -27,7 +27,6 @@ const EOPYY_EMPTY_ORDER_TEMPLATE: Record<string, unknown> = {
   customer_mobile2: null,
   customer_tel: null,
   customer_Notes: null,
-  customer_notes: null,
   customer_email: null,
   customer_dob: null,
   customer_tel_otp: null,
