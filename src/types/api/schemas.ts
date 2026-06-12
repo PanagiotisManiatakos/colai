@@ -644,6 +644,9 @@ export type APLAT_T_WC_DIADIKASIA_CALENDAR = {
   daysUntilReminder?: number | null;
   doctoR_SINTAGHS?: string | null;
   docT_GRLSH?: string | null;
+  deliveryAddress1?: string | null;
+  deliveryCity?: string | null;
+  deliveryPostal?: string | null;
   items?: string | null;
   totalTurnover?: number | null;
   pasy?: number | null;
