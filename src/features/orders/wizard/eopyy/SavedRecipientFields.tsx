@@ -30,7 +30,6 @@ const OTHER_RECIPIENT_FIELD_KEYS = [
   "recipient_ErpGID",
   "recipient_ErpContact_PersonGID",
   "recipient_ErpContact_AddressGID",
-  "recipient_Notes",
   "recipient_from_erp_lookup",
   "shouldUpdateRecipientInfos",
   "updateRecipient_afm",

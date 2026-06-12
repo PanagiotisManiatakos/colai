@@ -31,6 +31,7 @@ import type {
 import { RootState } from "@/store/store";
 import { formatStringToISODDateTime, formatUIDate } from "@/lib/utils/date";
 import { parseGreekDecimal } from "@/lib/utils/number";
+import { pickFirstNonBlankString } from "@/lib/utils/string";
 import {
   pickDefaultAddressGid,
   pickDefaultPersonRow,
@@ -915,6 +916,16 @@ const ordersSlice = createSlice({
         state.draft.order.dateOfSyntagi = formatUIDate(order.dateOfSyntagi);
         state.draft.order.dateIsxyeiApo = formatUIDate(order.dateIsxyeiApo);
         state.draft.order.dateIsxyeiEos = formatUIDate(order.dateIsxyeiEos);
+        const loadedOrderRecord = order as Record<string, unknown>;
+        const mergedComments = pickFirstNonBlankString(
+          order?.sellerComments,
+          loadedOrderRecord.customer_notes,
+          loadedOrderRecord.customer_Notes,
+          order?.recipient_Notes,
+        );
+        if (mergedComments) {
+          state.draft.order.sellerComments = mergedComments;
+        }
         const prevUid =
           prevOrder?.uid != null ? String(prevOrder.uid).trim() : "";
         const nextUid = order?.uid != null ? String(order.uid).trim() : "";
