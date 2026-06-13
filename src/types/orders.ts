@@ -1,5 +1,13 @@
-import type { SaleOrder_CheckItem } from "./api/schemas";
+import type { Nullable } from "./api/common";
+import type {
+  APLAT_Sales_FileItem,
+  APLAT_Sales_OrderItem,
+  AddressAndPersonDto,
+  AddressDto,
+  SaleOrder_CheckItem,
+} from "./api/schemas";
 
+/** Order wizard draft — text fields use empty string instead of API null. */
 export type Order = {
   id: number;
   uid: string;
@@ -12,7 +20,7 @@ export type Order = {
   seller_GID: string;
   sellerPerson_GID: string;
   sellerName: string;
-  dateIn: string; // ISO datetime
+  dateIn: string;
   customer_amka: string;
   customer_afm: string;
   customer_passport: string;
@@ -29,16 +37,16 @@ export type Order = {
   amka_origin: string;
   customer_ErpGID: string;
   /** Person ERP id from run-ai jsonDoc.person_erpid (null = pending EBS link). */
-  person_erpid?: string | null;
-  person_ErpGID: string | null;
-  address_ErpGID: string | null;
-  shipTo_other_address: number; // 0/1
+  person_erpid?: Nullable<string>;
+  person_ErpGID: Nullable<string>;
+  address_ErpGID: Nullable<string>;
+  shipTo_other_address: number;
   customer_other_address: string;
   customer_other_city: string;
   customer_other_tk: string;
   customer_notes: string;
   has_other_recipient: number;
-  /** 1 after choosing a person via search-erp-contacts while Παραλαβή από νέο πρόσωπο is on (shows Επικαιροποίηση). */
+  /** 1 after choosing a person via search-erp-contacts while Παραλαβή από νέο πρόσωπο is on. */
   recipient_from_erp_lookup?: number;
   recipient_relation_id: number;
   recipient_relation: string;
@@ -54,9 +62,9 @@ export type Order = {
   recipient_tel: string;
   recipient_mobile?: string;
   recipient_mobile2?: string;
-  recipient_ErpGID: string | null;
-  recipient_ErpContact_PersonGID?: string | null;
-  recipient_ErpContact_AddressGID?: string | null;
+  recipient_ErpGID: Nullable<string>;
+  recipient_ErpContact_PersonGID?: Nullable<string>;
+  recipient_ErpContact_AddressGID?: Nullable<string>;
   recipient_Notes: string;
   doctor_amka: string;
   doctor_name: string;
@@ -64,7 +72,7 @@ export type Order = {
   doctor_Domi: string;
   doctor_DomiTypos: string;
   doctor_ErpGID: string;
-  has_suggested_doctor: number; // 0/1/2
+  has_suggested_doctor: number;
   doctorSuggested_amka: string;
   doctorSuggested_name: string;
   doctorSuggested_afm: string;
@@ -78,9 +86,9 @@ export type Order = {
   otherDoctorSuggested_domi: string;
   otherDoctorSuggested_mobile: string;
   otherDoctorSuggested_ErpGID: string;
-  dateOfSyntagi: string; // ISO datetime
-  dateIsxyeiApo: string; // ISO datetime
-  dateIsxyeiEos: string; // ISO datetime
+  dateOfSyntagi: string;
+  dateIsxyeiApo: string;
+  dateIsxyeiEos: string;
   barcode: string;
   katigoriaParoxis: string;
   symm: string;
@@ -89,26 +97,26 @@ export type Order = {
   kostos_EOPPY: number;
   kostos_RETAIL: number;
   posoSymmetoxis: number;
-  posoDiscounted: number | string;
+  posoDiscounted: Nullable<number>;
   calculatedDiscPercent: number;
-  dateDiscountReviewed: string; // ISO datetime
+  dateDiscountReviewed: string;
   discountReviewedByUID: string;
   discountReviewedByName: string;
-  isDiscountApproved: number; // 0/1
+  isDiscountApproved: number;
   discount_reason_id: number;
   discount_reason: string;
-  dateDiscountNotify: string; // ISO datetime
+  dateDiscountNotify: string;
   eidos_Egkrisis: number;
   varos: string;
   ipsos: string;
   contact_personid: number;
-  is_signed: number; // 0/1
-  date_signed: string; // ISO datetime
+  is_signed: number;
+  date_signed: string;
   signedBy: string;
-  dateUpdated: string; // ISO datetime
+  dateUpdated: string;
   statusId: number;
   erpId: string;
-  dateErpLinked: string; // ISO datetime
+  dateErpLinked: string;
   sellerComments: string;
   retakeFromOrderId: number;
   retakeFromOrderUID: string;
@@ -144,59 +152,22 @@ export type Order = {
   updateRecipient_tk?: string;
   updateRecipient_mobile?: string;
   eopyyVerifyNoParticipation: number;
-  hasConfirmedMidenikiPliromi?: boolean | null;
+  hasConfirmedMidenikiPliromi?: Nullable<boolean>;
   maxPosoKostousGiaSymmetoxi?: number;
   plafonGiftAmount?: number;
 };
 
-export type OrderYlika = {
+/** Line item — based on swagger `APLAT_Sales_OrderItem` with required UI numeric fields. */
+export type OrderYlika = Partial<APLAT_Sales_OrderItem> & {
   id: number;
-  uid?: string;
   orderId: number;
-  orderUID?: string;
-  lineNum?: number;
-  erpGid?: string;
-  erpCode?: string;
-  erpName?: string;
   qty: number;
-  price?: number;
-  eoppy_Code?: string;
-  eoppy_Diagnosi_Code?: string;
-  eoppy_Diagnosi_Name?: string;
-  eoppy_Symmetoxi?: string;
-  eoppy_DiarkiaTherapias?: string;
-  eoppy_SynPosotita?: string;
-  eoppy_Sxolia?: string;
-  eoppy_Diagnosi2_Code?: string;
-  eoppy_Diagnosi2_Name?: string;
-  eoppy_CleanName?: string;
-  eoppy_SlugName?: string;
-  eoppy_AnatomPerioxi?: string;
   erp_Price: number;
   erp_EoppyPrice: number;
-  aiMatchedErpGid?: string;
-  aiMatchedBy?: string;
-  fuzzyMatched?: number;
 };
 
-export type OrderFile = {
-  id?: number;
-  uid?: string;
-  orderId?: number;
-  orderUID?: string;
-  originalFileName?: string;
-  name?: string;
-  friendlyName?: string;
-  fileType?: string;
-  fileSize?: string;
-  documentCategory?: string;
-  extractedText?: string;
-  dateIn?: unknown;
-  sellerComments?: string;
-  adminComments?: string;
-  useInAI?: number;
-  position?: number;
-  hasValidData?: number;
+/** Uploaded file — based on swagger `APLAT_Sales_FileItem` plus client-only fields. */
+export type OrderFile = Partial<APLAT_Sales_FileItem> & {
   document_category?: string;
   base64filename?: string;
 };
@@ -242,9 +213,16 @@ export type OrdeListOfSelections = {
   plafonGiftAmount?: number;
 };
 
-export type OrderListOfAddressPersons = {
-  person_ErpGID: string;
-  personName: string;
+/** Address row in the wizard — normalized from swagger `AddressDto`. */
+export type OrderAddress = Required<
+  Pick<AddressDto, "address_ErpGID" | "address" | "city" | "tk">
+> &
+  Pick<AddressDto, "isAddressPreselected">;
+
+/** Person + addresses — normalized from swagger `AddressAndPersonDto`. */
+export type OrderListOfAddressPersons = Required<
+  Pick<AddressAndPersonDto, "person_ErpGID" | "personName" | "isCustomer">
+> & {
   personAMKA?: string;
   personVatNumber?: string;
   personIDCode?: string;
@@ -252,15 +230,6 @@ export type OrderListOfAddressPersons = {
   personMobile?: string;
   personMobile1?: string;
   addresses: OrderAddress[];
-  isCustomer: boolean;
-};
-
-export type OrderAddress = {
-  address_ErpGID: string;
-  address: string;
-  city: string;
-  tk: string;
-  isAddressPreselected?: boolean;
 };
 
 export type { SaleOrder_CheckItem };

@@ -4,20 +4,16 @@ import type {
   PhoneContactItem,
 } from "@/types/api/schemas";
 
-/** Row from `GET /api/wc-diadikasia/calendar` (`listData`). Field casing may vary by backend. */
+/** Normalized WC calendar row for UI (required display fields). */
 export type wcCalendar = APLAT_T_WC_DIADIKASIA_CALENDAR & {
   customerCode: string;
   customer_GID?: string;
   customerGID?: string;
   customerName: string;
-  pel_GRLSH?: string;
-  peL_GRLSH?: string;
-  amka?: string;
   sellerCode: string;
   sellerName: string;
   lastPAEO: string;
   task_CODE?: string;
-  tasK_CODE?: string;
   lastOrderDate: string;
   expectedNextOrderDate: string;
   datesInfo: string;

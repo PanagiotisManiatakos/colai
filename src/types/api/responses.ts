@@ -2,10 +2,12 @@ import type {
   ApiFailure,
   ApiSuccess,
   ConsentUploadDataObject,
+  Nullable,
   PagingResults,
   ToastMessage,
 } from "./common";
 import type { SellerSalesWC, SellerTeamatesWC } from "./sqlData";
+import type { GenikiTaxTrackResponse } from "./schemas";
 import type {
   APLAT_Sales_Order,
   AddressAndPersonDto,
@@ -34,7 +36,7 @@ type Success<T> = Extract<T, { ok: true }>;
 
 /** `GET /api/orders` */
 export type GetOrdersResponse =
-  | ApiSuccess<{ orders: APLAT_Sales_Order[]; paging: PagingResults | null }>
+  | ApiSuccess<{ orders: APLAT_Sales_Order[]; paging: Nullable<PagingResults> }>
   | ApiFailure;
 
 /** `POST /api/orders` */
@@ -69,7 +71,7 @@ export type SearchErpContactsApiResponse = SearchErpContactsResponse;
 
 /** `GET /api/search-customer-tels` */
 export type SearchCustomerTelsResponse =
-  | ApiSuccess<{ data: CustomerContactItem; statusCode?: number | null }>
+  | ApiSuccess<{ data: CustomerContactItem; statusCode?: Nullable<number> }>
   | ApiFailure;
 
 /** `GET /api/products` */
@@ -91,7 +93,7 @@ export type RunAiApiResponse = ReadEoppyDocumentAIResp & {
 
 /** `POST /api/orders/file` */
 export type FileUploadApiResponse = ApiSuccess<
-  ToastMessage & { dataobject?: ConsentUploadDataObject | null }
+  ToastMessage & { dataobject?: Nullable<ConsentUploadDataObject> }
 > | ApiFailure;
 
 /** `GET /api/dashboard` */
@@ -131,6 +133,11 @@ export type GetWcTeamatesResponse =
   | ApiSuccess<{ records: SellerTeamatesWC[] }>
   | ApiFailure;
 
+/** `GET /api/gt-track-and-trace` */
+export type GetGtTrackAndTraceResponse =
+  | ApiSuccess<GenikiTaxTrackResponse>
+  | ApiFailure;
+
 /** `POST /api/auth/login` */
 export type LoginResponse = ApiSuccess<LoginResp> | ApiFailure;
 export type LoginSuccess = Extract<LoginResponse, { ok: true }>;
@@ -164,6 +171,7 @@ export type ReviewDiscountRequestSuccess = Success<ReviewDiscountRequestResponse
 export type GetWcCalendarSuccess = Success<GetWcCalendarResponse>;
 export type GetWcOrderListSuccess = Success<GetWcOrderListResponse>;
 export type GetWcTeamatesSuccess = Success<GetWcTeamatesResponse>;
+export type GetGtTrackAndTraceSuccess = Success<GetGtTrackAndTraceResponse>;
 export type AuthMeSuccess = Success<AuthMeResponse>;
 /** Re-export commonly used schema aliases for consumers. */
 export type CustomerSearchResult = COLAI_T_CUSTOMER_PERSONAL_INFO;
@@ -172,3 +180,8 @@ export type DoctorSearchResult = COLAI_T_DOCTORS;
 export type ProductSearchResult = EopyDoc_ErpMappedProduct;
 export type DiscountRequestItem = DiscountReq_OrderVM;
 export type { OrderPreviewVM, OrderEditItemResp, ReadEoppyDocumentAIResp };
+export type {
+  Checkpoint,
+  GenikiTaxTrackResponse,
+  TrackAndTraceResult,
+} from "./schemas";

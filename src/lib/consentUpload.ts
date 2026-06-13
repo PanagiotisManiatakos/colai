@@ -40,9 +40,11 @@ export function isConsentScoreHigh(
   return formScore >= 80;
 }
 
+import type { Maybe } from "@/types/api/common";
+
 export function getConsentFileCategory(file: {
-  documentCategory?: string;
-  document_category?: string;
+  documentCategory?: Maybe<string>;
+  document_category?: Maybe<string>;
 }): string {
   return String(file.documentCategory ?? file.document_category ?? "");
 }

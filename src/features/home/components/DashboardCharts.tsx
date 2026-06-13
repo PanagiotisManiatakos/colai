@@ -3,14 +3,8 @@
 import type { Order } from "@/types/orders";
 import type { WcStoixoiMina } from "@/types/dashboard";
 import { aggregateLastOrdersByDay, type DayOrderBucket } from "@/features/home/dashboard/aggregateLastOrdersByDay";
-import { formatCurrencyGR } from "@/lib/utils/number";
+import { formatCurrencyGR, formatIntGR } from "@/lib/utils/number";
 import React from "react";
-
-const intFmt = new Intl.NumberFormat("el-GR", { maximumFractionDigits: 0 });
-
-function formatInt(n: number): string {
-    return intFmt.format(Number.isFinite(n) ? n : 0);
-}
 
 /** Donut + stacked bar: νέες vs επαναλήψεις (WC μήνας). */
 export function WcDistributionCharts({ wc }: { wc: WcStoixoiMina }) {
@@ -48,7 +42,7 @@ export function WcDistributionCharts({ wc }: { wc: WcStoixoiMina }) {
                         borderColor: "var(--bs-border-color-translucent)",
                     }}
                 >
-                    <span className="small fw-bold text-body">{formatInt(total)}</span>
+                    <span className="small fw-bold text-body">{formatIntGR(total)}</span>
                 </div>
             </div>
 
@@ -66,13 +60,13 @@ export function WcDistributionCharts({ wc }: { wc: WcStoixoiMina }) {
                 <div className="d-flex align-items-center gap-2">
                     <span className="rounded-circle bg-primary flex-shrink-0" style={{ width: 8, height: 8 }} />
                     <span className="text-secondary">Νέες</span>
-                    <span className="fw-semibold text-body">{formatInt(newC)}</span>
+                    <span className="fw-semibold text-body">{formatIntGR(newC)}</span>
                     <span className="text-secondary">({formatCurrencyGR(wc.amount_paragg_new)}€)</span>
                 </div>
                 <div className="d-flex align-items-center gap-2">
                     <span className="rounded-circle bg-info flex-shrink-0" style={{ width: 8, height: 8 }} />
                     <span className="text-secondary">Επαναλήψεις</span>
-                    <span className="fw-semibold text-body">{formatInt(repC)}</span>
+                    <span className="fw-semibold text-body">{formatIntGR(repC)}</span>
                     <span className="text-secondary">({formatCurrencyGR(wc.amount_paragg_repeat)}€)</span>
                 </div>
             </div>

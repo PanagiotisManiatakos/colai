@@ -1,4 +1,4 @@
-export const onlyDigits = (s: string) => s.replace(/\D/g, "");
+export { onlyDigits } from "@/lib/utils/string";
 
 export function normalizeBarcode(value: unknown): string {
   return String(value ?? "").replace(/\s/g, "");

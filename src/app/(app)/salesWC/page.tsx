@@ -8,8 +8,23 @@ import AppLoader from "@/components/ui/AppLoader";
 import { CollapsibleAppTile } from "@/components/ui/CollapsibleAppTile";
 import PullToRefresh from "@/components/ui/PullToRefresh";
 import { SearchBar } from "@/components/ui/SearchBar";
+import TrackingTraceAccordion from "@/features/salesWC/TrackingTraceAccordion";
 import { parseProxyJson } from "@/lib/api/client";
-import { formatCurrencyGR } from "@/lib/utils/number";
+import {
+  isManagerWithoutSellerRole,
+  normalizeSellerCode,
+} from "@/lib/sellerAccess";
+import { formatElGRDateShort, parseLocalDateTimeMs } from "@/lib/utils/date";
+import {
+  formatCurrencyGR,
+  formatCurrencyWithEuro,
+  parseLocaleNumber,
+} from "@/lib/utils/number";
+import {
+  displayMetric,
+  displayValue,
+  normalizeSearchText,
+} from "@/lib/utils/string";
 import { useAppSelector } from "@/store/hooks";
 import type {
   GetWcOrderListSuccess,
@@ -18,12 +33,6 @@ import type {
   SellerTeamatesWC,
 } from "@/types/api";
 
-const dateFmt = new Intl.DateTimeFormat("el-GR", {
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-});
-
 type SortMode = "date" | "newrep";
 
 type SellerOrderDetailsState = {
@@ -31,21 +40,6 @@ type SellerOrderDetailsState = {
   error: string | null;
   records: SellerSalesWC[] | null;
 };
-
-function textValue(value: unknown): string {
-  const text = String(value ?? "").trim();
-  return text || "-";
-}
-
-function metricText(value: unknown): string {
-  const text = String(value ?? "").trim();
-  return text || "0";
-}
-
-function normalizeSellerCode(value: unknown): string {
-  const text = String(value ?? "").trim();
-  return /^\d+$/.test(text) ? text.replace(/^0+(?=\d)/, "") : text;
-}
 
 function getColaiMarkerKind(value: unknown): "manual" | "app" | null {
   const text = String(value ?? "").trim();
@@ -89,61 +83,8 @@ function getNewRepSortRank(value: unknown): number {
   return 2;
 }
 
-function parseSalesDate(value: string | null | undefined): number {
-  const raw = String(value ?? "").trim();
-  const match = raw.match(
-    /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}):(\d{2}))?/,
-  );
-  if (!match) return 0;
-
-  const [, year, month, day, hour = "0", minute = "0", second = "0"] = match;
-  const date = new Date(
-    Number(year),
-    Number(month) - 1,
-    Number(day),
-    Number(hour),
-    Number(minute),
-    Number(second),
-  );
-
-  return Number.isFinite(date.getTime()) ? date.getTime() : 0;
-}
-
-function formatSalesDate(value: string | null | undefined): string {
-  const raw = String(value ?? "").trim();
-  if (!raw) return "-";
-
-  const timestamp = parseSalesDate(raw);
-  if (!timestamp) return raw;
-
-  return dateFmt.format(new Date(timestamp));
-}
-
-function parseTurnoverValue(value: string | number | null | undefined): number {
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-
-  const raw = String(value ?? "").trim();
-  if (!raw) return 0;
-
-  const compact = raw.replace(/[€\s]/g, "");
-  const normalized =
-    compact.includes(",") && compact.includes(".")
-      ? compact.replace(/\./g, "").replace(",", ".")
-      : compact.replace(",", ".");
-  const amount = Number(normalized);
-
-  return Number.isFinite(amount) ? amount : 0;
-}
-
-function formatTurnover(value: string | number | null | undefined): string {
-  const text = String(value ?? "").trim();
-  if (!text) return "-";
-
-  return `${formatCurrencyGR(parseTurnoverValue(value))}€`;
-}
-
 function matchesQuery(sale: SellerSalesWC, query: string): boolean {
-  const q = query.trim().toLocaleLowerCase("el-GR");
+  const q = normalizeSearchText(query);
   if (!q) return true;
 
   return [
@@ -158,13 +99,13 @@ function matchesQuery(sale: SellerSalesWC, query: string): boolean {
     sale.COLAI,
     sale.Turnover,
   ]
-    .map((value) => textValue(value).toLocaleLowerCase("el-GR"))
+    .map((value) => normalizeSearchText(displayValue(value)))
     .join(" ")
     .includes(q);
 }
 
 function matchesTeamQuery(sale: SellerTeamatesWC, query: string): boolean {
-  const q = query.trim().toLocaleLowerCase("el-GR");
+  const q = normalizeSearchText(query);
   if (!q) return true;
 
   return [
@@ -175,7 +116,7 @@ function matchesTeamQuery(sale: SellerTeamatesWC, query: string): boolean {
     sale.TOT,
     sale.TURNOVER,
   ]
-    .map((value) => textValue(value).toLocaleLowerCase("el-GR"))
+    .map((value) => normalizeSearchText(displayValue(value)))
     .join(" ")
     .includes(q);
 }
@@ -201,6 +142,76 @@ function getTeamTileKey(sale: SellerTeamatesWC, index: number): string {
 
 function getSellerStateKey(sellerCode: unknown): string {
   return normalizeSellerCode(sellerCode) || String(sellerCode ?? "").trim();
+}
+
+function hasTrackingNumber(value: unknown): boolean {
+  const text = String(value ?? "").trim();
+  return text !== "" && text !== "-";
+}
+
+function buildSaleDetailRows(sale: SellerSalesWC) {
+  return [
+    {
+      icon: "bi-calendar3",
+      label: "Ημερομηνία",
+      value: formatElGRDateShort(sale.RegistrationDate),
+    },
+    {
+      icon: "bi-file-earmark-text",
+      label: "Παραστατικό",
+      value: sale.ReferenceDocument,
+    },
+    { icon: "bi-upc-scan", label: "AD Code", value: sale.ADCode },
+    ...(isZeroColai(sale.COLAI)
+      ? []
+      : [{ icon: "bi-phone", label: "COLAI", value: sale.COLAI }]),
+  ];
+}
+
+function SaleExpandedDetails({ sale }: { sale: SellerSalesWC }) {
+  const details = buildSaleDetailRows(sale);
+  const trackingNo = String(sale.TrackingNo ?? "").trim();
+
+  return (
+    <div className="d-flex flex-column">
+      {hasTrackingNumber(trackingNo) ? (
+        <div
+          className="py-2"
+          style={{ borderBottom: "1px solid var(--bs-border-color-translucent)" }}
+        >
+          <TrackingTraceAccordion voucher={trackingNo} />
+        </div>
+      ) : (
+        <DetailRow
+          icon="bi-truck"
+          label="Tracking"
+          value={sale.TrackingNo}
+          showDivider
+        />
+      )}
+      <DetailRow
+        icon={details[0].icon}
+        label={details[0].label}
+        value={details[0].value}
+        showDivider
+      />
+      <DetailRow
+        icon={details[1].icon}
+        label={details[1].label}
+        value={details[1].value}
+        showDivider
+      />
+      {details.slice(2).map((detail, index, rest) => (
+        <DetailRow
+          key={detail.label}
+          icon={detail.icon}
+          label={detail.label}
+          value={detail.value}
+          showDivider={index < rest.length - 1}
+        />
+      ))}
+    </div>
+  );
 }
 
 function DetailRow({
@@ -234,7 +245,7 @@ function DetailRow({
         className="fw-medium text-break text-end"
         style={{ color: "var(--bs-body-color)", fontSize: 13, minWidth: 0 }}
       >
-        {textValue(value)}
+        {displayValue(value)}
       </div>
     </div>
   );
@@ -251,25 +262,8 @@ function SalesWCCard({
 }) {
   const colaiMarker = getColaiMarkerKind(sale.COLAI);
   const newRepKind = getNewRepKind(sale.NEWREP);
-  const newRepLabel = textValue(sale.NEWREP);
-  const turnover = formatTurnover(sale.Turnover);
-  const details = [
-    {
-      icon: "bi-calendar3",
-      label: "Ημερομηνία",
-      value: formatSalesDate(sale.RegistrationDate),
-    },
-    {
-      icon: "bi-file-earmark-text",
-      label: "Παραστατικό",
-      value: sale.ReferenceDocument,
-    },
-    { icon: "bi-truck", label: "Tracking", value: sale.TrackingNo },
-    { icon: "bi-upc-scan", label: "AD Code", value: sale.ADCode },
-    ...(isZeroColai(sale.COLAI)
-      ? []
-      : [{ icon: "bi-phone", label: "COLAI", value: sale.COLAI }]),
-  ];
+  const newRepLabel = displayValue(sale.NEWREP);
+  const turnover = formatCurrencyWithEuro(sale.Turnover);
 
   return (
     <CollapsibleAppTile
@@ -289,14 +283,14 @@ function SalesWCCard({
                 minWidth: 0,
               }}
             >
-              {textValue(sale.CustomerName)}
+              {displayValue(sale.CustomerName)}
             </span>
             <span className="text-secondary flex-shrink-0">-</span>
             <span
               className="text-secondary text-truncate"
               style={{ fontSize: 13, minWidth: 0 }}
             >
-              {textValue(sale.Doctor)}
+              {displayValue(sale.Doctor)}
             </span>
           </div>
           <div className="d-flex align-items-center mt-2 gap-2">
@@ -365,17 +359,7 @@ function SalesWCCard({
         </div>
       )}
     >
-      <div className="d-flex flex-column">
-        {details.map((detail, index) => (
-          <DetailRow
-            key={detail.label}
-            icon={detail.icon}
-            label={detail.label}
-            value={detail.value}
-            showDivider={index < details.length - 1}
-          />
-        ))}
-      </div>
+      <SaleExpandedDetails sale={sale} />
     </CollapsibleAppTile>
   );
 }
@@ -426,25 +410,8 @@ function SellerOrderDetails({
       {records.map((record, index) => {
         const colaiMarker = getColaiMarkerKind(record.COLAI);
         const newRepKind = getNewRepKind(record.NEWREP);
-        const newRepLabel = textValue(record.NEWREP);
-        const turnover = formatTurnover(record.Turnover);
-        const details = [
-          {
-            icon: "bi-calendar3",
-            label: "Ημερομηνία",
-            value: formatSalesDate(record.RegistrationDate),
-          },
-          {
-            icon: "bi-file-earmark-text",
-            label: "Παραστατικό",
-            value: record.ReferenceDocument,
-          },
-          { icon: "bi-truck", label: "Tracking", value: record.TrackingNo },
-          { icon: "bi-upc-scan", label: "AD Code", value: record.ADCode },
-          ...(isZeroColai(record.COLAI)
-            ? []
-            : [{ icon: "bi-phone", label: "COLAI", value: record.COLAI }]),
-        ];
+        const newRepLabel = displayValue(record.NEWREP);
+        const turnover = formatCurrencyWithEuro(record.Turnover);
 
         return (
           <CollapsibleAppTile
@@ -470,14 +437,14 @@ function SellerOrderDetails({
                       minWidth: 0,
                     }}
                   >
-                    {textValue(record.CustomerName)}
+                    {displayValue(record.CustomerName)}
                   </span>
                   <span className="text-secondary flex-shrink-0">-</span>
                   <span
                     className="text-secondary text-truncate"
                     style={{ fontSize: 12, minWidth: 0 }}
                   >
-                    {textValue(record.Doctor)}
+                    {displayValue(record.Doctor)}
                   </span>
                 </div>
                 <div className="d-flex align-items-center mt-2 gap-2">
@@ -549,17 +516,7 @@ function SellerOrderDetails({
               </div>
             )}
           >
-            <div className="d-flex flex-column">
-              {details.map((detail, detailIndex) => (
-                <DetailRow
-                  key={detail.label}
-                  icon={detail.icon}
-                  label={detail.label}
-                  value={detail.value}
-                  showDivider={detailIndex < details.length - 1}
-                />
-              ))}
-            </div>
+            <SaleExpandedDetails sale={record} />
           </CollapsibleAppTile>
         );
       })}
@@ -607,14 +564,14 @@ function TeamSalesCard({
                   minWidth: 0,
                 }}
               >
-                {textValue(sale.SellerName)}
+                {displayValue(sale.SellerName)}
               </span>
               <span className="text-secondary flex-shrink-0">-</span>
               <span
                 className="text-secondary text-truncate"
                 style={{ fontSize: 13, minWidth: 0 }}
               >
-                {textValue(sale.SELLERCODE)}
+                {displayValue(sale.SELLERCODE)}
               </span>
             </div>
             <span
@@ -623,7 +580,7 @@ function TeamSalesCard({
             >
               <i className="bi bi-cash-coin text-secondary" aria-hidden />
               <span className="fw-semibold">
-                {formatTurnover(sale.TURNOVER)}
+                {formatCurrencyWithEuro(sale.TURNOVER)}
               </span>
             </span>
           </div>
@@ -637,21 +594,21 @@ function TeamSalesCard({
                 style={{ fontSize: 12 }}
               >
                 <span className="fw-medium">N:</span>
-                <span className="fw-semibold">{metricText(sale.NEW)}</span>
+                <span className="fw-semibold">{displayMetric(sale.NEW)}</span>
               </span>
               <span
                 className="badge rounded-pill text-bg-success d-inline-flex align-items-center gap-1"
                 style={{ fontSize: 12 }}
               >
                 <span className="fw-medium">E:</span>
-                <span className="fw-semibold">{metricText(sale.REP)}</span>
+                <span className="fw-semibold">{displayMetric(sale.REP)}</span>
               </span>
               <span
                 className="badge rounded-pill bg-body-tertiary text-body d-inline-flex align-items-center gap-1 border"
                 style={{ fontSize: 12 }}
               >
                 <span className="text-secondary fw-medium">Σύνολο:</span>
-                <span className="fw-semibold">{metricText(sale.TOT)}</span>
+                <span className="fw-semibold">{displayMetric(sale.TOT)}</span>
               </span>
             </div>
             <i
@@ -675,8 +632,7 @@ function TeamSalesCard({
 export default function SalesWCPage() {
   const userInfos = useAppSelector((s) => s.auth.userInfos);
   const loggedSellerCode = userInfos?.sellerCode;
-  const isManagerMode =
-    userInfos?.isManager === true && userInfos?.isSeller !== true;
+  const isManagerMode = isManagerWithoutSellerRole(userInfos);
   const [records, setRecords] = React.useState<SellerSalesWC[]>([]);
   const [teamRecords, setTeamRecords] = React.useState<SellerTeamatesWC[]>([]);
   const [summaryRecord, setSummaryRecord] =
@@ -844,8 +800,8 @@ export default function SalesWCPage() {
           }
 
           return (
-            parseSalesDate(b.RegistrationDate) -
-            parseSalesDate(a.RegistrationDate)
+            parseLocalDateTimeMs(b.RegistrationDate) -
+            parseLocalDateTimeMs(a.RegistrationDate)
           );
         }),
     [q, records, sortMode],
@@ -857,11 +813,11 @@ export default function SalesWCPage() {
         .filter((sale) => matchesTeamQuery(sale, q))
         .sort((a, b) => {
           const byTurnover =
-            parseTurnoverValue(b.TURNOVER) - parseTurnoverValue(a.TURNOVER);
+            parseLocaleNumber(b.TURNOVER) - parseLocaleNumber(a.TURNOVER);
           if (byTurnover !== 0) return byTurnover;
 
-          return textValue(a.SellerName).localeCompare(
-            textValue(b.SellerName),
+          return displayValue(a.SellerName).localeCompare(
+            displayValue(b.SellerName),
             "el-GR",
           );
         }),
@@ -870,9 +826,9 @@ export default function SalesWCPage() {
 
   const summary = React.useMemo(
     () => ({
-      newCount: metricText(summaryRecord?.NEW),
-      repeatCount: metricText(summaryRecord?.REP),
-      turnoverTotal: parseTurnoverValue(summaryRecord?.TURNOVER),
+      newCount: displayMetric(summaryRecord?.NEW),
+      repeatCount: displayMetric(summaryRecord?.REP),
+      turnoverTotal: parseLocaleNumber(summaryRecord?.TURNOVER),
     }),
     [summaryRecord],
   );

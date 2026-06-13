@@ -1,8 +1,20 @@
+/** OpenAPI nullable field (`nullable: true`). */
+export type Nullable<T> = T | null;
+
+/** Value that may be absent or null (e.g. function parameters). */
+export type Maybe<T> = T | null | undefined;
+
+/** ISO-8601 date-time string (`format: date-time`). */
+export type DateTimeString = string;
+
+/** UUID string (`format: uuid`). */
+export type UuidString = string;
+
 /** Standard Next.js proxy failure envelope. */
 export type ApiFailure = {
   ok: false;
   message?: string;
-  detailedMessage?: string | null;
+  detailedMessage?: Nullable<string>;
 };
 
 /** Standard Next.js proxy success envelope. */
@@ -15,15 +27,15 @@ export type ApiResult<T extends Record<string, unknown>> =
 
 export type SelectListGroup = {
   disabled: boolean;
-  name?: string | null;
+  name?: Nullable<string>;
 };
 
 export type SelectListItem = {
   disabled: boolean;
-  group?: SelectListGroup | null;
+  group?: Nullable<SelectListGroup>;
   selected: boolean;
-  text?: string | null;
-  value?: string | null;
+  text?: Nullable<string>;
+  value?: Nullable<string>;
 };
 
 export type KatigoriaParoxisItem = SelectListItem & {
@@ -32,29 +44,29 @@ export type KatigoriaParoxisItem = SelectListItem & {
 };
 
 export type PagingResults = {
-  totalpages?: number | null;
-  totalrecords?: number | null;
-  currentPage?: number | null;
-  currentPagesize?: number | null;
-  searchFunction?: string | null;
-  currentPageHtmlElementId?: string | null;
-  itemsidentifier?: string | null;
+  totalpages?: Nullable<number>;
+  totalrecords?: Nullable<number>;
+  currentPage?: Nullable<number>;
+  currentPagesize?: Nullable<number>;
+  searchFunction?: Nullable<string>;
+  currentPageHtmlElementId?: Nullable<string>;
+  itemsidentifier?: Nullable<string>;
 };
 
 /** Backend `ToastMessage` schema. */
 export type ToastMessage = {
   result: boolean;
-  message?: string | null;
-  type?: string | null;
-  exmessage?: string | null;
-  redirectlink?: string | null;
+  message?: Nullable<string>;
+  type?: Nullable<string>;
+  exmessage?: Nullable<string>;
+  redirectlink?: Nullable<string>;
   backtopreviouspage: boolean;
-  misc1?: string | null;
-  misc2?: string | null;
-  misc3?: string | null;
-  misc4?: string | null;
-  misc5?: string | null;
-  misc6?: string | null;
+  misc1?: Nullable<string>;
+  misc2?: Nullable<string>;
+  misc3?: Nullable<string>;
+  misc4?: Nullable<string>;
+  misc5?: Nullable<string>;
+  misc6?: Nullable<string>;
   dataobject?: unknown;
 };
 
@@ -63,7 +75,7 @@ export type ConsentUploadDataObject = {
 };
 
 export type StatusEnvelope = {
-  statusCode?: number | null;
-  message?: string | null;
-  detailedMessage?: string | null;
+  statusCode?: Nullable<number>;
+  message?: Nullable<string>;
+  detailedMessage?: Nullable<string>;
 };

@@ -1,3 +1,5 @@
+import type { Maybe } from "@/types/api/common";
+
 /** True when value is null/undefined or whitespace-only (after trim). */
 export function isBlank(value: unknown): boolean {
   return value == null || String(value).trim() === "";
@@ -19,4 +21,26 @@ export function pickFirstNonBlankString(...values: unknown[]): string {
     if (hasText(value)) return String(value).trim();
   }
   return "";
+}
+
+/** Trimmed display text, or fallback when blank (default "-"). */
+export function displayValue(value: unknown, fallback = "-"): string {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+/** Trimmed metric text, or fallback when blank (default "0"). */
+export function displayMetric(value: unknown, fallback = "0"): string {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+/** Keep digits only. */
+export function onlyDigits(value: Maybe<string>): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+/** Normalize text for case-insensitive search (Greek locale). */
+export function normalizeSearchText(value: string): string {
+  return value.trim().toLocaleLowerCase("el-GR");
 }

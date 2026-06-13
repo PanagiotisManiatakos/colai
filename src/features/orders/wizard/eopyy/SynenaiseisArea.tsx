@@ -16,6 +16,7 @@ import {
   isConsentScoreWarning,
 } from "@/lib/consentUpload";
 import { Alert } from "react-bootstrap";
+import { formatFileSizeMB } from "@/lib/utils/number";
 import type { UploadStatus, UploadingInfo } from "./wizard/types";
 
 const CONSENT_BACK_CATEGORY = "consent_form_back";
@@ -137,7 +138,7 @@ export default function SynenaiseisArea() {
                 <div>
                   <div className="fw-semibold">{uploading.name}</div>
                   <div className="small text-secondary">
-                    {`${(uploading.fileSize / 1024 / 1024).toFixed(2)} MB`}
+                    {formatFileSizeMB(uploading.fileSize)}
                   </div>
                 </div>
               </div>
@@ -173,9 +174,9 @@ export default function SynenaiseisArea() {
               const sizeLabel = f.fileSize
                 ? String(f.fileSize).includes("MB")
                   ? String(f.fileSize)
-                  : `${(parseFloat(String(f.fileSize)) / 1024 / 1024).toFixed(2)} MB`
+                  : formatFileSizeMB(f.fileSize)
                 : "";
-              const pdf = isPdf(name ?? "", f.fileType);
+              const pdf = isPdf(name ?? "", f.fileType ?? undefined);
 
               return (
                 <div
@@ -283,7 +284,7 @@ export default function SynenaiseisArea() {
                 <div style={fileInfoWrapStyle}>
                   <TruncatedFileName name={uploadingBack.name} />
                   <div className="small text-secondary">
-                    {`${(uploadingBack.fileSize / 1024 / 1024).toFixed(2)} MB`}
+                    {formatFileSizeMB(uploadingBack.fileSize)}
                   </div>
                 </div>
               </div>
@@ -327,7 +328,7 @@ export default function SynenaiseisArea() {
                 1024 /
                 1024
               ).toFixed(2);
-              const pdf = isPdf(name ?? "", f.fileType);
+              const pdf = isPdf(name ?? "", f.fileType ?? undefined);
 
               return (
                 <div
