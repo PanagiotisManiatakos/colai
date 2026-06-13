@@ -136,7 +136,7 @@ export default function SavedRecipientFields() {
           }}
         >
           {listAddressesPersons.map((x) => (
-            <option key={x.person_ErpGID} value={x.person_ErpGID}>
+            <option key={x.person_ErpGID ?? ""} value={x.person_ErpGID ?? ""}>
               {x.personName}
             </option>
           ))}
@@ -161,10 +161,9 @@ export default function SavedRecipientFields() {
               }
             >
               {selectedPersonAddresses.map((a) => (
-                <option
-                  key={a.address_ErpGID}
-                  value={a.address_ErpGID}
-                >{`${a.address}, ${a.city}, ${a.tk}`}</option>
+                <option key={a.address_ErpGID} value={a.address_ErpGID ?? ""}>
+                  {`${a.address}, ${a.city}, ${a.tk}`}
+                </option>
               ))}
             </FormSelect>
           </OrderField>

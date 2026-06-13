@@ -1,27 +1,54 @@
+import type { Maybe, Nullable } from "@/types/api/common";
 import type { ApiAccessSellerItem, ApiUserInfo } from "@/types/api/schemas";
 
+export function normalizeSellerCode(value: unknown): string {
+  const text = String(value ?? "").trim();
+  return /^\d+$/.test(text) ? text.replace(/^0+(?=\d)/, "") : text;
+}
+
+export function isManagerWithoutSellerRole(
+  userInfo: Maybe<ApiUserInfo>,
+): boolean {
+  return userInfo?.isManager === true && userInfo.isSeller !== true;
+}
+
+export function canAccessSeller(
+  userInfo: Maybe<ApiUserInfo>,
+  sellerCode: string,
+): boolean {
+  const normalizedTarget = normalizeSellerCode(sellerCode);
+  const normalizedOwn = normalizeSellerCode(userInfo?.sellerCode);
+  if (normalizedOwn && normalizedTarget === normalizedOwn) return true;
+
+  if (!isManagerWithoutSellerRole(userInfo)) return false;
+
+  return (userInfo?.listAccessSellers ?? []).some(
+    (seller) => normalizeSellerCode(seller.sellerCode) === normalizedTarget,
+  );
+}
+
 export function hasSellerAccessList(
-  userInfos: ApiUserInfo | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
 ): boolean {
   return (userInfos?.listAccessSellers?.length ?? 0) > 0;
 }
 
 export function isActingSellerSelectionValid(
-  userInfos: ApiUserInfo | null | undefined,
-  actingSellerCode: string | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
+  actingSellerCode: Maybe<string>,
 ): boolean {
   if (!hasSellerAccessList(userInfos)) return true;
   return Boolean(getActingSellerCodeForApi(userInfos, actingSellerCode));
 }
 
 export function getOwnSellerCode(
-  userInfos: ApiUserInfo | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
 ): string {
   return userInfos?.sellerCode?.trim() ?? "";
 }
 
 export function getAccessibleSellers(
-  userInfos: ApiUserInfo | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
 ): ApiAccessSellerItem[] {
   const ownCode = getOwnSellerCode(userInfos);
   return (userInfos?.listAccessSellers ?? []).filter((item) => {
@@ -31,8 +58,8 @@ export function getAccessibleSellers(
 }
 
 export function getActingSellerCodeForApi(
-  userInfos: ApiUserInfo | null | undefined,
-  actingSellerCode: string | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
+  actingSellerCode: Maybe<string>,
 ): string | undefined {
   if (!hasSellerAccessList(userInfos)) return undefined;
 
@@ -49,8 +76,8 @@ export function getActingSellerCodeForApi(
 }
 
 export function resolveActingSeller(
-  userInfos: ApiUserInfo | null | undefined,
-  actingSellerCode: string | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
+  actingSellerCode: Maybe<string>,
 ): Pick<ApiAccessSellerItem, "sellerCode" | "sellerName"> | null {
   if (!userInfos) return null;
 
@@ -83,8 +110,8 @@ export function applyActingSellerToOrder<
   T extends { sellerCode?: string; sellerName?: string },
 >(
   order: T,
-  userInfos: ApiUserInfo | null | undefined,
-  actingSellerCode: string | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
+  actingSellerCode: Maybe<string>,
 ): T {
   const seller = resolveActingSeller(userInfos, actingSellerCode);
   if (!seller?.sellerCode) return order;
@@ -100,8 +127,8 @@ export function appendActingSellerCommentsSuffix<
   T extends { sellerComments?: string | null },
 >(
   order: T,
-  userInfos: ApiUserInfo | null | undefined,
-  actingSellerCode: string | null | undefined,
+  userInfos: Maybe<ApiUserInfo>,
+  actingSellerCode: Maybe<string>,
 ): T {
   if (!getActingSellerCodeForApi(userInfos, actingSellerCode)) {
     return order;

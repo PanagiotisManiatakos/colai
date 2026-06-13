@@ -4,6 +4,7 @@ import React from "react";
 import { Capacitor } from "@capacitor/core";
 import { Modal } from "react-bootstrap";
 import type { FileUploadSuccess } from "@/types/api/responses";
+import { formatFileSizeMB } from "@/lib/utils/number";
 import type { FileUploadButtonProps } from "./componentProps";
 
 function uploadWithProgress(
@@ -123,7 +124,7 @@ export default function FileUploadButton({
         position,
         document_category,
         documentCategory: document_category,
-        fileSize: `${(parseFloat(String(file.size) ?? "0") / 1024 / 1024).toFixed(2)} MB`,
+        fileSize: formatFileSizeMB(file.size),
         fileType: file.type,
       });
 

@@ -1,5 +1,15 @@
-import { cookieName, userCookieName } from "@/lib/auth";
-import type { ApiUserInfo } from "@/types/api/schemas";
+import {
+  cookieName,
+  decodeUserInfoCookie,
+  userCookieName,
+} from "@/lib/auth";
+import {
+  extractSqlRecords,
+  getUpstreamErrorMessage,
+  readSqlUpstreamPayload,
+  WC_SQL_NO_CACHE_HEADERS,
+} from "@/lib/api/wcSqlService";
+import { isManagerWithoutSellerRole } from "@/lib/sellerAccess";
 import type { SellerTeamatesWC } from "@/types/api/sqlData";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
@@ -9,129 +19,24 @@ export const dynamic = "force-dynamic";
 const SQL_APP_ID = "1305";
 const SQL_NAME = "TEAMATES_WC";
 
-const noCacheHeaders = {
-  "Cache-Control": "no-store, no-cache, must-revalidate",
-  Pragma: "no-cache",
-};
-
-function getObject(value: unknown): Record<string, unknown> | null {
-  return typeof value === "object" && value !== null
-    ? (value as Record<string, unknown>)
-    : null;
-}
-
-function getArray(value: unknown): SellerTeamatesWC[] | null {
-  return Array.isArray(value) ? (value as SellerTeamatesWC[]) : null;
-}
-
-function extractRecords(payload: unknown): SellerTeamatesWC[] {
-  const body = getObject(payload);
-  const data = getObject(body?.data);
-
-  return (
-    getArray(body?.rows) ??
-    getArray(body?.items) ??
-    getArray(body?.result) ??
-    getArray(body?.data) ??
-    getArray(data?.mydata) ??
-    getArray(data?.rows) ??
-    getArray(data?.items) ??
-    getArray(data?.result) ??
-    []
-  );
-}
-
-function getUpstreamErrorMessage(payload: unknown): string | null {
-  const body = getObject(payload);
-  if (!body) return null;
-
-  const success = body.success;
-  if (success === false || success === "false") {
-    return String(body.error ?? body.message ?? "SQL data service failed");
-  }
-
-  const statusCode = Number(body.statusCode);
-  if (Number.isFinite(statusCode) && statusCode !== 0 && statusCode !== 200) {
-    return String(
-      body.message ?? body.detailedMessage ?? "SQL data service failed",
-    );
-  }
-
-  return null;
-}
-
-function parseJsonText(text: string): unknown {
-  if (!text) return {};
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
-}
-
-function countReplacementChars(text: string): number {
-  return (text.match(/\uFFFD/g) ?? []).length;
-}
-
-function decodeResponseText(
-  buffer: ArrayBuffer,
-  contentType: string | null,
-): string {
-  const charset = contentType?.match(/charset=([^;\s]+)/i)?.[1]?.trim();
-  if (charset) {
-    try {
-      return new TextDecoder(charset).decode(buffer);
-    } catch {
-      // Fall through to UTF-8 with Windows-1253 fallback.
-    }
-  }
-
-  const utf8 = new TextDecoder("utf-8").decode(buffer);
-  if (!utf8.includes("\uFFFD")) return utf8;
-
-  try {
-    const windows1253 = new TextDecoder("windows-1253").decode(buffer);
-    return countReplacementChars(windows1253) < countReplacementChars(utf8)
-      ? windows1253
-      : utf8;
-  } catch {
-    return utf8;
-  }
-}
-
-function decodeUserInfoCookie(value?: string): ApiUserInfo | null {
-  if (!value) return null;
-
-  try {
-    const decoded = Buffer.from(value, "base64url").toString("utf8");
-    const parsed: unknown = JSON.parse(decoded);
-    return getObject(parsed) ? (parsed as ApiUserInfo) : null;
-  } catch {
-    return null;
-  }
-}
-
 export async function GET() {
   const jar = await cookies();
   const token = jar.get(cookieName)?.value;
   if (!token) {
     return NextResponse.json(
       { ok: false, message: "Not authenticated" },
-      { status: 401, headers: noCacheHeaders },
+      { status: 401, headers: WC_SQL_NO_CACHE_HEADERS },
     );
   }
 
   const userInfo = decodeUserInfoCookie(jar.get(userCookieName)?.value);
-  const isManagerWithoutSellerRole =
-    userInfo?.isManager === true && userInfo.isSeller !== true;
-  const sellerCode = isManagerWithoutSellerRole
-    ? userInfo.listAccessSellers?.[0]?.sellerCode?.trim()
+  const sellerCode = isManagerWithoutSellerRole(userInfo)
+    ? userInfo?.listAccessSellers?.[0]?.sellerCode?.trim()
     : userInfo?.sellerCode?.trim();
   if (!sellerCode) {
     return NextResponse.json(
       { ok: false, message: "Missing seller code for authenticated user" },
-      { status: 400, headers: noCacheHeaders },
+      { status: 400, headers: WC_SQL_NO_CACHE_HEADERS },
     );
   }
 
@@ -142,7 +47,7 @@ export async function GET() {
   if (!serviceUrl || !clientID) {
     return NextResponse.json(
       { ok: false, message: "Missing SQL data config" },
-      { status: 500, headers: noCacheHeaders },
+      { status: 500, headers: WC_SQL_NO_CACHE_HEADERS },
     );
   }
 
@@ -168,29 +73,23 @@ export async function GET() {
       err instanceof Error ? err.message : "SQL data service request failed";
     return NextResponse.json(
       { ok: false, message },
-      { status: 502, headers: noCacheHeaders },
+      { status: 502, headers: WC_SQL_NO_CACHE_HEADERS },
     );
   }
 
-  const text = await upstream
-    .arrayBuffer()
-    .then((buffer) =>
-      decodeResponseText(buffer, upstream.headers.get("content-type")),
-    )
-    .catch(() => "");
-  const payload = parseJsonText(text);
+  const { payload, text } = await readSqlUpstreamPayload(upstream);
 
   if (!upstream.ok) {
     return NextResponse.json(
       { ok: false, message: text || "SQL data service failed" },
-      { status: upstream.status, headers: noCacheHeaders },
+      { status: upstream.status, headers: WC_SQL_NO_CACHE_HEADERS },
     );
   }
 
   if (payload === null) {
     return NextResponse.json(
       { ok: false, message: text || "Invalid SQL data service response" },
-      { status: 502, headers: noCacheHeaders },
+      { status: 502, headers: WC_SQL_NO_CACHE_HEADERS },
     );
   }
 
@@ -198,12 +97,12 @@ export async function GET() {
   if (upstreamMessage) {
     return NextResponse.json(
       { ok: false, message: upstreamMessage },
-      { status: 502, headers: noCacheHeaders },
+      { status: 502, headers: WC_SQL_NO_CACHE_HEADERS },
     );
   }
 
   return NextResponse.json(
-    { ok: true, records: extractRecords(payload) },
-    { headers: noCacheHeaders },
+    { ok: true, records: extractSqlRecords<SellerTeamatesWC>(payload) },
+    { headers: WC_SQL_NO_CACHE_HEADERS },
   );
 }
