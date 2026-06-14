@@ -200,7 +200,7 @@ export default function CompletionArea() {
                 <input
                   className="form-control"
                   name="posoDiscounted"
-                  value={data.posoDiscounted}
+                  value={data.posoDiscounted ?? ""}
                   onChange={(e) => {
                     const raw = e.target.value
                       .replaceAll(".", "")

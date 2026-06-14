@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { normalizeSearchText } from "@/lib/utils/string";
 
 export type SearchableSelectOption = {
   value: string;
@@ -22,10 +23,6 @@ type SearchableSelectProps = {
   name?: string;
   isInvalid?: boolean;
 };
-
-function normalizeSearchText(value: string): string {
-  return value.trim().toLocaleLowerCase("el-GR");
-}
 
 function getOptionSearchText(option: SearchableSelectOption): string {
   return normalizeSearchText(

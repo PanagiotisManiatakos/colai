@@ -9,6 +9,16 @@ import {
     WcDistributionCharts,
 } from "@/features/home/components/DashboardCharts";
 import { parseProxyJson } from "@/lib/api/client";
+import {
+  isManagerWithoutSellerRole,
+  normalizeSellerCode,
+} from "@/lib/sellerAccess";
+import {
+  formatCurrencyGR,
+  formatIntGR,
+  formatPercentGR,
+  parseLocaleNumber,
+} from "@/lib/utils/number";
 import type { WcStoixoiMina } from "@/types/dashboard";
 import type {
     GetWcTeamatesSuccess,
@@ -17,37 +27,6 @@ import type {
 import Link from "next/link";
 import React from "react";
 import { Alert } from "react-bootstrap";
-
-const intFmt = new Intl.NumberFormat("el-GR", { maximumFractionDigits: 0 });
-const pctFmt = new Intl.NumberFormat("el-GR", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-});
-
-function formatInt(n: number): string {
-    return intFmt.format(Number.isFinite(n) ? n : 0);
-}
-
-function normalizeSellerCode(value: unknown): string {
-    const text = String(value ?? "").trim();
-    return /^\d+$/.test(text) ? text.replace(/^0+(?=\d)/, "") : text;
-}
-
-function parseMetricValue(value: unknown): number {
-    if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-
-    const raw = String(value ?? "").trim();
-    if (!raw) return 0;
-
-    const compact = raw.replace(/[€\s]/g, "");
-    const normalized =
-        compact.includes(",") && compact.includes(".")
-            ? compact.replace(/\./g, "").replace(",", ".")
-            : compact.replace(",", ".");
-    const amount = Number(normalized);
-
-    return Number.isFinite(amount) ? amount : 0;
-}
 
 type WcEndpointSummary = {
     newCount: number;
@@ -64,9 +43,9 @@ const emptyWcSummary: WcEndpointSummary = {
 function sumTeamRows(records: SellerTeamatesWC[]): WcEndpointSummary {
     return records.reduce<WcEndpointSummary>(
         (acc, record) => ({
-            newCount: acc.newCount + parseMetricValue(record.NEW),
-            repeatCount: acc.repeatCount + parseMetricValue(record.REP),
-            turnover: acc.turnover + parseMetricValue(record.TURNOVER),
+            newCount: acc.newCount + parseLocaleNumber(record.NEW),
+            repeatCount: acc.repeatCount + parseLocaleNumber(record.REP),
+            turnover: acc.turnover + parseLocaleNumber(record.TURNOVER),
         }),
         emptyWcSummary,
     );
@@ -159,8 +138,7 @@ function MetricCard({ title, value, delta, deltaDirection = "neutral", icon, hre
 
 function WcMonthCard() {
     const userInfos = useAppSelector((s) => s.auth.userInfos);
-    const isManager =
-        userInfos?.isManager === true && userInfos?.isSeller !== true;
+    const isManager = isManagerWithoutSellerRole(userInfos);
     const loggedSellerCode = normalizeSellerCode(userInfos?.sellerCode);
     const [summary, setSummary] = React.useState<WcEndpointSummary>(emptyWcSummary);
     const [loading, setLoading] = React.useState(true);
@@ -208,9 +186,9 @@ function WcMonthCard() {
                 setSummary(
                     sellerRecord
                         ? {
-                              newCount: parseMetricValue(sellerRecord.NEW),
-                              repeatCount: parseMetricValue(sellerRecord.REP),
-                              turnover: parseMetricValue(sellerRecord.TURNOVER),
+                              newCount: parseLocaleNumber(sellerRecord.NEW),
+                              repeatCount: parseLocaleNumber(sellerRecord.REP),
+                              turnover: parseLocaleNumber(sellerRecord.TURNOVER),
                           }
                         : emptyWcSummary,
                 );
@@ -287,14 +265,14 @@ function MonthComparisonCard({
                 <span
                     className={`badge app-pill ${pendingReviews > 0 ? "bg-warning-subtle text-warning-emphasis" : "bg-success-subtle text-success-emphasis"}`}
                 >
-                    {formatInt(pendingReviews)} εκκρεμείς
+                    {formatIntGR(pendingReviews)} εκκρεμείς
                 </span>
             </div>
 
             <div className="mt-3">
                 <div className="d-flex justify-content-between small text-secondary mb-1">
                     <span>Προηγούμενος μήνας</span>
-                    <span className="fw-medium text-body">{formatInt(previous)}</span>
+                    <span className="fw-medium text-body">{formatIntGR(previous)}</span>
                 </div>
                 <div
                     className="rounded-pill bg-body-tertiary mb-3"
@@ -309,7 +287,7 @@ function MonthComparisonCard({
 
                 <div className="d-flex justify-content-between small text-secondary mb-1">
                     <span>Τρέχων μήνας</span>
-                    <span className="fw-medium text-body">{formatInt(current)}</span>
+                    <span className="fw-medium text-body">{formatIntGR(current)}</span>
                 </div>
                 <div className="rounded-pill bg-body-tertiary" style={{ height: 8, overflow: "hidden" }} role="presentation">
                     <div className="h-100 bg-primary rounded-pill" style={{ width: `${currPct}%` }} />
@@ -329,7 +307,7 @@ export default function HomeStats() {
 
     const mom = dash.totalOrders_month_perc;
     const momDir: "up" | "down" | "neutral" = mom > 0 ? "up" : mom < 0 ? "down" : "neutral";
-    const momLabel = `${pctFmt.format(Math.abs(mom))}%`;
+    const momLabel = `${formatPercentGR(Math.abs(mom))}%`;
     const showInitialDashLoader = dash.loading && dash.lastFetchedAt === 0;
 
     return (
@@ -356,14 +334,14 @@ export default function HomeStats() {
                 <div className="row g-3 mb-3">
                     <MetricCard
                         title="Παραγγελίες μήνα"
-                        value={formatInt(dash.totalOrders_month)}
+                        value={formatIntGR(dash.totalOrders_month)}
                         delta={momLabel}
                         deltaDirection={momDir}
                         icon="bi-box-seam"
                     />
                     <MetricCard
                         title="Συνταγές επόμενων 10 ημερών"
-                        value={formatInt(dash.next10DaysSyntages)}
+                        value={formatIntGR(dash.next10DaysSyntages)}
                         delta={null}
                         icon="bi-paperclip"
                         href="/diadikasia-wc?next10=1"

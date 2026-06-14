@@ -1,4 +1,11 @@
 import type { wcCalendar } from "@/types/wc";
+import {
+  formatElGRDateLong,
+  formatElGRMonthYear,
+  parseOrderDate,
+} from "@/lib/utils/date";
+
+export { parseOrderDate } from "@/lib/utils/date";
 
 export type WcDayGroup = {
     dayOfMonth: number;
@@ -14,37 +21,6 @@ export type WcMonthGroup = {
     totalTurnover: number;
     days: WcDayGroup[];
 };
-
-const EL_DATE = new Intl.DateTimeFormat("el-GR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-});
-
-const EL_MONTH = new Intl.DateTimeFormat("el-GR", {
-    month: "long",
-    year: "numeric",
-});
-
-/**
- * Parses a date string as a local calendar date when possible (avoids UTC day-shift on date-only strings).
- * ISO datetimes (`2026-03-25T19:51:53.074Z`) use the calendar portion in local time.
- */
-export function parseOrderDate(value: string | null | undefined): Date | null {
-    if (value == null || String(value).trim() === "") return null;
-    const s = String(value).trim();
-    const isoDay = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
-    if (isoDay) {
-        const y = Number(isoDay[1]);
-        const m = Number(isoDay[2]);
-        const d = Number(isoDay[3]);
-        const dt = new Date(y, m - 1, d);
-        return Number.isNaN(dt.getTime()) ? null : dt;
-    }
-    const dt = new Date(s);
-    return Number.isNaN(dt.getTime()) ? null : dt;
-}
 
 function turnoverEuros(r: wcCalendar): number {
     const v = r.totalTurnover;
@@ -108,13 +84,13 @@ export function groupWcCalendarByLastOrderDate(
             const dayTurnover = dayItems.reduce((sum, r) => sum + turnoverEuros(r), 0);
             return {
                 dayOfMonth,
-                dayTitle: EL_DATE.format(sample),
+                dayTitle: formatElGRDateLong(sample),
                 items: dayItems,
                 totalTurnover: dayTurnover,
             };
         });
 
-        const monthTitle = EL_MONTH.format(new Date(year, month - 1, 1));
+        const monthTitle = formatElGRMonthYear(new Date(year, month - 1, 1));
 
         return {
             sortKey: monthKey,

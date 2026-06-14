@@ -12,6 +12,7 @@ import RunAiButton from "./RunAIButton";
 import { SiGooglegemini } from "react-icons/si";
 import Image from "next/image";
 import type { GnomateuseisAreaProps } from "./componentProps";
+import { formatFileSizeMB } from "@/lib/utils/number";
 import type { UploadStatus, UploadingInfo } from "./wizard/types";
 
 function isPdf(name: string, mimeType?: string) {
@@ -204,7 +205,7 @@ export default function GnomateuseisArea({
           <div className="d-flex flex-column gap-2 overflow-hidden">
             {recipeFiles.map((f: OrderFile) => {
               const name = f.originalFileName ?? f.name ?? f.base64filename;
-              const pdf = isPdf(name ?? "", f.fileType);
+              const pdf = isPdf(name ?? "", f.fileType ?? undefined);
 
               return (
                 <div
@@ -286,7 +287,7 @@ export default function GnomateuseisArea({
                 <div style={fileInfoWrapStyle}>
                   <TruncatedFileName name={uploadingExtra.name} />
                   <div className="small text-secondary">
-                    {`${(uploadingExtra.fileSize / 1024 / 1024).toFixed(2)} MB`}
+                    {formatFileSizeMB(uploadingExtra.fileSize)}
                   </div>
                 </div>
               </div>
@@ -330,7 +331,7 @@ export default function GnomateuseisArea({
                 1024 /
                 1024
               ).toFixed(2);
-              const pdf = isPdf(name ?? "", f.fileType);
+              const pdf = isPdf(name ?? "", f.fileType ?? undefined);
 
               if (f.documentCategory == "recipe_aux") {
                 return (

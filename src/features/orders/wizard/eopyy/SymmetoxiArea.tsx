@@ -459,7 +459,7 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
 
                     if (raw === "") {
                       dispatch(
-                        setDraftProperty({ key: "posoDiscounted", value: "" }),
+                        setDraftProperty({ key: "posoDiscounted", value: null }),
                       );
                       return;
                     }

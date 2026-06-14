@@ -11,7 +11,7 @@ type Props = {
     disabled?: boolean;
 };
 
-const onlyDigits = (s: string) => (s ?? "").replace(/\D/g, "");
+import { onlyDigits } from "@/lib/utils/string";
 
 export default function OtpInput({
     value,
