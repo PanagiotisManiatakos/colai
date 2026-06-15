@@ -175,12 +175,7 @@ function SaleExpandedDetails({ sale }: { sale: SellerSalesWC }) {
   return (
     <div className="d-flex flex-column">
       {hasTrackingNumber(trackingNo) ? (
-        <div
-          className="py-2"
-          style={{ borderBottom: "1px solid var(--bs-border-color-translucent)" }}
-        >
-          <TrackingTraceAccordion voucher={trackingNo} />
-        </div>
+        <TrackingTraceAccordion voucher={trackingNo} showDivider />
       ) : (
         <DetailRow
           icon="bi-truck"

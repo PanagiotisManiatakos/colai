@@ -1089,6 +1089,19 @@ html[data-bs-theme="dark"] .searchable-select-empty {
   line-height: 1;
 }
 
+.track-trace-modal .modal-content {
+  max-height: 80dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.track-trace-modal .modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .track-trace-timeline {
   display: flex;
   flex-direction: column;
