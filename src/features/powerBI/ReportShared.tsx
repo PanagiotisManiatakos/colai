@@ -8,7 +8,7 @@ export function ReportHeader({
   title,
   subtitle,
   icon,
-  badgeClassName = "bg-primary-subtle text-primary-emphasis",
+  badgeClassName = "",
 }: {
   title: string;
   subtitle: string;
@@ -18,11 +18,21 @@ export function ReportHeader({
   return (
     <section className="app-card p-3">
       <div className="d-flex align-items-start justify-content-between gap-3">
-        <div className="min-w-0">
-          <div className="d-flex align-items-center flex-wrap gap-2">
-            <h1 className="h4 fw-bold mb-0">{title}</h1>
-            <span className={`badge rounded-pill ${badgeClassName}`}>
-              BI Reports
+        <div className="min-w-0 flex-grow-1">
+          <div className="d-flex align-items-center gap-2 flex-nowrap">
+            <h1 className="h4 fw-bold text-truncate mb-0">{title}</h1>
+            <span
+              className={`badge rounded-pill flex-shrink-0 ${badgeClassName}`}
+              style={{
+                backgroundColor: "#f2c811",
+                border: "1px solid #d9b30d",
+                color: "#1f1f1f",
+                fontSize: 10,
+                lineHeight: 1,
+                padding: "4px 7px",
+              }}
+            >
+              PowerBI
             </span>
           </div>
           <div className="text-secondary mt-1" style={{ fontSize: 13 }}>

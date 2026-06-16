@@ -127,7 +127,7 @@ export function PowerBiGroupsPage() {
   return (
     <div className="d-flex flex-column gap-3">
       <ReportHeader
-        title="Power BI Groups"
+        title="Groups"
         subtitle="Workspaces διαθέσιμα στο Power BI tenant"
         icon="bi-grid-3x3-gap"
       />

@@ -239,7 +239,6 @@ export function AkrateiaReportPage({
         title="Ακράτεια"
         subtitle={sellerLabel}
         icon="bi-droplet-half"
-        badgeClassName="bg-danger-subtle text-danger-emphasis"
       />
 
       {loading ? (

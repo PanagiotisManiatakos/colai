@@ -15,7 +15,6 @@ import {
 import {
   accentColors,
   formatCurrency,
-  getDelta,
   getMonthLabel,
 } from "@/lib/bi-reports/reportUtils";
 import { parseProxyJson } from "@/lib/api/client";
@@ -23,7 +22,7 @@ import type {
   MonthlySalesRow,
   SalesPerMonthResponse,
 } from "@/lib/bi-reports/biReports";
-import { formatIntGR, formatPercentGR } from "@/lib/utils/number";
+import { formatIntGR } from "@/lib/utils/number";
 
 function MonthlySalesChart({ rows }: { rows: MonthlySalesRow[] }) {
   const maxSales = Math.max(...rows.map((row) => row.sales), 1);
@@ -75,76 +74,6 @@ function MonthlySalesChart({ rows }: { rows: MonthlySalesRow[] }) {
   );
 }
 
-function MonthSalesCard({
-  row,
-  index,
-  total,
-  previous,
-}: {
-  row: MonthlySalesRow;
-  index: number;
-  total: number;
-  previous?: MonthlySalesRow;
-}) {
-  const share = total > 0 ? (row.sales / total) * 100 : 0;
-  const delta = getDelta(row.sales, previous?.sales);
-  const accent = accentColors[index % accentColors.length];
-  const deltaClass =
-    delta == null
-      ? "bg-body text-secondary border"
-      : delta >= 0
-        ? "text-bg-success"
-        : "text-bg-danger";
-
-  return (
-    <div className="app-card p-3">
-      <div className="d-flex align-items-start justify-content-between gap-3">
-        <div className="d-flex align-items-center min-w-0 gap-3">
-          <div
-            className="d-inline-flex align-items-center justify-content-center rounded-3 fw-bold flex-shrink-0"
-            style={{
-              minWidth: 116,
-              height: 46,
-              background: `${accent}1f`,
-              color: accent,
-              paddingInline: 12,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {getMonthLabel(row.month)}
-          </div>
-        </div>
-        <div className="flex-shrink-0 text-end">
-          <div className="fw-bold">{formatCurrency(row.sales)}</div>
-          <span
-            className={`badge rounded-pill mt-1 ${deltaClass}`}
-            style={{ fontSize: 11 }}
-          >
-            {delta == null
-              ? "βάση"
-              : `${delta > 0 ? "+" : ""}${formatPercentGR(delta)}%`}
-          </span>
-        </div>
-      </div>
-
-      <div className="d-flex align-items-center justify-content-between small text-secondary mt-3">
-        <span>Μερίδιο περιόδου</span>
-        <span className="fw-semibold text-body">{formatPercentGR(share)}%</span>
-      </div>
-      <div
-        className="rounded-pill bg-body-tertiary mt-1"
-        style={{ height: 7, overflow: "hidden" }}
-        role="presentation"
-      >
-        <div
-          className="rounded-pill h-100"
-          style={{ width: `${share}%`, background: accent }}
-        />
-      </div>
-    </div>
-  );
-}
-
 function DataRows({ rows }: { rows: MonthlySalesRow[] }) {
   return (
     <div className="app-card p-3">
@@ -182,6 +111,8 @@ export function SalesPerMonthReportPage({
   datasetId,
 }: PowerBiReportTargetProps = {}) {
   const [records, setRecords] = React.useState<MonthlySalesRow[]>([]);
+  const [sellerCode, setSellerCode] = React.useState("");
+  const [sellerName, setSellerName] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
   const apiUrl = React.useMemo(
@@ -211,6 +142,8 @@ export function SalesPerMonthReportPage({
       );
 
       setRecords(data.records ?? []);
+      setSellerCode(data.sellerCode ?? "");
+      setSellerName(data.sellerName ?? "");
     } catch (err) {
       const message =
         err instanceof Error
@@ -218,6 +151,8 @@ export function SalesPerMonthReportPage({
           : "Failed to load Power BI sales per month";
       setError(message);
       setRecords([]);
+      setSellerCode("");
+      setSellerName("");
     } finally {
       setLoading(false);
     }
@@ -234,12 +169,16 @@ export function SalesPerMonthReportPage({
     null,
   );
   const latestMonth = records.at(-1);
+  const sellerLabel =
+    sellerName || sellerCode
+      ? `${sellerName || "Πωλητής"}${sellerCode ? ` • ${sellerCode}` : ""}`
+      : "Πωλήσεις πωλητή ανά μήνα";
 
   return (
     <div className="d-flex flex-column gap-3">
       <ReportHeader
         title="Πωλήσεις ανά μήνα"
-        subtitle="Πωλήσεις πωλητή ανά μήνα"
+        subtitle={sellerLabel}
         icon="bi-clipboard-data"
       />
 
@@ -280,18 +219,6 @@ export function SalesPerMonthReportPage({
           </section>
 
           <MonthlySalesChart rows={records} />
-
-          <section className="d-flex flex-column gap-2">
-            {records.map((row, index) => (
-              <MonthSalesCard
-                key={`${row.sellerCode}-${row.month}`}
-                row={row}
-                index={index}
-                total={totalSales}
-                previous={records[index - 1]}
-              />
-            ))}
-          </section>
 
           <DataRows rows={records} />
         </>

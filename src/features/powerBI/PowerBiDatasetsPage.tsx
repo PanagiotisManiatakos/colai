@@ -178,7 +178,7 @@ export function PowerBiDatasetsPage() {
   return (
     <div className="d-flex flex-column gap-3">
       <ReportHeader
-        title="Power BI Datasets"
+        title="Datasets"
         subtitle={groupName}
         icon="bi-database"
       />
