@@ -4,7 +4,7 @@ import {
   getPowerBiGroups,
   POWERBI_NO_CACHE_HEADERS,
   PowerBiRequestError,
-} from "@/lib/powerBi";
+} from "@/lib/bi-reports/powerBi";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 

@@ -1,4 +1,4 @@
-import type { PowerBiDatasetTarget } from "@/lib/powerBi";
+import type { PowerBiDatasetTarget } from "@/lib/bi-reports/powerBi";
 import { normalizeSellerCode } from "@/lib/sellerAccess";
 import type { ApiUserInfo } from "@/types/api/schemas";
 
@@ -10,7 +10,7 @@ export type BiReportSellerContext = {
   sellerName: string;
 };
 
-export type BiReportPowerBiTargetKey = "sales" | "akrateia";
+export type BiReportPowerBiTargetKey = "sales" | "sales_year" | "akrateia";
 
 export type MonthlySalesRow = {
   sellerCode: string;
@@ -34,6 +34,25 @@ export type AkrateiaRow = {
   ccEktelTotalPerRunning: number | null;
 };
 
+export type SalesPerYearRow = {
+  totalColoplastSales: number | null;
+  totalClpTarget: number | null;
+  totalClpSalesForecast: number | null;
+  totalClpCover: number | null;
+  ocPer: number | null;
+  ocPerTarget: number | null;
+  ocPerForecast: number | null;
+  ocCover: number | null;
+  icPerNew: number | null;
+  icPerTargetNew: number | null;
+  genadyneSales: number | null;
+  genadyneTarget: number | null;
+  genadyneCover: number | null;
+  unoSales: number | null;
+  unoTargetSales: number | null;
+  unoCover: number | null;
+};
+
 export type ReportTile = {
   key: string;
   title: string;
@@ -55,6 +74,13 @@ export type AkrateiaResponse = {
   sellerCode: string;
   sellerName: string;
   records: AkrateiaRow[];
+};
+
+export type SalesPerYearResponse = {
+  ok: true;
+  sellerCode: string;
+  sellerName: string;
+  records: SalesPerYearRow[];
 };
 
 function readPowerBiEnv(name: string): string {

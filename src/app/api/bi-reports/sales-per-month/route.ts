@@ -3,14 +3,14 @@ import {
   resolveBiReportPowerBiTarget,
   resolveBiReportSellerContext,
   type MonthlySalesRow,
-} from "@/lib/biReports";
+} from "@/lib/bi-reports/biReports";
 import {
   escapeDaxString,
   executePowerBiQuery,
   POWERBI_NO_CACHE_HEADERS,
   PowerBiRequestError,
   type PowerBiExecuteQueriesResponse,
-} from "@/lib/powerBi";
+} from "@/lib/bi-reports/powerBi";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
