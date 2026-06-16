@@ -9,7 +9,11 @@ import {
   ReportHeader,
   TargetBar,
   ValuePill,
-} from "@/features/biReports/ReportShared";
+} from "@/features/powerBI/ReportShared";
+import {
+  buildPowerBiReportApiUrl,
+  type PowerBiReportTargetProps,
+} from "@/features/powerBI/reportApi";
 import {
   formatNullableCurrency,
   formatNullableNumber,
@@ -246,19 +250,30 @@ function SalesPerYearDetailsTable({ row }: { row: SalesPerYearRow }) {
   );
 }
 
-export function SalesPerYearReportPage() {
+export function SalesPerYearReportPage({
+  workspaceId,
+  datasetId,
+}: PowerBiReportTargetProps = {}) {
   const [records, setRecords] = React.useState<SalesPerYearRow[]>([]);
   const [sellerCode, setSellerCode] = React.useState("");
   const [sellerName, setSellerName] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const apiUrl = React.useMemo(
+    () =>
+      buildPowerBiReportApiUrl("/api/powerbi/sales-per-year", {
+        workspaceId,
+        datasetId,
+      }),
+    [workspaceId, datasetId],
+  );
 
   const loadSalesPerYear = React.useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/bi-reports/sales-per-year", {
+      const res = await fetch(apiUrl, {
         cache: "no-store",
         headers: {
           "Cache-Control": "no-cache",
@@ -285,7 +300,7 @@ export function SalesPerYearReportPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiUrl]);
 
   React.useEffect(() => {
     void loadSalesPerYear();

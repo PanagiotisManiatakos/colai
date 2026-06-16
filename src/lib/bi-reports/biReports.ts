@@ -1,4 +1,5 @@
 import type { PowerBiDatasetTarget } from "@/lib/bi-reports/powerBi";
+import type { PowerBiDataset, PowerBiGroup } from "@/lib/bi-reports/powerBi";
 import { normalizeSellerCode } from "@/lib/sellerAccess";
 import type { ApiUserInfo } from "@/types/api/schemas";
 
@@ -83,6 +84,19 @@ export type SalesPerYearResponse = {
   records: SalesPerYearRow[];
 };
 
+export type BiReportGroupsResponse = {
+  ok: true;
+  configuredWorkspaceId: string;
+  configuredGroup: PowerBiGroup | null;
+  groups: PowerBiGroup[];
+};
+
+export type BiReportDatasetsResponse = {
+  ok: true;
+  workspaceId: string;
+  datasets: PowerBiDataset[];
+};
+
 function readPowerBiEnv(name: string): string {
   return process.env[name]?.trim() || "";
 }
@@ -103,6 +117,21 @@ export function resolveBiReportPowerBiTarget(
     MAVROGENIS_SALES_DATASET_ID;
 
   return { datasetId, workspaceId };
+}
+
+export function resolveBiReportPowerBiTargetFromRequest(
+  req: Request,
+  key: BiReportPowerBiTargetKey,
+): Required<PowerBiDatasetTarget> {
+  const fallback = resolveBiReportPowerBiTarget(key);
+  const url = new URL(req.url);
+  const workspaceId = url.searchParams.get("workspaceId")?.trim();
+  const datasetId = url.searchParams.get("datasetId")?.trim();
+
+  return {
+    workspaceId: workspaceId || fallback.workspaceId,
+    datasetId: datasetId || fallback.datasetId,
+  };
 }
 
 export function getUserDisplayName(userInfo: ApiUserInfo | null): string {

@@ -1,6 +1,6 @@
 import { cookieName, decodeUserInfoCookie, userCookieName } from "@/lib/auth";
 import {
-  resolveBiReportPowerBiTarget,
+  resolveBiReportPowerBiTargetFromRequest,
   resolveBiReportSellerContext,
   type AkrateiaRow,
 } from "@/lib/bi-reports/biReports";
@@ -90,7 +90,7 @@ function normalizeAkrateiaRows(
     });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const jar = await cookies();
   const token = jar.get(cookieName)?.value;
   if (!token) {
@@ -113,7 +113,7 @@ export async function GET() {
   try {
     data = await executePowerBiQuery(
       buildAkrateiaQuery(seller.sellerCode),
-      resolveBiReportPowerBiTarget("akrateia"),
+      resolveBiReportPowerBiTargetFromRequest(req, "akrateia"),
     );
   } catch (err) {
     const status = err instanceof PowerBiRequestError ? err.status : 500;

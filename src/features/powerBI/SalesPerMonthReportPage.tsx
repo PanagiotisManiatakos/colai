@@ -7,7 +7,11 @@ import {
   MetricCard,
   ReportError,
   ReportHeader,
-} from "@/features/biReports/ReportShared";
+} from "@/features/powerBI/ReportShared";
+import {
+  buildPowerBiReportApiUrl,
+  type PowerBiReportTargetProps,
+} from "@/features/powerBI/reportApi";
 import {
   accentColors,
   formatCurrency,
@@ -173,17 +177,28 @@ function DataRows({ rows }: { rows: MonthlySalesRow[] }) {
   );
 }
 
-export function SalesPerMonthReportPage() {
+export function SalesPerMonthReportPage({
+  workspaceId,
+  datasetId,
+}: PowerBiReportTargetProps = {}) {
   const [records, setRecords] = React.useState<MonthlySalesRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const apiUrl = React.useMemo(
+    () =>
+      buildPowerBiReportApiUrl("/api/powerbi/sales-per-month", {
+        workspaceId,
+        datasetId,
+      }),
+    [workspaceId, datasetId],
+  );
 
   const loadSalesPerMonth = React.useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/bi-reports/sales-per-month", {
+      const res = await fetch(apiUrl, {
         cache: "no-store",
         headers: {
           "Cache-Control": "no-cache",
@@ -206,7 +221,7 @@ export function SalesPerMonthReportPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiUrl]);
 
   React.useEffect(() => {
     void loadSalesPerMonth();

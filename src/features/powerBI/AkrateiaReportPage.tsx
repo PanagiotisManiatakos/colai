@@ -9,7 +9,11 @@ import {
   ReportHeader,
   TargetBar,
   ValuePill,
-} from "@/features/biReports/ReportShared";
+} from "@/features/powerBI/ReportShared";
+import {
+  buildPowerBiReportApiUrl,
+  type PowerBiReportTargetProps,
+} from "@/features/powerBI/reportApi";
 import {
   accentColors,
   formatCurrency,
@@ -160,19 +164,30 @@ function AkrateiaCompactTable({ rows }: { rows: AkrateiaRow[] }) {
   );
 }
 
-export function AkrateiaReportPage() {
+export function AkrateiaReportPage({
+  workspaceId,
+  datasetId,
+}: PowerBiReportTargetProps = {}) {
   const [records, setRecords] = React.useState<AkrateiaRow[]>([]);
   const [sellerCode, setSellerCode] = React.useState("");
   const [sellerName, setSellerName] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
+  const apiUrl = React.useMemo(
+    () =>
+      buildPowerBiReportApiUrl("/api/powerbi/akrateia", {
+        workspaceId,
+        datasetId,
+      }),
+    [workspaceId, datasetId],
+  );
 
   const loadAkrateia = React.useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/bi-reports/akrateia", {
+      const res = await fetch(apiUrl, {
         cache: "no-store",
         headers: {
           "Cache-Control": "no-cache",
@@ -199,7 +214,7 @@ export function AkrateiaReportPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [apiUrl]);
 
   React.useEffect(() => {
     void loadAkrateia();
