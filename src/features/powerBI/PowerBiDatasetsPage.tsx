@@ -17,21 +17,7 @@ function boolLabel(value?: boolean) {
   return value ? "Ναι" : "Όχι";
 }
 
-function DatasetCard({
-  dataset,
-  groupId,
-  groupName,
-}: {
-  dataset: PowerBiDataset;
-  groupId: string;
-  groupName: string;
-}) {
-  const href = dataset.id
-    ? `/powerbi/groups/${encodeURIComponent(groupId)}/datasets/${encodeURIComponent(
-        dataset.id,
-      )}/seller-reports?groupName=${encodeURIComponent(groupName)}&datasetName=${encodeURIComponent(dataset.name)}`
-    : "";
-
+function DatasetCard({ dataset }: { dataset: PowerBiDataset }) {
   const card = (
     <div className="app-card p-3">
       <div className="d-flex align-items-start justify-content-between gap-3">
@@ -41,12 +27,6 @@ function DatasetCard({
             {dataset.targetStorageMode || "Dataset"}
           </div>
         </div>
-        {href ? (
-          <i
-            className="bi bi-chevron-right text-secondary flex-shrink-0"
-            aria-hidden
-          />
-        ) : null}
       </div>
 
       <div
@@ -111,17 +91,7 @@ function DatasetCard({
     </div>
   );
 
-  if (!href) return card;
-
-  return (
-    <Link
-      href={href}
-      className="text-decoration-none"
-      style={{ color: "var(--bs-body-color)" }}
-    >
-      {card}
-    </Link>
-  );
+  return card;
 }
 
 export function PowerBiDatasetsPage() {
@@ -198,12 +168,7 @@ export function PowerBiDatasetsPage() {
       ) : datasets.length ? (
         <section className="d-flex flex-column gap-2">
           {datasets.map((dataset) => (
-            <DatasetCard
-              key={dataset.id}
-              dataset={dataset}
-              groupId={groupId}
-              groupName={groupName}
-            />
+            <DatasetCard key={dataset.id} dataset={dataset} />
           ))}
         </section>
       ) : (

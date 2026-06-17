@@ -15,7 +15,6 @@ import {
 } from "@/lib/sellerAccess";
 import {
   formatIntGR,
-  formatPercentGR,
   parseLocaleNumber,
 } from "@/lib/utils/number";
 import type { WcStoixoiMina } from "@/types/dashboard";
@@ -39,8 +38,8 @@ const emptyWcSummary: WcEndpointSummary = {
     turnover: 0,
 };
 
-// const SELLER_REPORTS_HREF =
-//     "/powerbi/groups/a279f8cd-3d0e-4362-af29-2e5af5b043d1/datasets/e928997c-ad45-4320-a7d6-b35a8fa8e510/seller-reports";
+const SELLER_REPORTS_HREF =
+    "/powerbi/seller-reports";
 
 function sumTeamRows(records: SellerTeamatesWC[]): WcEndpointSummary {
     return records.reduce<WcEndpointSummary>(
@@ -127,7 +126,7 @@ function MetricCard({ title, value, delta, deltaDirection = "neutral", icon, hre
                 <Link
                     href={href}
                     className="text-decoration-none text-reset d-block h-100"
-                    aria-label={`${title} — μετάβαση στο WC διαδικασία`}
+                    aria-label={`${title} — μετάβαση`}
                 >
                     {body}
                 </Link>
@@ -307,9 +306,6 @@ export default function HomeStats() {
         void dispatch(fetchDashboardData());
     }, [dispatch]);
 
-    const mom = dash.totalOrders_month_perc;
-    const momDir: "up" | "down" | "neutral" = mom > 0 ? "up" : mom < 0 ? "down" : "neutral";
-    const momLabel = `${formatPercentGR(Math.abs(mom))}%`;
     const showInitialDashLoader = dash.loading && dash.lastFetchedAt === 0;
 
     return (
@@ -334,19 +330,13 @@ export default function HomeStats() {
 
             <div className={showInitialDashLoader ? "d-none" : undefined}>
                 <div className="row g-3 mb-3">
-                    {/* <MetricCard
-                        title="Παραγγελίες μήνα"
-                        value={formatIntGR(dash.totalOrders_month)}
-                        delta={momLabel}
-                        deltaDirection={momDir}
-                        icon="bi-box-seam"
-                    /> */}
+                   
                     <MetricCard
                         title="Seller Reports"
                         value="PowerBI"
                         delta={null}
                         icon="bi-bar-chart-line"
-                        // href={SELLER_REPORTS_HREF}
+                        href={SELLER_REPORTS_HREF}
                     />
                     <MetricCard
                         title="Συνταγές επόμενων 10 ημερών"

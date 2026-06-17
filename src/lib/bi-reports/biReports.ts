@@ -35,6 +35,20 @@ export type AkrateiaRow = {
   ccEktelTotalPerRunning: number | null;
 };
 
+export type AkrateiaPermanentRow = {
+  month: string;
+  monimoiSales: number | null;
+  monimoiSalesTarget: number | null;
+  peCover: number | null;
+};
+
+export type AkrateiaCoverSummary = {
+  ccSalesCover: number | null;
+  ccNewPerCover: number | null;
+  ccRepPerCover: number | null;
+  ccPerCover: number | null;
+};
+
 export type SalesPerYearRow = {
   totalColoplastSales: number | null;
   totalClpTarget: number | null;
@@ -52,6 +66,35 @@ export type SalesPerYearRow = {
   unoSales: number | null;
   unoTargetSales: number | null;
   unoCover: number | null;
+};
+
+export type SalesPerYearMonthlyRow = {
+  month: string;
+  hospitalSales: number | null;
+  hospitalTarget: number | null;
+  hospitalSalesCoverCM: number | null;
+  nonHospitalSalesWc: number | null;
+  nonHospitalTargetWc: number | null;
+  wcSalesCoverCM: number | null;
+  nonHospitalSalesCc: number | null;
+  nonHospitalTargetCc: number | null;
+  ccNhSalesCoverCM: number | null;
+  totalColoplastSales: number | null;
+  totalClpTarget: number | null;
+  totalClpSalesCoverCM: number | null;
+  genadyneSales: number | null;
+  genadyneTargetSales: number | null;
+  geSalesCoverCM: number | null;
+  unoSales: number | null;
+  unoTargetSales: number | null;
+  unoCover: number | null;
+};
+
+export type SalesPerYearCoverSummary = {
+  hospitalCoverAll: number | null;
+  wcCoverAll: number | null;
+  ccCoverAll: number | null;
+  totalCoverAll: number | null;
 };
 
 export type ReportTile = {
@@ -75,6 +118,8 @@ export type AkrateiaResponse = {
   sellerCode: string;
   sellerName: string;
   records: AkrateiaRow[];
+  permanentRecords: AkrateiaPermanentRow[];
+  coverSummary: AkrateiaCoverSummary | null;
 };
 
 export type SalesPerYearResponse = {
@@ -82,6 +127,8 @@ export type SalesPerYearResponse = {
   sellerCode: string;
   sellerName: string;
   records: SalesPerYearRow[];
+  monthlyRecords: SalesPerYearMonthlyRow[];
+  coverSummary: SalesPerYearCoverSummary | null;
 };
 
 export type BiReportGroupsResponse = {

@@ -82,19 +82,40 @@ export function formatNullableRatioPercent(value: number | null) {
 
 export function getMonthLabel(month: string) {
   const trimmed = month.trim();
+  const monthIndex = getMonthIndex(trimmed);
+  if (monthIndex != null) return greekMonthNames[monthIndex];
+
+  const monthPart = trimmed
+    .replace(/^\d+\s*/, "")
+    .replace(".", "")
+    .trim();
+
+  return monthPart || trimmed;
+}
+
+export function getMonthIndex(month: string) {
+  const trimmed = month.trim();
   const numericPrefix = trimmed.match(/^0?([1-9]|1[0-2])\b/);
   if (numericPrefix) {
-    return greekMonthNames[Number(numericPrefix[1]) - 1];
+    return Number(numericPrefix[1]) - 1;
   }
 
   const monthPart = trimmed
     .replace(/^\d+\s*/, "")
     .replace(".", "")
     .trim();
-  const englishIndex = englishMonthIndex[monthPart.toLowerCase()];
-  if (englishIndex != null) return greekMonthNames[englishIndex];
+  if (!monthPart) return null;
 
-  return monthPart || trimmed;
+  const englishIndex = englishMonthIndex[monthPart.toLowerCase()];
+  if (englishIndex != null) return englishIndex;
+
+  const greekIndex = greekMonthNames.findIndex((name) =>
+    name.toLocaleLowerCase("el-GR").startsWith(
+      monthPart.toLocaleLowerCase("el-GR"),
+    ),
+  );
+
+  return greekIndex >= 0 ? greekIndex : null;
 }
 
 export function getDelta(current: number, previous?: number) {

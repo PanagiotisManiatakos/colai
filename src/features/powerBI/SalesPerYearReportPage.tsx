@@ -18,12 +18,40 @@ import {
   formatNullableCurrency,
   formatNullableNumber,
   formatNullableRatioPercent,
+  getMonthIndex,
+  getMonthLabel,
 } from "@/lib/bi-reports/reportUtils";
 import { parseProxyJson } from "@/lib/api/client";
 import type {
+  SalesPerYearCoverSummary,
+  SalesPerYearMonthlyRow,
   SalesPerYearResponse,
   SalesPerYearRow,
 } from "@/lib/bi-reports/biReports";
+
+function getCurrentAthensMonthIndex() {
+  const month = new Intl.DateTimeFormat("en-US", {
+    month: "numeric",
+    timeZone: "Europe/Athens",
+  }).format(new Date());
+
+  return Number(month) - 1;
+}
+
+function ReportSectionTitle({
+  title,
+  subtitle,
+}: {
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="app-card p-3">
+      <div className="fw-semibold">{title}</div>
+      <div className="small text-secondary mt-1">{subtitle}</div>
+    </div>
+  );
+}
 
 function SalesPerYearTargetPanel({
   title,
@@ -175,6 +203,163 @@ function SalesPerYearProductCard({
   );
 }
 
+function SalesPerYearCoverSummaryCards({
+  summary,
+}: {
+  summary: SalesPerYearCoverSummary | null;
+}) {
+  if (!summary) return null;
+
+  return (
+    <section className="row g-3">
+      <MetricCard
+        label="Hospital Trend All"
+        value={formatNullableRatioPercent(summary.hospitalCoverAll)}
+        icon="bi-hospital"
+        accent="#2563eb"
+      />
+      <MetricCard
+        label="WC Trend All"
+        value={formatNullableRatioPercent(summary.wcCoverAll)}
+        icon="bi-clipboard2-pulse"
+        accent="#16a34a"
+      />
+      <MetricCard
+        label="CC Trend All"
+        value={formatNullableRatioPercent(summary.ccCoverAll)}
+        icon="bi-droplet-half"
+        accent="#dc2626"
+      />
+      <MetricCard
+        label="Total Trend All"
+        value={formatNullableRatioPercent(summary.totalCoverAll)}
+        icon="bi-bullseye"
+        accent="#7c3aed"
+      />
+    </section>
+  );
+}
+
+function SalesPerYearMonthCard({
+  row,
+  index,
+}: {
+  row: SalesPerYearMonthlyRow;
+  index: number;
+}) {
+  const accent = ["#2563eb", "#16a34a", "#dc2626", "#7c3aed"][
+    index % 4
+  ];
+
+  return (
+    <div className="app-card p-3">
+      <div className="d-flex align-items-start justify-content-between gap-3">
+        <div className="min-w-0">
+          <div className="fw-bold">{getMonthLabel(row.month)}</div>
+          <div className="small text-secondary">
+            Νοσοκομειακός & εξωνοσοκομειακός τζίρος
+          </div>
+        </div>
+        <span
+          className="badge rounded-pill flex-shrink-0"
+          style={{
+            background: `${accent}1f`,
+            color: accent,
+            border: `1px solid ${accent}33`,
+          }}
+        >
+          {formatNullableRatioPercent(row.totalClpSalesCoverCM)}
+        </span>
+      </div>
+
+      <div className="d-flex flex-column mt-3 gap-3">
+        <TargetBar
+          label="Hospital Sales"
+          actual={row.hospitalSales}
+          target={row.hospitalTarget}
+          coverage={row.hospitalSalesCoverCM}
+          accent="#2563eb"
+          formatValue={formatNullableCurrency}
+        />
+        <TargetBar
+          label="Non Hospital Sales WC"
+          actual={row.nonHospitalSalesWc}
+          target={row.nonHospitalTargetWc}
+          coverage={row.wcSalesCoverCM}
+          accent="#16a34a"
+          formatValue={formatNullableCurrency}
+        />
+        <TargetBar
+          label="Non Hospital Sales CC"
+          actual={row.nonHospitalSalesCc}
+          target={row.nonHospitalTargetCc}
+          coverage={row.ccNhSalesCoverCM}
+          accent="#dc2626"
+          formatValue={formatNullableCurrency}
+        />
+        <TargetBar
+          label="Total Coloplast Sales"
+          actual={row.totalColoplastSales}
+          target={row.totalClpTarget}
+          coverage={row.totalClpSalesCoverCM}
+          accent="#7c3aed"
+          formatValue={formatNullableCurrency}
+        />
+        <TargetBar
+          label="Genadyne Sales"
+          actual={row.genadyneSales}
+          target={row.genadyneTargetSales}
+          coverage={row.geSalesCoverCM}
+          accent="#0891b2"
+          formatValue={formatNullableCurrency}
+        />
+        <TargetBar
+          label="UNO Sales"
+          actual={row.unoSales}
+          target={row.unoTargetSales}
+          coverage={row.unoCover}
+          accent="#f97316"
+          formatValue={formatNullableCurrency}
+        />
+      </div>
+    </div>
+  );
+}
+
+function SalesPerYearMonthlyBreakdown({
+  rows,
+}: {
+  rows: SalesPerYearMonthlyRow[];
+}) {
+  if (!rows.length) return null;
+
+  return (
+    <section className="d-flex flex-column gap-2">
+      <div className="app-card p-3">
+        <div className="d-flex align-items-start justify-content-between gap-3">
+          <div>
+            <div className="fw-semibold">Μήνες αναφοράς</div>
+            <div className="small text-secondary">
+              Από Ιανουάριο έως τον τρέχοντα μήνα
+            </div>
+          </div>
+          <span className="badge rounded-pill bg-body-tertiary text-body border">
+            {rows.length} μήνες
+          </span>
+        </div>
+      </div>
+
+      {rows.map((row, index) => (
+        <SalesPerYearMonthCard
+          key={`${row.month}-${index}`}
+          row={row}
+          index={index}
+        />
+      ))}
+    </section>
+  );
+}
+
 function SalesPerYearDetailsTable({ row }: { row: SalesPerYearRow }) {
   const details = [
     {
@@ -255,6 +440,11 @@ export function SalesPerYearReportPage({
   datasetId,
 }: PowerBiReportTargetProps = {}) {
   const [records, setRecords] = React.useState<SalesPerYearRow[]>([]);
+  const [monthlyRecords, setMonthlyRecords] = React.useState<
+    SalesPerYearMonthlyRow[]
+  >([]);
+  const [coverSummary, setCoverSummary] =
+    React.useState<SalesPerYearCoverSummary | null>(null);
   const [sellerCode, setSellerCode] = React.useState("");
   const [sellerName, setSellerName] = React.useState("");
   const [loading, setLoading] = React.useState(true);
@@ -286,6 +476,8 @@ export function SalesPerYearReportPage({
       );
 
       setRecords(data.records ?? []);
+      setMonthlyRecords(data.monthlyRecords ?? []);
+      setCoverSummary(data.coverSummary ?? null);
       setSellerCode(data.sellerCode ?? "");
       setSellerName(data.sellerName ?? "");
     } catch (err) {
@@ -295,6 +487,8 @@ export function SalesPerYearReportPage({
           : "Failed to load Power BI sales per year";
       setError(message);
       setRecords([]);
+      setMonthlyRecords([]);
+      setCoverSummary(null);
       setSellerCode("");
       setSellerName("");
     } finally {
@@ -307,6 +501,14 @@ export function SalesPerYearReportPage({
   }, [loadSalesPerYear]);
 
   const row = records[0] ?? null;
+  const visibleMonthlyRecords = React.useMemo(() => {
+    const currentMonthIndex = getCurrentAthensMonthIndex();
+
+    return monthlyRecords.filter((monthlyRow) => {
+      const monthIndex = getMonthIndex(monthlyRow.month);
+      return monthIndex == null || monthIndex <= currentMonthIndex;
+    });
+  }, [monthlyRecords]);
   const sellerLabel =
     sellerName || sellerCode
       ? `${sellerName || "Πωλητής"}${sellerCode ? ` • ${sellerCode}` : ""}`
@@ -326,21 +528,26 @@ export function SalesPerYearReportPage({
         <ReportError message={error} onRetry={() => void loadSalesPerYear()} />
       ) : row ? (
         <>
+          <ReportSectionTitle
+            title="Εικόνα Πωλήσεων 2026"
+            subtitle="Σύνολα, στόχοι, forecast και καλύψεις πωλητή"
+          />
+
           <section className="row g-3">
             <MetricCard
-              label="Total Coloplast"
+              label="Total Coloplast Sales"
               value={formatNullableCurrency(row.totalColoplastSales)}
               icon="bi-cash-stack"
               accent="#7c3aed"
             />
             <MetricCard
-              label="CLP Cover"
+              label="% Total CLP Cover"
               value={formatNullableRatioPercent(row.totalClpCover)}
               icon="bi-bullseye"
               accent="#16a34a"
             />
             <MetricCard
-              label="OC Cover"
+              label="% OC Cover"
               value={formatNullableRatioPercent(row.ocCover)}
               icon="bi-pie-chart"
               accent="#2563eb"
@@ -409,6 +616,15 @@ export function SalesPerYearReportPage({
           </section>
 
           <SalesPerYearDetailsTable row={row} />
+
+          <ReportSectionTitle
+            title="Αποτέλεσμα Νοσοκομειακού & Εξωνοσοκομειακού Τζίρου"
+            subtitle="Μηνιαία εικόνα έως τον τρέχοντα μήνα"
+          />
+
+          <SalesPerYearCoverSummaryCards summary={coverSummary} />
+
+          <SalesPerYearMonthlyBreakdown rows={visibleMonthlyRecords} />
         </>
       ) : (
         <div className="app-card text-secondary p-3 text-center">

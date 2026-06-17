@@ -3,10 +3,7 @@ import Link from "next/link";
 import type { ReportTile } from "@/lib/bi-reports/biReports";
 
 type SellerReportsPageProps = {
-  workspaceId: string;
-  datasetId: string;
-  groupName?: string;
-  datasetName?: string;
+  subtitle?: string;
 };
 
 type SellerReportTile = Omit<ReportTile, "href"> & {
@@ -40,23 +37,8 @@ const sellerReportTiles: SellerReportTile[] = [
   },
 ];
 
-function buildReportHref({
-  workspaceId,
-  datasetId,
-  slug,
-  groupName,
-  datasetName,
-}: SellerReportsPageProps & { slug: string }) {
-  const params = new URLSearchParams();
-  if (groupName) params.set("groupName", groupName);
-  if (datasetName) params.set("datasetName", datasetName);
-
-  const query = params.toString();
-  const path = `/powerbi/groups/${encodeURIComponent(
-    workspaceId,
-  )}/datasets/${encodeURIComponent(datasetId)}/seller-reports/${slug}`;
-
-  return query ? `${path}?${query}` : path;
+function buildReportHref(slug: string) {
+  return `/powerbi/seller-reports/${slug}`;
 }
 
 function ReportSelector({ reports }: { reports: ReportTile[] }) {
@@ -105,23 +87,12 @@ function ReportSelector({ reports }: { reports: ReportTile[] }) {
 }
 
 export default function SellerReportsPage({
-  workspaceId,
-  datasetId,
-  groupName,
-  datasetName,
+  subtitle = "Επιλογή αναφοράς πωλητή",
 }: SellerReportsPageProps) {
   const reports = sellerReportTiles.map((report) => ({
     ...report,
-    href: buildReportHref({
-      workspaceId,
-      datasetId,
-      slug: report.slug,
-      groupName,
-      datasetName,
-    }),
+    href: buildReportHref(report.slug),
   }));
-
-  const subtitle = [datasetName, groupName].filter(Boolean).join(" • ");
 
   return (
     <div className="d-flex flex-column gap-3">
@@ -145,7 +116,7 @@ export default function SellerReportsPage({
               </span>
             </div>
             <div className="text-secondary mt-1" style={{ fontSize: 13 }}>
-              {subtitle || "Επιλογή αναφοράς πωλητή"}
+              {subtitle}
             </div>
           </div>
           <div
@@ -156,16 +127,6 @@ export default function SellerReportsPage({
           </div>
         </div>
       </section>
-
-      {/* <Link
-        href={`/powerbi/groups/${encodeURIComponent(workspaceId)}/datasets${
-          groupName ? `?name=${encodeURIComponent(groupName)}` : ""
-        }`}
-        className="btn btn-sm btn-outline-secondary align-self-start"
-      >
-        <i className="bi bi-chevron-left me-1" aria-hidden />
-        Datasets
-      </Link> */}
 
       <ReportSelector reports={reports} />
     </div>

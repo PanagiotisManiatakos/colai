@@ -2,6 +2,8 @@ import { cookieName, decodeUserInfoCookie, userCookieName } from "@/lib/auth";
 import {
   resolveBiReportPowerBiTargetFromRequest,
   resolveBiReportSellerContext,
+  type AkrateiaCoverSummary,
+  type AkrateiaPermanentRow,
   type AkrateiaRow,
 } from "@/lib/bi-reports/biReports";
 import {
@@ -36,6 +38,18 @@ function buildAkrateiaQuery(sellerCode: string): string {
   const escapedSellerCode = escapeDaxString(sellerCode);
 
   return `EVALUATE SUMMARIZECOLUMNS('Calendar'[Month], FILTER('U Sales Person', 'U Sales Person'[SellerCode] = "${escapedSellerCode}"), "CC NEW sales", [CC NEW sales], "CC REP sales", [CC REP sales], "Sales", [Sales], "CC Sales Target", [CC Sales Target], "CC % Sales Cover CM", [CC % Sales Cover CM], "CC New PERi", [CC New PERi], "CC NEW PER Target", [CC NEW PER Target], "CC NEW % PER Cover CM", [CC NEW % PER Cover CM], "CC EKTEL", [CC EKTEL], "CC Ektel Target", [CC Ektel Target], "% CC EKTEL Total PER running", [% CC EKTEL Total PER running])`;
+}
+
+function buildAkrateiaPermanentQuery(sellerCode: string): string {
+  const escapedSellerCode = escapeDaxString(sellerCode);
+
+  return `EVALUATE SUMMARIZECOLUMNS('Calendar'[Month], FILTER('U Sales Person', 'U Sales Person'[SellerCode] = "${escapedSellerCode}"), "Monimoi Sales", [Monimoi Sales], "Monimoi Sales Target", [Monimoi Sales Target], "% PE Cover", [% PE Cover]) ORDER BY 'Calendar'[Month]`;
+}
+
+function buildAkrateiaCoverSummaryQuery(sellerCode: string): string {
+  const escapedSellerCode = escapeDaxString(sellerCode);
+
+  return `EVALUATE SUMMARIZECOLUMNS(FILTER('U Sales Person', 'U Sales Person'[SellerCode] = "${escapedSellerCode}"), "% CC Sales Cover", [% CC Sales Cover], "% CC NEW PER Cover", [% CC NEW PER Cover], "% CC REP PER Cover", [% CC REP PER Cover], "% CC PER Cover", [% CC PER Cover])`;
 }
 
 function toNullableNumber(value: unknown): number | null {
@@ -90,6 +104,40 @@ function normalizeAkrateiaRows(
     });
 }
 
+function normalizeAkrateiaPermanentRows(
+  response: PowerBiExecuteQueriesResponse,
+): AkrateiaPermanentRow[] {
+  const rows = response.results?.[0]?.tables?.[0]?.rows ?? [];
+
+  return rows
+    .map((row) => ({
+      month: String(row["Calendar[Month]"] ?? "").trim(),
+      monimoiSales: toNullableNumber(row["[Monimoi Sales]"]),
+      monimoiSalesTarget: toNullableNumber(row["[Monimoi Sales Target]"]),
+      peCover: toNullableNumber(row["[% PE Cover]"]),
+    }))
+    .filter((row) => row.month)
+    .sort((a, b) => {
+      const orderDiff = getMonthSortIndex(a.month) - getMonthSortIndex(b.month);
+      if (orderDiff !== 0) return orderDiff;
+      return a.month.localeCompare(b.month, "el");
+    });
+}
+
+function normalizeAkrateiaCoverSummary(
+  response: PowerBiExecuteQueriesResponse,
+): AkrateiaCoverSummary | null {
+  const row = response.results?.[0]?.tables?.[0]?.rows?.[0];
+  if (!row) return null;
+
+  return {
+    ccSalesCover: toNullableNumber(row["[% CC Sales Cover]"]),
+    ccNewPerCover: toNullableNumber(row["[% CC NEW PER Cover]"]),
+    ccRepPerCover: toNullableNumber(row["[% CC REP PER Cover]"]),
+    ccPerCover: toNullableNumber(row["[% CC PER Cover]"]),
+  };
+}
+
 export async function GET(req: Request) {
   const jar = await cookies();
   const token = jar.get(cookieName)?.value;
@@ -110,12 +158,29 @@ export async function GET(req: Request) {
   }
 
   let data: PowerBiExecuteQueriesResponse;
+  let permanentData: PowerBiExecuteQueriesResponse;
+  let coverSummaryData: PowerBiExecuteQueriesResponse;
   try {
-    data = await executePowerBiQuery(
-      buildAkrateiaQuery(seller.sellerCode),
-      resolveBiReportPowerBiTargetFromRequest(req, "akrateia"),
-      { amsaAccessToken: token },
-    );
+    const target = resolveBiReportPowerBiTargetFromRequest(req, "akrateia");
+    const tokenOptions = { amsaAccessToken: token };
+
+    [data, permanentData, coverSummaryData] = await Promise.all([
+      executePowerBiQuery(
+        buildAkrateiaQuery(seller.sellerCode),
+        target,
+        tokenOptions,
+      ),
+      executePowerBiQuery(
+        buildAkrateiaPermanentQuery(seller.sellerCode),
+        target,
+        tokenOptions,
+      ),
+      executePowerBiQuery(
+        buildAkrateiaCoverSummaryQuery(seller.sellerCode),
+        target,
+        tokenOptions,
+      ),
+    ]);
   } catch (err) {
     const status = err instanceof PowerBiRequestError ? err.status : 500;
     const message =
@@ -133,6 +198,8 @@ export async function GET(req: Request) {
       sellerCode: seller.sellerCode,
       sellerName: seller.sellerName,
       records: normalizeAkrateiaRows(data),
+      permanentRecords: normalizeAkrateiaPermanentRows(permanentData),
+      coverSummary: normalizeAkrateiaCoverSummary(coverSummaryData),
     },
     { headers: POWERBI_NO_CACHE_HEADERS },
   );
