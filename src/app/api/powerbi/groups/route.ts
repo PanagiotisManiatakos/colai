@@ -23,7 +23,7 @@ export async function GET() {
   const configuredWorkspaceId = getDefaultPowerBiWorkspaceId();
 
   try {
-    const groups = await getPowerBiGroups();
+    const groups = await getPowerBiGroups({ amsaAccessToken: token });
     const configuredGroup =
       groups.find((group) => group.id === configuredWorkspaceId) ?? null;
 

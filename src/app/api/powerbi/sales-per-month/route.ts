@@ -71,6 +71,7 @@ export async function GET(req: Request) {
     data = await executePowerBiQuery(
       buildSalesPerMonthQuery(seller.sellerCode),
       resolveBiReportPowerBiTargetFromRequest(req, "sales"),
+      { amsaAccessToken: token },
     );
   } catch (err) {
     const status = err instanceof PowerBiRequestError ? err.status : 500;

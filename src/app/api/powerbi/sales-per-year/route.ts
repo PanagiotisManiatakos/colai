@@ -37,9 +37,7 @@ function normalizeSalesPerYearRows(
   return rows.map((row) => ({
     totalColoplastSales: toNullableNumber(row["[Total Coloplast Sales]"]),
     totalClpTarget: toNullableNumber(row["[Total CLP Target]"]),
-    totalClpSalesForecast: toNullableNumber(
-      row["[Total CLP Sales Forecast]"],
-    ),
+    totalClpSalesForecast: toNullableNumber(row["[Total CLP Sales Forecast]"]),
     totalClpCover: toNullableNumber(row["[% Total CLP Cover]"]),
     ocPer: toNullableNumber(row["[OC PER]"]),
     ocPerTarget: toNullableNumber(row["[OC PER Target]"]),
@@ -80,6 +78,7 @@ export async function GET(req: Request) {
     data = await executePowerBiQuery(
       buildSalesPerYearQuery(seller.sellerCode),
       resolveBiReportPowerBiTargetFromRequest(req, "sales_year"),
+      { amsaAccessToken: token },
     );
   } catch (err) {
     const status = err instanceof PowerBiRequestError ? err.status : 500;

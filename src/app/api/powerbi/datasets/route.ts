@@ -23,7 +23,10 @@ export async function GET() {
   const workspaceId = getDefaultPowerBiWorkspaceId();
 
   try {
-    const datasets = await getPowerBiDatasets({ workspaceId });
+    const datasets = await getPowerBiDatasets(
+      { workspaceId },
+      { amsaAccessToken: token },
+    );
 
     return NextResponse.json(
       {

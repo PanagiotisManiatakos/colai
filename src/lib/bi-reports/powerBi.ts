@@ -21,10 +21,10 @@ export type PowerBiDatasetTarget = {
 };
 
 export type PowerBiAuthInfo = {
-  mode: "client_credentials" | "static_access_token" | "missing";
+  mode: "amsa_token_service" | "client_credentials" | "missing";
   tenantId: string | null;
   clientId: string | null;
-  hasStaticAccessToken: boolean;
+  hasAmsaApiBaseUrl: boolean;
 };
 
 export type PowerBiDataset = {
@@ -55,6 +55,18 @@ type PowerBiDatasetsResponse = {
 type PowerBiGroupsResponse = {
   value?: PowerBiGroup[];
   ["@odata.count"]?: number;
+};
+
+type AmsaPowerBiTokenResponse = {
+  statusCode?: number;
+  message?: string;
+  detailedMessage?: string;
+  token?: string;
+  token_data?: string;
+};
+
+type PowerBiTokenOptions = {
+  amsaAccessToken?: string | null;
 };
 
 type PowerBiErrorResponse = {
@@ -100,17 +112,15 @@ export function getDefaultPowerBiDatasetId(): string {
 export function getPowerBiAuthInfo(): PowerBiAuthInfo {
   const tenantId = process.env.POWERBI_TENANT_ID?.trim() || null;
   const clientId = process.env.POWERBI_CLIENT_ID?.trim() || null;
+  const hasAmsaApiBaseUrl = Boolean(process.env.AMSA_API_BASE_URL?.trim());
   const hasClientSecret = Boolean(process.env.POWERBI_CLIENT_SECRET?.trim());
-  const hasStaticAccessToken = Boolean(
-    process.env.POWERBI_ACCESS_TOKEN?.trim(),
-  );
 
-  if (hasStaticAccessToken) {
+  if (hasAmsaApiBaseUrl) {
     return {
-      mode: "static_access_token",
+      mode: "amsa_token_service",
       tenantId,
       clientId,
-      hasStaticAccessToken,
+      hasAmsaApiBaseUrl,
     };
   }
 
@@ -119,7 +129,7 @@ export function getPowerBiAuthInfo(): PowerBiAuthInfo {
       mode: "client_credentials",
       tenantId,
       clientId,
-      hasStaticAccessToken,
+      hasAmsaApiBaseUrl,
     };
   }
 
@@ -127,7 +137,7 @@ export function getPowerBiAuthInfo(): PowerBiAuthInfo {
     mode: "missing",
     tenantId,
     clientId,
-    hasStaticAccessToken,
+    hasAmsaApiBaseUrl,
   };
 }
 
@@ -254,10 +264,78 @@ async function getClientCredentialsToken(
   return data.access_token;
 }
 
-export async function getPowerBiToken(): Promise<string> {
-  // Temporary local override until the app/service principal has workspace access.
-  const staticToken = process.env.POWERBI_ACCESS_TOKEN?.trim();
-  if (staticToken) return staticToken;
+async function getAmsaPowerBiToken(amsaAccessToken: string): Promise<string> {
+  const baseUrl = process.env.AMSA_API_BASE_URL?.trim();
+  if (!baseUrl) {
+    throw new PowerBiRequestError("Missing AMSA_API_BASE_URL.", 500);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(`${baseUrl}/api/fetch-pbi-token`, {
+      method: "GET",
+      headers: {
+        Accept: "text/plain",
+        Authorization: `Bearer ${amsaAccessToken}`,
+      },
+      cache: "no-store",
+    });
+  } catch (err) {
+    throw new PowerBiRequestError(
+      err instanceof Error ? err.message : "Power BI token service failed",
+      502,
+    );
+  }
+
+  const text = await res.text().catch(() => "");
+  const data = (
+    text
+      ? (() => {
+          try {
+            return JSON.parse(text) as AmsaPowerBiTokenResponse;
+          } catch {
+            return { message: text } satisfies AmsaPowerBiTokenResponse;
+          }
+        })()
+      : {}
+  ) as AmsaPowerBiTokenResponse;
+
+  if (!res.ok) {
+    throw new PowerBiRequestError(
+      data.detailedMessage ||
+        data.message ||
+        `Power BI token service failed (HTTP ${res.status})`,
+      res.status,
+    );
+  }
+
+  const backendStatusCode = Number(data.statusCode);
+  const token = data.token?.trim() || data.token_data?.trim();
+
+  if (
+    (Number.isFinite(backendStatusCode) &&
+      backendStatusCode !== 0 &&
+      backendStatusCode !== 200) ||
+    !token
+  ) {
+    throw new PowerBiRequestError(
+      data.detailedMessage ||
+        data.message ||
+        "Power BI token service did not return a token.",
+      500,
+    );
+  }
+
+  return token;
+}
+
+export async function getPowerBiToken(
+  options: PowerBiTokenOptions = {},
+): Promise<string> {
+  const amsaAccessToken = options.amsaAccessToken?.trim();
+  if (amsaAccessToken) {
+    return getAmsaPowerBiToken(amsaAccessToken);
+  }
 
   const tenantId = process.env.POWERBI_TENANT_ID?.trim();
   const clientId = process.env.POWERBI_CLIENT_ID?.trim();
@@ -276,8 +354,9 @@ export async function getPowerBiToken(): Promise<string> {
 export async function executePowerBiQuery(
   query: string,
   target?: PowerBiDatasetTarget,
+  tokenOptions?: PowerBiTokenOptions,
 ): Promise<PowerBiExecuteQueriesResponse> {
-  const accessToken = await getPowerBiToken();
+  const accessToken = await getPowerBiToken(tokenOptions);
   const endpoint = getPowerBiExecuteQueriesEndpoint(target);
 
   let upstream: Response;
@@ -321,10 +400,11 @@ export async function executePowerBiQuery(
 
 export async function getPowerBiDatasets(
   target?: Pick<PowerBiDatasetTarget, "workspaceId">,
+  tokenOptions?: PowerBiTokenOptions,
 ): Promise<PowerBiDataset[]> {
   const workspaceId =
     target?.workspaceId?.trim() || getDefaultPowerBiWorkspaceId();
-  const accessToken = await getPowerBiToken();
+  const accessToken = await getPowerBiToken(tokenOptions);
 
   let upstream: Response;
   try {
@@ -363,8 +443,10 @@ export async function getPowerBiDatasets(
   return "value" in data && Array.isArray(data.value) ? data.value : [];
 }
 
-export async function getPowerBiGroups(): Promise<PowerBiGroup[]> {
-  const accessToken = await getPowerBiToken();
+export async function getPowerBiGroups(
+  tokenOptions?: PowerBiTokenOptions,
+): Promise<PowerBiGroup[]> {
+  const accessToken = await getPowerBiToken(tokenOptions);
 
   let upstream: Response;
   try {

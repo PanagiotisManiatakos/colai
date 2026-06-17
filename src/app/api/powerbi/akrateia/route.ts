@@ -114,6 +114,7 @@ export async function GET(req: Request) {
     data = await executePowerBiQuery(
       buildAkrateiaQuery(seller.sellerCode),
       resolveBiReportPowerBiTargetFromRequest(req, "akrateia"),
+      { amsaAccessToken: token },
     );
   } catch (err) {
     const status = err instanceof PowerBiRequestError ? err.status : 500;
