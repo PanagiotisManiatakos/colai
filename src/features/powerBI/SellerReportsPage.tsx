@@ -157,7 +157,7 @@ export default function SellerReportsPage({
         </div>
       </section>
 
-      <Link
+      {/* <Link
         href={`/powerbi/groups/${encodeURIComponent(workspaceId)}/datasets${
           groupName ? `?name=${encodeURIComponent(groupName)}` : ""
         }`}
@@ -165,7 +165,7 @@ export default function SellerReportsPage({
       >
         <i className="bi bi-chevron-left me-1" aria-hidden />
         Datasets
-      </Link>
+      </Link> */}
 
       <ReportSelector reports={reports} />
     </div>

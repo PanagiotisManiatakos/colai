@@ -14,7 +14,6 @@ import {
   normalizeSellerCode,
 } from "@/lib/sellerAccess";
 import {
-  formatCurrencyGR,
   formatIntGR,
   formatPercentGR,
   parseLocaleNumber,
@@ -39,6 +38,9 @@ const emptyWcSummary: WcEndpointSummary = {
     repeatCount: 0,
     turnover: 0,
 };
+
+// const SELLER_REPORTS_HREF =
+//     "/powerbi/groups/a279f8cd-3d0e-4362-af29-2e5af5b043d1/datasets/e928997c-ad45-4320-a7d6-b35a8fa8e510/seller-reports";
 
 function sumTeamRows(records: SellerTeamatesWC[]): WcEndpointSummary {
     return records.reduce<WcEndpointSummary>(
@@ -332,12 +334,19 @@ export default function HomeStats() {
 
             <div className={showInitialDashLoader ? "d-none" : undefined}>
                 <div className="row g-3 mb-3">
-                    <MetricCard
+                    {/* <MetricCard
                         title="Παραγγελίες μήνα"
                         value={formatIntGR(dash.totalOrders_month)}
                         delta={momLabel}
                         deltaDirection={momDir}
                         icon="bi-box-seam"
+                    /> */}
+                    <MetricCard
+                        title="Seller Reports"
+                        value="PowerBI"
+                        delta={null}
+                        icon="bi-bar-chart-line"
+                        // href={SELLER_REPORTS_HREF}
                     />
                     <MetricCard
                         title="Συνταγές επόμενων 10 ημερών"
