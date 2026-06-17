@@ -336,7 +336,7 @@ export default function HomeStats() {
                         value="PowerBI"
                         delta={null}
                         icon="bi-bar-chart-line"
-                        href={SELLER_REPORTS_HREF}
+                        // href={SELLER_REPORTS_HREF}
                     />
                     <MetricCard
                         title="Συνταγές επόμενων 10 ημερών"
