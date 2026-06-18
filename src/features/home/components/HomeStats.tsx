@@ -15,6 +15,7 @@ import {
 } from "@/lib/sellerAccess";
 import {
   formatIntGR,
+  formatPercentGR,
   parseLocaleNumber,
 } from "@/lib/utils/number";
 import type { WcStoixoiMina } from "@/types/dashboard";
@@ -306,6 +307,9 @@ export default function HomeStats() {
         void dispatch(fetchDashboardData());
     }, [dispatch]);
 
+    const mom = dash.totalOrders_month_perc;
+    const momDir: "up" | "down" | "neutral" = mom > 0 ? "up" : mom < 0 ? "down" : "neutral";
+    const momLabel = `${formatPercentGR(Math.abs(mom))}%`;
     const showInitialDashLoader = dash.loading && dash.lastFetchedAt === 0;
 
     return (
@@ -330,13 +334,12 @@ export default function HomeStats() {
 
             <div className={showInitialDashLoader ? "d-none" : undefined}>
                 <div className="row g-3 mb-3">
-                   
                     <MetricCard
-                        title="Seller Reports"
-                        value="PowerBI"
-                        delta={null}
-                        icon="bi-bar-chart-line"
-                        // href={SELLER_REPORTS_HREF}
+                        title="Παραγγελίες μήνα"
+                        value={formatIntGR(dash.totalOrders_month)}
+                        delta={momLabel}
+                        deltaDirection={momDir}
+                        icon="bi-box-seam"
                     />
                     <MetricCard
                         title="Συνταγές επόμενων 10 ημερών"
