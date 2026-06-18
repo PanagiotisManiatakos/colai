@@ -228,7 +228,19 @@ export type SaveOrderReq = {
 
 export type SaleOrder_ErrorMode = 0 | 1 | 400 | 500;
 
-export type SaleOrderIssueCode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11;
+export type SaleOrderIssueCode =
+  | 0
+  | 1
+  | 2
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 8
+  | 9
+  | 10
+  | 11;
 
 export type SaleOrder_CheckItem = {
   name?: Nullable<string>;
@@ -796,8 +808,6 @@ export type ReadEoppyDoc_Response = {
   jsonError?: Nullable<string>;
   detailedError?: Nullable<string>;
   logId?: Nullable<number>;
-  orderExists: boolean;
-  orderExistsMessage?: Nullable<string>;
 };
 
 export type ReadEoppyDocumentAIResp = {

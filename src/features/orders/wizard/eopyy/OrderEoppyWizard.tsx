@@ -32,6 +32,7 @@ import {
 } from "./wizard/customerFieldValidation";
 import { focusWizardField } from "./wizard/wizardUtils";
 import { runEoppyAi } from "./wizard/runEoppyAi";
+import { EOPPY_AI_TIMEOUT_MS } from "./wizard/runEoppyAiWithFallback";
 import {
   buildStepOrderMap,
   prepareTouchdownIssues,
@@ -164,8 +165,7 @@ export default function OrderEoppyWizard() {
       setAiMessage(null);
 
       const controller = new AbortController();
-      const pendingTimeoutMs = 120_000;
-      const t = window.setTimeout(() => controller.abort(), pendingTimeoutMs);
+      const t = window.setTimeout(() => controller.abort(), EOPPY_AI_TIMEOUT_MS);
 
       try {
         await runEoppyAi({

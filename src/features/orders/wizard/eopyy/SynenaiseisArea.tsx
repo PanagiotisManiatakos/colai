@@ -238,7 +238,7 @@ export default function SynenaiseisArea() {
         ) : null}
       </div>
 
-      <div className="app-card overflow-hidden p-4">
+      <div className="app-card overflow-hidden p-3">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Πίσω σελίδα</div>
 
