@@ -56,7 +56,9 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
       router.replace(next);
     } catch (err) {
       const msg =
-        err instanceof Error ? err.message : "Αποτυχία σύνδεσης. Δοκίμασε ξανά.";
+        err instanceof Error
+          ? err.message
+          : "Αποτυχία σύνδεσης. Δοκίμασε ξανά.";
       setError(msg);
       dispatch(loginFail(msg));
     } finally {
@@ -78,7 +80,7 @@ export default function LoginPage({ appVersion }: { appVersion: string }) {
           />
         </div>
 
-        <div className="app-card p-3">
+        <div className="app-card px-3 py-2">
           {error ? (
             <div className="alert alert-danger small py-2">{error}</div>
           ) : null}

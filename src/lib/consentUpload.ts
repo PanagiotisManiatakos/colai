@@ -13,6 +13,12 @@ export function getConsentFormScore(
   return formScore;
 }
 
+export function isVoiceConsentOrder(
+  order: { isVoiceConsent?: number | null } | null | undefined,
+): boolean {
+  return order?.isVoiceConsent == 1;
+}
+
 export function isConsentScoreTooLow(
   results: SynaineseisResults | null | undefined,
 ): boolean {

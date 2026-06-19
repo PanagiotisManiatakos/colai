@@ -243,7 +243,7 @@ export default function OrderCustomerArea({
   }
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
         <div className="d-flex align-items-center border-bottom mb-3 gap-5 pb-3">
           <label className="form-label fw-semibold mb-0 flex-shrink-0">

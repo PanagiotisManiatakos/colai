@@ -22,6 +22,8 @@ type SearchableSelectProps = {
   className?: string;
   name?: string;
   isInvalid?: boolean;
+  allowClear?: boolean;
+  emptyLabel?: string;
 };
 
 function getOptionSearchText(option: SearchableSelectOption): string {
@@ -49,6 +51,8 @@ export default function SearchableSelect({
   className = "",
   name,
   isInvalid = false,
+  allowClear = false,
+  emptyLabel,
 }: SearchableSelectProps) {
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   const searchRef = React.useRef<HTMLInputElement | null>(null);
@@ -100,30 +104,64 @@ export default function SearchableSelect({
     setQuery("");
   };
 
+  const handleClear = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onChange("");
+    setOpen(false);
+    setQuery("");
+  };
+
+  const displayText = selectedOption
+    ? getOptionLabel(selectedOption)
+    : emptyLabel?.trim() || placeholder;
+  const displayMuted = !selectedOption && !emptyLabel?.trim();
+
   return (
     <div
       ref={rootRef}
       className={`searchable-select position-relative${open ? " searchable-select--open" : ""} ${className}`.trim()}
     >
-      <button
-        type="button"
-        name={name}
-        className={`${controlClass} searchable-select-toggle d-flex align-items-center justify-content-between gap-2 text-start${isInvalid ? " is-invalid" : ""}`.trim()}
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        onClick={() => setOpen((current) => !current)}
+      <div
+        className={`${controlClass} searchable-select-toggle d-flex align-items-center gap-2 text-start${isInvalid ? " is-invalid" : ""}`.trim()}
       >
-        <span
-          className={`text-truncate ${selectedOption ? "" : "text-secondary"}`.trim()}
+        <button
+          type="button"
+          name={name}
+          className="btn btn-link searchable-select-value flex-grow-1 min-w-0 border-0 p-0 text-start text-decoration-none"
+          aria-label={ariaLabel}
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          onClick={() => setOpen((current) => !current)}
         >
-          {selectedOption ? getOptionLabel(selectedOption) : placeholder}
-        </span>
-        <i
-          className={`bi bi-chevron-${open ? "up" : "down"} flex-shrink-0 text-secondary`}
-          aria-hidden
-        />
-      </button>
+          <span
+            className={`text-truncate d-block ${displayMuted ? "text-secondary" : "text-body"}`.trim()}
+            title={displayText}
+          >
+            {displayText}
+          </span>
+        </button>
+        {allowClear && value ? (
+          <button
+            type="button"
+            className="btn btn-link btn-sm p-0 text-secondary searchable-select-clear flex-shrink-0"
+            aria-label="Επιστροφή στον προεπιλεγμένο πωλητή"
+            onClick={handleClear}
+          >
+            <i className="bi bi-x-lg" aria-hidden />
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="btn btn-link p-0 text-secondary flex-shrink-0 border-0"
+          aria-label={open ? "Κλείσιμο λίστας" : "Άνοιγμα λίστας"}
+          onClick={() => setOpen((current) => !current)}
+        >
+          <i
+            className={`bi bi-chevron-${open ? "up" : "down"}`}
+            aria-hidden
+          />
+        </button>
+      </div>
 
       {open ? (
         <div className="searchable-select-menu shadow">

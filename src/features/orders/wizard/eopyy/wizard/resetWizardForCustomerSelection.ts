@@ -116,6 +116,7 @@ const SYMMETOXi_FIELDS: (keyof Order)[] = [
   "maxPosoKostousGiaSymmetoxi",
   "plafonGiftAmount",
   "payFullOrDiscount",
+  "isPaid",
   "eopyyVerifyNoParticipation",
   "hasConfirmedMidenikiPliromi",
   "discount_reason_id",

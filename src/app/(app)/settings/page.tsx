@@ -58,7 +58,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="fw-semibold mb-2">About</div>
         <div className="text-secondary small">
           {process.env.NEXT_PUBLIC_APP_VERSION}

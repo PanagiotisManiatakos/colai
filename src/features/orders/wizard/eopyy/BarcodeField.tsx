@@ -171,7 +171,7 @@ export default function BarcodeField({
         </Modal.Header>
 
         <Modal.Body>
-          <div className="app-card p-3">
+          <div className="app-card px-3 py-2">
             <div className="small text-secondary mb-2">
               Στρέψε την κάμερα στο barcode. Κράτα το σταθερό για καλύτερη
               ανάγνωση.

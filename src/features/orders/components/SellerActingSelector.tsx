@@ -5,7 +5,7 @@ import React from "react";
 import SearchableSelect, {
   type SearchableSelectOption,
 } from "@/components/ui/SearchableSelect";
-import { getAccessibleSellers, hasSellerAccessList } from "@/lib/sellerAccess";
+import { getAccessibleSellers, hasSellerAccessList, resolveActingSeller } from "@/lib/sellerAccess";
 import { setActingSellerCode } from "@/features/auth/authSlice";
 import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -27,6 +27,10 @@ export default function SellerActingSelector({
 
   const accessSellers = getAccessibleSellers(userInfos);
   const selectedValue = actingSellerCode?.trim() ?? "";
+  const defaultSeller = React.useMemo(
+    () => resolveActingSeller(userInfos, null),
+    [userInfos],
+  );
 
   const options = React.useMemo<SearchableSelectOption[]>(
     () =>
@@ -46,24 +50,42 @@ export default function SellerActingSelector({
     dispatch(setActingSellerCode(code));
     clearError?.("actingSellerCode");
 
-    const seller = accessSellers.find(
-      (item) => item.sellerCode?.trim() === code,
-    );
-    if (seller?.sellerCode?.trim()) {
+    if (code) {
+      const seller = accessSellers.find(
+        (item) => item.sellerCode?.trim() === code,
+      );
+      if (seller?.sellerCode?.trim()) {
+        dispatch(
+          setDraftProperty({
+            key: "sellerCode",
+            value: seller.sellerCode.trim(),
+          }),
+        );
+        if (seller.sellerName?.trim()) {
+          dispatch(
+            setDraftProperty({
+              key: "sellerName",
+              value: seller.sellerName.trim(),
+            }),
+          );
+        }
+      }
+      return;
+    }
+
+    if (defaultSeller?.sellerCode) {
       dispatch(
         setDraftProperty({
           key: "sellerCode",
-          value: seller.sellerCode.trim(),
+          value: defaultSeller.sellerCode,
         }),
       );
-      if (seller.sellerName?.trim()) {
-        dispatch(
-          setDraftProperty({
-            key: "sellerName",
-            value: seller.sellerName.trim(),
-          }),
-        );
-      }
+      dispatch(
+        setDraftProperty({
+          key: "sellerName",
+          value: defaultSeller.sellerName?.trim() ?? defaultSeller.sellerCode,
+        }),
+      );
     }
   };
 
@@ -74,7 +96,7 @@ export default function SellerActingSelector({
 
   return (
     <div
-      className={`app-card-soft searchable-select-shell d-flex align-items-center gap-2 px-3 py-2 ${className}`.trim()}
+      className={`app-card-soft searchable-select-shell d-flex align-items-center mb-1 gap-2 px-3 py-2 ${className}`.trim()}
     >
       <i
         className="bi bi-person-badge text-secondary flex-shrink-0"
@@ -93,6 +115,7 @@ export default function SellerActingSelector({
           ariaLabel="Επιλογή πωλητή"
           placeholder="Επιλέξτε πωλητή…"
           searchPlaceholder="Αναζήτηση πωλητή…"
+          allowClear
           isInvalid={Boolean(errorMessage)}
         />
         {errorMessage ? (

@@ -128,7 +128,9 @@ export type Order = {
   diagnosi2_GID: string;
   countYlika: number;
   payFullOrDiscount: number;
+  isPaid: number;
   hasUploadedConsentForm: number;
+  isVoiceConsent: number;
   finalPaymentAmount: number;
   shipMethodId: number;
   shipMethodName: string;

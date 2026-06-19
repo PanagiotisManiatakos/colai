@@ -14,7 +14,7 @@ export default function MaterialsArea() {
   const [showLookup, setShowLookup] = React.useState(false);
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
         <div className="fw-semibold">Υλικά</div>
 
@@ -45,7 +45,7 @@ export default function MaterialsArea() {
                   }}
                   deleteAriaLabel="Αφαίρεση υλικού"
                 >
-                  <div className="app-card p-3">
+                  <div className="app-card px-3 py-2">
                     <div className="d-flex align-items-start justify-content-between gap-3">
                       <div className="flex-grow-1">
                         <span className="badge bg-secondary-subtle text-secondary ms-0">

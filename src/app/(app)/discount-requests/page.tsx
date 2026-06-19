@@ -119,7 +119,8 @@ export default function DiscountRequestsPage() {
 
   const showInitialLoader =
     (listLoading || refreshing) && discountRequests.requests.length === 0;
-  const showUpdatingLoader = listLoading && discountRequests.requests.length > 0;
+  const showUpdatingLoader =
+    listLoading && discountRequests.requests.length > 0;
 
   return (
     <>
@@ -135,8 +136,8 @@ export default function DiscountRequestsPage() {
         </div>
       </div>
 
-      <div className="app-card p-2 mb-2">
-        <ul className="nav nav-pills nav-fill gap-1 mb-0">
+      <div className="app-card mb-2 px-3 py-2">
+        <ul className="nav nav-pills nav-fill mb-0 gap-1">
           <li className="nav-item">
             <button
               type="button"

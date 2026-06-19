@@ -61,7 +61,7 @@ export default function OrderStartPage() {
           Διάλεξε ροή εργασίας για να ξεκινήσεις.
         </p>
       </div>
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <label className="form-label small text-secondary mb-2">
           Κατηγορία
         </label>

@@ -22,7 +22,7 @@ export default function RequireAuth({
 
   if (status === "unknown") {
     // return (
-    //   <div className="app-card p-3 text-center">
+    //   <div className="app-card py-2 px-3 text-center">
     //     <div className="spinner-border" role="status" aria-hidden />
     //     <div className="mt-2 text-secondary small">Loading…</div>
     //   </div>
