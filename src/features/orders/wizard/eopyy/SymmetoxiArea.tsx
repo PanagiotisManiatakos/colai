@@ -2,10 +2,11 @@ import { setDraftProperty } from "@/store/orders/ordersSlice";
 import { formatCurrencyGR } from "@/lib/utils/number";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { FormSelect } from "react-bootstrap";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import FormErrorsContext from "@/components/ui/FormErrorContect";
 import OrderField from "@/components/ui/OrderField";
 import OrderSwitchField from "@/components/ui/OrdeSwitchField";
+import PrepaidOrderConfirmModal from "../modals/PrepaidOrderConfirmModal";
 import type { SymmetoxiAreaProps } from "./componentProps";
 import {
   isAllowedSymmPercentage,
@@ -76,6 +77,10 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
   };
 
   const prevPosoSymmetoxisRef = useRef<number | null>(null);
+  const [showPrepaidConfirm, setShowPrepaidConfirm] = useState(false);
+
+  const showIsPaidToggle =
+    isAllowedSymmPercentage(data.symmPercentage) && data.symmPercentage !== 0;
 
   useEffect(() => {
     if (data.payFullOrDiscount !== 2) {
@@ -154,10 +159,8 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
     isFinalAmountZero,
   ]);
 
-  const showIsPaidToggle =
-    isAllowedSymmPercentage(data.symmPercentage) && data.symmPercentage !== 0;
-
   return (
+    <>
     <div className="app-card px-3 py-2">
       <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
         <div
@@ -183,6 +186,7 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                   setDraftProperty({ key: "symmPercentage", value: null }),
                 );
                 dispatch(setDraftProperty({ key: "isPaid", value: 0 }));
+                setShowPrepaidConfirm(false);
                 return;
               }
 
@@ -192,6 +196,7 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
               dispatch(setDraftProperty({ key: "symmPercentage", value: n }));
               if (n === 0) {
                 dispatch(setDraftProperty({ key: "isPaid", value: 0 }));
+                setShowPrepaidConfirm(false);
               }
             }}
           >
@@ -400,10 +405,15 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                 label="Προπληρωμένο"
                 checked={data.isPaid == 1}
                 onChange={(checked) => {
+                  if (checked) {
+                    setShowPrepaidConfirm(true);
+                    return;
+                  }
+
                   dispatch(
                     setDraftProperty({
                       key: "isPaid",
-                      value: checked ? 1 : 0,
+                      value: 0,
                     }),
                   );
                 }}
@@ -539,6 +549,16 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
         )}
       </FormErrorsContext.Provider>
     </div>
+
+    <PrepaidOrderConfirmModal
+      show={showPrepaidConfirm && showIsPaidToggle}
+      onCancel={() => setShowPrepaidConfirm(false)}
+      onConfirm={() => {
+        setShowPrepaidConfirm(false);
+        dispatch(setDraftProperty({ key: "isPaid", value: 1 }));
+      }}
+    />
+    </>
   );
 };
 

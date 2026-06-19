@@ -5,6 +5,16 @@ export const WC_SQL_NO_CACHE_HEADERS = {
   Pragma: "no-cache",
 } as const;
 
+export function getSqlDataConfig(): {
+  serviceUrl: string | null;
+  clientId: string | null;
+} {
+  return {
+    serviceUrl: process.env.SQL_DATA_SERVICE_URL?.trim() || null,
+    clientId: process.env.SQL_DATA_CLIENT_ID?.trim() || null,
+  };
+}
+
 function countReplacementChars(text: string): number {
   return (text.match(/\uFFFD/g) ?? []).length;
 }

@@ -20,3 +20,9 @@ export type NewRecipientConfirmModalProps = {
   onSelectExisting: () => void;
   onCancel: () => void;
 };
+
+export type PrepaidOrderConfirmModalProps = {
+  show: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
+};

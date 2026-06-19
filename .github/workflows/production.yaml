@@ -31,11 +31,15 @@ jobs:
           AMSA_API_BASE_URL=${{ secrets.AMSA_API_BASE_URL }}
           NEXT_PUBLIC_APP_ENV=production
           NEXT_PUBLIC_APP_VERSION=${NEXT_PUBLIC_APP_VERSION}
+          SQL_DATA_SERVICE_URL=${{ secrets.SQL_DATA_SERVICE_URL }}
+          SQL_DATA_CLIENT_ID=${{ secrets.SQL_DATA_CLIENT_ID }}
           EOF
 
           # sanity checks (no secret printing)
           test -f .env.production
           grep -q '^AMSA_API_BASE_URL=' .env.production
+          grep -q '^SQL_DATA_SERVICE_URL=' .env.production
+          grep -q '^SQL_DATA_CLIENT_ID=' .env.production
           echo ".env.production created ✅"
 
       # ✅ CHANGE: remove DOTENV_CONFIG_PATH (Next doesn't use it here). next build loads .env.production automatically.
