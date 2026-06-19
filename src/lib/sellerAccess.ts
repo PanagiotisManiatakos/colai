@@ -106,6 +106,20 @@ export function resolveActingSeller(
   return { sellerCode: ownCode, sellerName: ownName };
 }
 
+export function getActingSellerDisplayLabel(
+  userInfos: Maybe<ApiUserInfo>,
+  actingSellerCode: Maybe<string>,
+): string | null {
+  const code = getActingSellerCodeForApi(userInfos, actingSellerCode);
+  if (!code) return null;
+
+  const seller = getAccessibleSellers(userInfos).find(
+    (item) => item.sellerCode?.trim() === code,
+  );
+  const name = seller?.sellerName?.trim();
+  return name ? `${name} (${code})` : code;
+}
+
 export function applyActingSellerToOrder<
   T extends { sellerCode?: string; sellerName?: string },
 >(

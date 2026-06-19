@@ -78,10 +78,7 @@ export default function UpdateRecipientArea() {
     if (data.shouldUpdateRecipientInfos != 1) return initialValues;
     return {
       amka: initialValues.amka,
-      afm: pickFirstNonBlankString(
-        data.updateRecipient_afm,
-        initialValues.afm,
-      ),
+      afm: pickFirstNonBlankString(data.updateRecipient_afm, initialValues.afm),
       passport: pickFirstNonBlankString(
         data.updateRecipient_passport,
         initialValues.passport,
@@ -188,7 +185,7 @@ export default function UpdateRecipientArea() {
   );
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
         <div className="fw-semibold">
           Επικαιροποίηση στοιχείων παραλήπτη

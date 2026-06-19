@@ -5,6 +5,7 @@ import {
 } from "@/lib/auth";
 import {
   extractSqlRecords,
+  getSqlDataConfig,
   getUpstreamErrorMessage,
   readSqlUpstreamPayload,
   WC_SQL_NO_CACHE_HEADERS,
@@ -40,9 +41,7 @@ export async function GET() {
     );
   }
 
-  const serviceUrl = "https://mavrogenis.oncloud.gr/s1services";
-  const clientID =
-    "9J8pGt4bDKDYG6ebDZ1r9JL4LKboJtH0OafQJMTKGq559JL5U4HoILDuGann9JOmLK5BH7D7Qt1GGazfKKybDZ0bDKDnL51HTKrgS6DMTcLrKLTjLrPVLLD1SaHZILXDL5LGU6T79JT69JL3OavMJ4LLTNbbL5HPSavlP590QNX4LNCbDqH5LIKrHNLXIt14KaftJ7LOIaGbDZ1A9JOmT7D2Kr5bNtPuPLTKRKK";
+  const { serviceUrl, clientId: clientID } = getSqlDataConfig();
 
   if (!serviceUrl || !clientID) {
     return NextResponse.json(

@@ -3,6 +3,7 @@
 import React from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
+  setDraftProperty,
   setDraftSyntagiUploaded,
   setSynaineseisResults,
 } from "@/store/orders/ordersSlice";
@@ -25,43 +26,14 @@ function isPdf(name: string, mimeType?: string) {
   return mimeType === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
-function TruncatedFileName({
-  name,
-  className = "fw-semibold",
-}: {
-  name?: string | null;
-  className?: string;
-}) {
-  const displayName = name ?? "";
-  if (!displayName) return null;
-
-  return (
-    <div
-      className={className}
-      title={displayName}
-      style={{
-        overflow: "hidden",
-        textOverflow: "ellipsis",
-        whiteSpace: "nowrap",
-        maxWidth: "100%",
-      }}
-    >
-      {displayName}
-    </div>
-  );
-}
-
-const fileInfoWrapStyle: React.CSSProperties = {
-  minWidth: 0,
-  overflow: "hidden",
-  flex: "1 1 0%",
-};
-
 export default function SynenaiseisArea() {
   const dispatch = useAppDispatch();
 
   const files = useAppSelector((s) => s.orders?.draft?.files) ?? [];
   const orderUid = useAppSelector((s) => s.orders?.draft?.order?.uid);
+  const isVoiceConsent = useAppSelector(
+    (s) => s.orders?.draft?.order?.isVoiceConsent,
+  );
   const synaineseisResults = useAppSelector(
     (s) => s.orders?.draft?.synaineseisResults,
   );
@@ -91,10 +63,36 @@ export default function SynenaiseisArea() {
 
   const isUploadingNow = status === "uploading";
   const isUploadingBackNow = statusBack === "uploading";
+  const showConsentUploads = isVoiceConsent != 1;
 
   return (
     <>
-      <div className="app-card p-3">
+      <div className="app-card mb-1 p-2">
+        <div className="form-check form-switch switch-lg mb-0">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            checked={isVoiceConsent == 1}
+            onChange={(e) =>
+              dispatch(
+                setDraftProperty({
+                  key: "isVoiceConsent",
+                  value: e.target.checked ? 1 : 0,
+                }),
+              )
+            }
+            name="isVoiceConsent"
+            id="isVoiceConsent"
+          />
+          <label className="form-check-label" htmlFor="isVoiceConsent">
+            Ηχητική συναίνεση
+          </label>
+        </div>
+      </div>
+
+      {showConsentUploads ? (
+        <>
+      <div className="app-card mb-1 px-3 py-2">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Αρχείo συναίνεσης</div>
 
@@ -238,7 +236,7 @@ export default function SynenaiseisArea() {
         ) : null}
       </div>
 
-      <div className="app-card overflow-hidden p-3">
+      <div className="app-card px-3 py-2">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Πίσω σελίδα</div>
 
@@ -273,25 +271,20 @@ export default function SynenaiseisArea() {
 
         {uploadingBack ? (
           <div className="mb-3 rounded border p-3">
-            <div className="d-flex align-items-start justify-content-between overflow-hidden">
-              <div
-                className="d-flex me-2 flex-grow-1 gap-2 overflow-hidden"
-                style={fileInfoWrapStyle}
-              >
+            <div className="d-flex align-items-start justify-content-between">
+              <div className="d-flex gap-2">
                 <i
-                  className={`bi flex-shrink-0 ${isPdf(uploadingBack.name, uploadingBack.fileType) ? "bi-filetype-pdf" : "bi-image"}`}
+                  className={`bi ${isPdf(uploadingBack.name, uploadingBack.fileType) ? "bi-filetype-pdf" : "bi-image"}`}
                 />
-                <div style={fileInfoWrapStyle}>
-                  <TruncatedFileName name={uploadingBack.name} />
+                <div>
+                  <div className="fw-semibold">{uploadingBack.name}</div>
                   <div className="small text-secondary">
                     {formatFileSizeMB(uploadingBack.fileSize)}
                   </div>
                 </div>
               </div>
 
-              <div className="small text-secondary flex-shrink-0">
-                {progressBack}%
-              </div>
+              <div className="small text-secondary">{progressBack}%</div>
             </div>
 
             <div className="progress mt-2" style={{ height: 10 }}>
@@ -314,46 +307,38 @@ export default function SynenaiseisArea() {
             ) : null}
           </div>
         ) : messageBack ? (
-          <div className="alert alert-danger small mb-3 py-2">
-            {messageBack}
-          </div>
+          <div className="alert alert-danger small mb-3 py-2">{messageBack}</div>
         ) : null}
 
         {hasBackFiles ? (
-          <div className="d-flex flex-column gap-2 overflow-hidden">
+          <div className="d-flex flex-column gap-2">
             {backFiles.map((f: OrderFile) => {
               const name = f.name ?? f.base64filename ?? f.originalFileName;
-              const sizeMb = (
-                parseFloat(String(f.fileSize ?? "0")) /
-                1024 /
-                1024
-              ).toFixed(2);
+              const sizeLabel = f.fileSize
+                ? String(f.fileSize).includes("MB")
+                  ? String(f.fileSize)
+                  : formatFileSizeMB(f.fileSize)
+                : "";
               const pdf = isPdf(name ?? "", f.fileType ?? undefined);
 
               return (
                 <div
                   key={`${f.position}-${name}`}
-                  className="d-flex justify-content-between align-items-center overflow-hidden rounded border p-2"
-                  style={{ minWidth: 0 }}
+                  className="d-flex justify-content-between align-items-center rounded border p-2"
                 >
-                  <div
-                    className="d-flex align-items-start me-2 gap-2 overflow-hidden"
-                    style={fileInfoWrapStyle}
-                  >
+                  <div className="d-flex align-items-start gap-2">
                     <i
-                      className={`bi flex-shrink-0 ${pdf ? "bi-filetype-pdf" : "bi-image"}`}
+                      className={`bi ${pdf ? "bi-filetype-pdf" : "bi-image"}`}
                     />
-                    <div style={fileInfoWrapStyle}>
-                      <TruncatedFileName name={name} />
+                    <div>
+                      <div className="fw-semibold">{name}</div>
                       <div className="small text-secondary">
-                        {sizeMb ? ` ${sizeMb} MB` : ""}
+                        {sizeLabel ? ` ${sizeLabel}` : ""}
                       </div>
                     </div>
                   </div>
 
-                  <span className="badge text-bg-success flex-shrink-0">
-                    Uploaded
-                  </span>
+                  <span className="badge text-bg-success">Uploaded</span>
                 </div>
               );
             })}
@@ -364,6 +349,8 @@ export default function SynenaiseisArea() {
           </div>
         )}
       </div>
+        </>
+      ) : null}
     </>
   );
 }

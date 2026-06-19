@@ -3,9 +3,9 @@
 import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchOrders, submitDraftAsync } from "@/store/orders/ordersSlice";
+import { fetchOrders, submitDraftAsync, clearDraftSubmitError } from "@/store/orders/ordersSlice";
 import { shouldShowSynainesiStep } from "@/lib/customerUtils";
-import { isConsentScoreTooLow } from "@/lib/consentUpload";
+import { isConsentScoreTooLow, isVoiceConsentOrder } from "@/lib/consentUpload";
 import {
   getAiRunErrorMessage,
   type AiClient,
@@ -13,6 +13,7 @@ import {
 } from "@/lib/utils/ai";
 import SubmitOrderConfirmModal from "../modals/SubmitOrderConfirmModal";
 import SellerActingSelector from "@/features/orders/components/SellerActingSelector";
+import { getActingSellerDisplayLabel } from "@/lib/sellerAccess";
 import { useRouter } from "next/navigation";
 import { buildStepDefs } from "./wizard/buildStepDefs";
 import {
@@ -73,6 +74,8 @@ export default function OrderEoppyWizard() {
     (s) => s.orders?.draft?.order?.group_EOPPY_id,
   );
   const submitState = useAppSelector((s) => s.orders.draft.submitState);
+  const userInfos = useAppSelector((s) => s.auth.userInfos);
+  const actingSellerCode = useAppSelector((s) => s.auth.actingSellerCode);
   const listAddressesPersons = useAppSelector(
     (s) => s.orders.draft.list_AddressesPersons,
   );
@@ -86,6 +89,9 @@ export default function OrderEoppyWizard() {
     (s) => s.orders.draft.synaineseisResults,
   );
   const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
+  const isVoiceConsent = isVoiceConsentOrder(draftOrder);
+  const consentBlocksProgress =
+    consentScoreTooLow && hasConsentFormFiles && !isVoiceConsent;
   const aiMaterials = useAppSelector((s) => s.orders.draft.ai_ylika);
   const maxPosoKostousGiaSymmetoxi = useAppSelector(
     (s) => s.orders?.draft?.order?.maxPosoKostousGiaSymmetoxi,
@@ -292,6 +298,11 @@ export default function OrderEoppyWizard() {
     [draftOrder],
   );
 
+  const submitConfirmOrderAsSeller = React.useMemo(
+    () => getActingSellerDisplayLabel(userInfos, actingSellerCode),
+    [userInfos, actingSellerCode],
+  );
+
   const showWizardNav = step > 0;
   const activeStepKey = effectiveSteps[step]?.key;
   console.log(draftOrder);
@@ -325,9 +336,7 @@ export default function OrderEoppyWizard() {
               className="btn btn-primary flex-fill"
               onClick={goNext}
               disabled={
-                activeStepKey === "synenaiseis" &&
-                consentScoreTooLow &&
-                hasConsentFormFiles
+                activeStepKey === "synenaiseis" && consentBlocksProgress
               }
             >
               Επόμενο
@@ -345,7 +354,7 @@ export default function OrderEoppyWizard() {
                   (hasValidationIssues ||
                     hasAmkaErrors ||
                     hasEmptyCustomerFields ||
-                    consentScoreTooLow))
+                    consentBlocksProgress))
               }
               className="btn btn-success flex-fill"
               onClick={onSaveClick}
@@ -366,8 +375,14 @@ export default function OrderEoppyWizard() {
         barcode={draftOrder.barcode}
         customerIsCompletelyNew={customerIsCompletelyNew === true}
         suggestedDoctorName={submitConfirmSuggestedDoctorName}
+        orderAsSeller={submitConfirmOrderAsSeller}
+        isVoiceConsent={isVoiceConsentOrder(draftOrder)}
+        isPaid={draftOrder.isPaid == 1}
         onClose={() => {
-          if (!submitState.loading) setShowSubmitConfirm(false);
+          if (!submitState.loading) {
+            setShowSubmitConfirm(false);
+            dispatch(clearDraftSubmitError());
+          }
         }}
         onConfirm={confirmSave}
       />

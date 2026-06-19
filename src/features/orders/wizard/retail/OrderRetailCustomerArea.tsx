@@ -112,7 +112,7 @@ export default function OrderRetailCustomerArea() {
 
   return (
     <FormErrorsContext.Provider value={{ errors: amkaFieldErrors }}>
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="d-flex align-items-center border-bottom mb-3 gap-5 pb-3">
           <label className="form-label fw-semibold mb-0 flex-shrink-0">
             Ασθενής
@@ -398,7 +398,10 @@ export default function OrderRetailCustomerArea() {
               }}
             >
               {listAddressesPersons.map((x) => (
-                <option key={x.person_ErpGID ?? ""} value={x.person_ErpGID ?? ""}>
+                <option
+                  key={x.person_ErpGID ?? ""}
+                  value={x.person_ErpGID ?? ""}
+                >
                   {x.personName}
                 </option>
               ))}

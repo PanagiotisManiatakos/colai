@@ -148,7 +148,9 @@ export type APLAT_Sales_Order = {
   diagnosi2_GID?: Nullable<string>;
   countYlika?: Nullable<number>;
   payFullOrDiscount?: Nullable<number>;
+  isPaid?: Nullable<number>;
   hasUploadedConsentForm?: Nullable<number>;
+  isVoiceConsent?: Nullable<number>;
   finalPaymentAmount?: Nullable<number>;
   shipMethodId?: Nullable<number>;
   shipMethodName?: Nullable<string>;

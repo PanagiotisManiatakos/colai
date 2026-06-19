@@ -9,14 +9,18 @@ import OrderDetailsViewSystinon from "../view/OrderDetailsViewSystinon";
 import OrderDetailsYlikaInfo from "../view/OrderDetailsYlikaInfo";
 import OrderDetailsSyntagiInfo from "../view/OrderDetailsSyntagiInfo";
 
-export default function OrderDetailsView({ order, mode, value, }: {
+export default function OrderDetailsView({
+  order,
+  mode,
+  value,
+}: {
   order: Order;
   mode: "view" | "edit";
   value: Partial<Order>;
 }) {
   return (
     <div
-      className="h-100 d-flex flex-column gap-3"
+      className="d-flex flex-column h-100 gap-3"
       style={{
         minHeight: 0,
         overflowX: "hidden",
@@ -24,7 +28,7 @@ export default function OrderDetailsView({ order, mode, value, }: {
         WebkitOverflowScrolling: "touch",
       }}
     >
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="d-flex justify-content-between align-items-start">
           <div>
             <div className="fw-semibold">{order.barcode}</div>
@@ -34,7 +38,9 @@ export default function OrderDetailsView({ order, mode, value, }: {
           </div>
           <div className="text-end">
             <StatusBadge status={order.statusId} />
-            <div className="small text-secondary mt-1">Υλικά: {order.countYlika}</div>
+            <div className="small text-secondary mt-1">
+              Υλικά: {order.countYlika}
+            </div>
           </div>
         </div>
       </div>
@@ -43,12 +49,13 @@ export default function OrderDetailsView({ order, mode, value, }: {
 
       <OrderDetailsViewDoctorInfo order={order} />
 
-      {order.hasOtherSystinonIatroBool && <OrderDetailsViewSystinon order={order} />}
+      {order.hasOtherSystinonIatroBool && (
+        <OrderDetailsViewSystinon order={order} />
+      )}
 
       <OrderDetailsYlikaInfo />
 
       <OrderDetailsSyntagiInfo />
-
     </div>
   );
 }

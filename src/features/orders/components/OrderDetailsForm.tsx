@@ -20,7 +20,7 @@ export default function OrderDetailsForm({
 
   return (
     <div className="d-flex flex-column gap-3">
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="d-flex justify-content-between align-items-start">
           <div>
             <div className="fw-semibold">{order.barcode}</div>
@@ -37,7 +37,7 @@ export default function OrderDetailsForm({
         </div>
       </div>
 
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="fw-semibold mb-2">Στοιχεία Πελάτη/Ασθενή</div>
 
         <div className="row g-2">
@@ -108,7 +108,7 @@ export default function OrderDetailsForm({
         </div>
       </div>
 
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="fw-semibold mb-2">Ιατρός</div>
         <div className="small text-secondary">Ονοματεπώνυμο</div>
         <div className="fw-medium">{order.doctor_name}</div>
@@ -116,7 +116,7 @@ export default function OrderDetailsForm({
         <div className="fw-medium">{order.doctor_amka}</div>
       </div>
 
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="fw-semibold mb-2">Σχόλια παραγγελίας</div>
         <textarea
           className="form-control"
@@ -127,7 +127,7 @@ export default function OrderDetailsForm({
         />
       </div>
 
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="fw-semibold mb-2">Παράδοση</div>
 
         <div className="form-check form-switch">

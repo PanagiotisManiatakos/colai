@@ -7,6 +7,9 @@ export type SubmitOrderConfirmModalProps = {
   barcode?: string | null;
   customerIsCompletelyNew?: boolean;
   suggestedDoctorName?: string | null;
+  orderAsSeller?: string | null;
+  isVoiceConsent?: boolean;
+  isPaid?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 };
@@ -16,4 +19,10 @@ export type NewRecipientConfirmModalProps = {
   onConfirmNewRecipient: () => void;
   onSelectExisting: () => void;
   onCancel: () => void;
+};
+
+export type PrepaidOrderConfirmModalProps = {
+  show: boolean;
+  onCancel: () => void;
+  onConfirm: () => void;
 };

@@ -39,7 +39,7 @@ export default function CompletionArea() {
 
   return (
     <>
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="d-flex align-items-center justify-content-between border-bottom mb-2 pb-2">
           <div className="fw-semibold">Touchdown</div>
         </div>
@@ -251,7 +251,7 @@ export default function CompletionArea() {
         </div>
       </div>
 
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <OrderField label="Σχόλια παραγγελίας">
           <textarea
             className="form-control"

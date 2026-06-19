@@ -4,7 +4,7 @@ import React from "react";
 import { StepIndicator } from "@/components/ui/StepIndicator";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchOrders, submitDraftAsync } from "@/store/orders/ordersSlice";
-import { isConsentScoreTooLow } from "@/lib/consentUpload";
+import { isConsentScoreTooLow, isVoiceConsentOrder } from "@/lib/consentUpload";
 import { getAmkaInlineFieldError } from "@/lib/utils/amka";
 import SynenaiseisArea from "@/features/orders/wizard/eopyy/SynenaiseisArea";
 import OrderRetailCustomerArea from "./OrderRetailCustomerArea";
@@ -34,6 +34,9 @@ export default function OrderRetailWizard() {
     (file) => file?.documentCategory === "consent_form",
   );
   const consentScoreTooLow = isConsentScoreTooLow(synaineseisResults);
+  const isVoiceConsent = isVoiceConsentOrder(draftOrder);
+  const consentBlocksProgress =
+    consentScoreTooLow && hasConsentFormFiles && !isVoiceConsent;
 
   const effectiveSteps = React.useMemo(() => {
     return [...steps];
@@ -67,10 +70,10 @@ export default function OrderRetailWizard() {
 
   const nextDisabled =
     (step === 0 && hasAmkaError) ||
-    (currentLabel === "Συναίνεση" && consentScoreTooLow && hasConsentFormFiles);
+    (currentLabel === "Συναίνεση" && consentBlocksProgress);
 
   const saveDisabled =
-    submitState.loading || hasAmkaError || consentScoreTooLow;
+    submitState.loading || hasAmkaError || consentBlocksProgress;
 
   return (
     <div className="order-wizard order-wizard--has-nav d-flex flex-column gap-2">
