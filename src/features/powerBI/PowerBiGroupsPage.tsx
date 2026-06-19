@@ -4,10 +4,7 @@ import React from "react";
 import Link from "next/link";
 
 import AppLoader from "@/components/ui/AppLoader";
-import {
-  ReportError,
-  ReportHeader,
-} from "@/features/powerBI/ReportShared";
+import { ReportError, ReportHeader } from "@/features/powerBI/ReportShared";
 import { parseProxyJson } from "@/lib/api/client";
 import type { BiReportGroupsResponse } from "@/lib/bi-reports/biReports";
 import type { PowerBiGroup } from "@/lib/bi-reports/powerBi";
@@ -22,7 +19,7 @@ function GroupCard({ group }: { group: PowerBiGroup }) {
     : "";
 
   const card = (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0">
           <div className="fw-bold text-truncate">{group.name}</div>

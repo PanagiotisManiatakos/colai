@@ -53,7 +53,7 @@ export default function AIMaterials() {
   };
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       {/* Header */}
       <AIMaterialSelectorModal
         idx={selectedIDX}
@@ -113,7 +113,7 @@ export default function AIMaterials() {
               deleteAriaLabel="Αφαίρεση υλικού"
             >
               <div
-                className="app-card p-3"
+                className="app-card px-3 py-2"
                 onClick={() => handleClickOnRow(idx, y)}
               >
                 <div className="d-flex align-items-start justify-content-between gap-3">

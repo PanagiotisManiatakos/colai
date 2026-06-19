@@ -154,8 +154,11 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
     isFinalAmountZero,
   ]);
 
+  const showIsPaidToggle =
+    isAllowedSymmPercentage(data.symmPercentage) && data.symmPercentage !== 0;
+
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <FormErrorsContext.Provider value={{ errors: errors ?? {}, clearError }}>
         <div
           style={{ height: 51 }}
@@ -179,6 +182,7 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                 dispatch(
                   setDraftProperty({ key: "symmPercentage", value: null }),
                 );
+                dispatch(setDraftProperty({ key: "isPaid", value: 0 }));
                 return;
               }
 
@@ -186,6 +190,9 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
               if (!isAllowedSymmPercentage(n)) return;
 
               dispatch(setDraftProperty({ key: "symmPercentage", value: n }));
+              if (n === 0) {
+                dispatch(setDraftProperty({ key: "isPaid", value: 0 }));
+              }
             }}
           >
             <option value="" />
@@ -386,6 +393,22 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
                 Εφαρμογή έκπτωσης
               </label>
             </div>
+            {showIsPaidToggle ? (
+              <OrderSwitchField
+                name="isPaid"
+                id="isPaid"
+                label="Προπληρωμένο"
+                checked={data.isPaid == 1}
+                onChange={(checked) => {
+                  dispatch(
+                    setDraftProperty({
+                      key: "isPaid",
+                      value: checked ? 1 : 0,
+                    }),
+                  );
+                }}
+              />
+            ) : null}
           </>
         )}
         {!(data.posoSymmetoxis > 0) && (
@@ -459,7 +482,10 @@ const SymmetoxiArea = ({ errors, clearError }: SymmetoxiAreaProps) => {
 
                     if (raw === "") {
                       dispatch(
-                        setDraftProperty({ key: "posoDiscounted", value: null }),
+                        setDraftProperty({
+                          key: "posoDiscounted",
+                          value: null,
+                        }),
                       );
                       return;
                     }

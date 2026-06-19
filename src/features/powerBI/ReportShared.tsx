@@ -1,8 +1,6 @@
 "use client";
 
-import {
-  formatNullableRatioPercent,
-} from "@/lib/bi-reports/reportUtils";
+import { formatNullableRatioPercent } from "@/lib/bi-reports/reportUtils";
 
 export function ReportHeader({
   title,
@@ -16,10 +14,10 @@ export function ReportHeader({
   badgeClassName?: string;
 }) {
   return (
-    <section className="app-card p-3">
+    <section className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0 flex-grow-1">
-          <div className="d-flex align-items-center gap-2 flex-nowrap">
+          <div className="d-flex align-items-center flex-nowrap gap-2">
             <h1 className="h4 fw-bold text-truncate mb-0">{title}</h1>
             <span
               className={`badge rounded-pill flex-shrink-0 ${badgeClassName}`}

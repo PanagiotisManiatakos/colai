@@ -7,6 +7,9 @@ export type SubmitOrderConfirmModalProps = {
   barcode?: string | null;
   customerIsCompletelyNew?: boolean;
   suggestedDoctorName?: string | null;
+  orderAsSeller?: string | null;
+  isVoiceConsent?: boolean;
+  isPaid?: boolean;
   onClose: () => void;
   onConfirm: () => void;
 };

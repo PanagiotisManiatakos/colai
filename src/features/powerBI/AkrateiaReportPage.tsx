@@ -60,7 +60,7 @@ function ReportSectionTitle({
   subtitle: string;
 }) {
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="fw-semibold">{title}</div>
       <div className="small text-secondary mt-1">{subtitle}</div>
     </div>
@@ -81,7 +81,7 @@ function AkrateiaMonthCard({
       : (row.ccNewSales ?? 0) + (row.ccRepSales ?? 0);
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0">
           <div className="fw-bold">{getMonthLabel(row.month)}</div>
@@ -200,7 +200,7 @@ function PermanentMonthCard({
   const accent = accentColors[(index + 1) % accentColors.length];
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0">
           <div className="fw-bold">{getMonthLabel(row.month)}</div>
@@ -247,11 +247,7 @@ function PermanentMonthCard({
   );
 }
 
-function PermanentMonthlyBreakdown({
-  rows,
-}: {
-  rows: AkrateiaPermanentRow[];
-}) {
+function PermanentMonthlyBreakdown({ rows }: { rows: AkrateiaPermanentRow[] }) {
   if (!rows.length) return null;
 
   return (
@@ -269,7 +265,7 @@ function PermanentMonthlyBreakdown({
 
 function AkrateiaCompactTable({ rows }: { rows: AkrateiaRow[] }) {
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div>
           <div className="fw-semibold">Αναλυτικά στοιχεία</div>

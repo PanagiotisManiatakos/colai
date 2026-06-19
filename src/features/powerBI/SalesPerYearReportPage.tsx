@@ -46,7 +46,7 @@ function ReportSectionTitle({
   subtitle: string;
 }) {
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="fw-semibold">{title}</div>
       <div className="small text-secondary mt-1">{subtitle}</div>
     </div>
@@ -82,7 +82,7 @@ function SalesPerYearTargetPanel({
   const width = ratio == null ? 0 : Math.min(100, Math.max(0, ratio * 100));
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0">
           <div className="d-flex align-items-center gap-2">
@@ -162,7 +162,7 @@ function SalesPerYearProductCard({
   accent: string;
 }) {
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0">
           <div className="fw-bold">{title}</div>
@@ -247,12 +247,10 @@ function SalesPerYearMonthCard({
   row: SalesPerYearMonthlyRow;
   index: number;
 }) {
-  const accent = ["#2563eb", "#16a34a", "#dc2626", "#7c3aed"][
-    index % 4
-  ];
+  const accent = ["#2563eb", "#16a34a", "#dc2626", "#7c3aed"][index % 4];
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0">
           <div className="fw-bold">{getMonthLabel(row.month)}</div>
@@ -335,7 +333,7 @@ function SalesPerYearMonthlyBreakdown({
 
   return (
     <section className="d-flex flex-column gap-2">
-      <div className="app-card p-3">
+      <div className="app-card px-3 py-2">
         <div className="d-flex align-items-start justify-content-between gap-3">
           <div>
             <div className="fw-semibold">Μήνες αναφοράς</div>
@@ -411,7 +409,7 @@ function SalesPerYearDetailsTable({ row }: { row: SalesPerYearRow }) {
   ];
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div>
           <div className="fw-semibold">Αναλυτικά στοιχεία</div>

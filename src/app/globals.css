@@ -891,6 +891,20 @@ html[data-bs-theme="dark"] .leave-order-modal__icon {
 
 .searchable-select-toggle {
   background-color: var(--bs-body-bg);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.searchable-select-value {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.searchable-select-value > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .searchable-select-menu {

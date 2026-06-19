@@ -145,13 +145,17 @@ export function validateEoppyOrder({
       );
     }
 
-    if (validateSynainesiPanel && !hasConsentFormFiles) {
+    if (
+      validateSynainesiPanel &&
+      draftOrder.isVoiceConsent != 1 &&
+      !hasConsentFormFiles
+    ) {
       add(
         "synenaiseis",
-        "",
+        "consent_form",
         true,
         "Νέος πελάτης, δεν έχετε ανεβάσει συναίνεση",
-        isBlank(draftOrder.customer_other_address),
+        true,
       );
     }
 

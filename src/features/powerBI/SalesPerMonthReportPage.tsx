@@ -28,7 +28,7 @@ function MonthlySalesChart({ rows }: { rows: MonthlySalesRow[] }) {
   const maxSales = Math.max(...rows.map((row) => row.sales), 1);
 
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div>
           <div className="fw-semibold">Πωλήσεις ανά μήνα</div>
@@ -76,7 +76,7 @@ function MonthlySalesChart({ rows }: { rows: MonthlySalesRow[] }) {
 
 function DataRows({ rows }: { rows: MonthlySalesRow[] }) {
   return (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div>
           <div className="fw-semibold">Αναλυτικές γραμμές</div>
@@ -185,10 +185,7 @@ export function SalesPerMonthReportPage({
       {loading ? (
         <AppLoader label="Φόρτωση Power BI..." />
       ) : error ? (
-        <ReportError
-          message={error}
-          onRetry={() => void loadSalesPerMonth()}
-        />
+        <ReportError message={error} onRetry={() => void loadSalesPerMonth()} />
       ) : records.length ? (
         <>
           <section className="row g-3">

@@ -5,10 +5,7 @@ import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
 
 import AppLoader from "@/components/ui/AppLoader";
-import {
-  ReportError,
-  ReportHeader,
-} from "@/features/powerBI/ReportShared";
+import { ReportError, ReportHeader } from "@/features/powerBI/ReportShared";
 import { parseProxyJson } from "@/lib/api/client";
 import type { BiReportDatasetsResponse } from "@/lib/bi-reports/biReports";
 import type { PowerBiDataset } from "@/lib/bi-reports/powerBi";
@@ -19,7 +16,7 @@ function boolLabel(value?: boolean) {
 
 function DatasetCard({ dataset }: { dataset: PowerBiDataset }) {
   const card = (
-    <div className="app-card p-3">
+    <div className="app-card px-3 py-2">
       <div className="d-flex align-items-start justify-content-between gap-3">
         <div className="min-w-0">
           <div className="fw-bold text-truncate">{dataset.name}</div>
@@ -84,7 +81,7 @@ function DatasetCard({ dataset }: { dataset: PowerBiDataset }) {
       </div>
 
       {dataset.configuredBy ? (
-        <div className="small text-secondary mt-3 text-truncate">
+        <div className="small text-secondary text-truncate mt-3">
           Configured by {dataset.configuredBy}
         </div>
       ) : null}
@@ -147,11 +144,7 @@ export function PowerBiDatasetsPage() {
 
   return (
     <div className="d-flex flex-column gap-3">
-      <ReportHeader
-        title="Datasets"
-        subtitle={groupName}
-        icon="bi-database"
-      />
+      <ReportHeader title="Datasets" subtitle={groupName} icon="bi-database" />
 
       <Link
         href="/powerbi/groups"

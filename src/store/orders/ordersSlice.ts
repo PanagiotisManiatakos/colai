@@ -835,6 +835,9 @@ const ordersSlice = createSlice({
       // state.draft = initialDraft();
       return state;
     },
+    clearDraftSubmitError(state) {
+      state.draft.submitState.error = null;
+    },
   },
   extraReducers: (b) => {
     b.addCase(fetchOrders.pending, (state, action) => {
@@ -1146,6 +1149,7 @@ export const {
   patchDraftRecipient,
   patchDraftDoctor,
   submitDraft,
+  clearDraftSubmitError,
   setDraftProperty,
   addDraftYliko,
   updateDraftYlikoQuantity,
